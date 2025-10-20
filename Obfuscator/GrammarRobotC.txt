@@ -1,0 +1,162 @@
+﻿T
+{
+	"int"
+	"string"
+	"bool"
+	"float"
+	"id"
+}
+MotorPort
+{
+	"motorA"
+	"motorB"
+	"motorC"
+	"id"
+}
+SensorPort
+{
+	"port1"
+	"port2"
+	"port3"
+	"port4"
+	"id"
+}
+E
+{
+	T "id" "=^" E'' ;
+	"id" "(" ListOfStatements ")" ;
+	"if^" "(" CE ")" "{" Body "}"
+	"while^" "(" CE ")" "{" Body "}"
+	"for^" "(" ForHeader ")" "{" Body "}"
+	"switch^" "(" E' ")" "{" CaseList "}"
+	"motor" "[" MotorPort "]" "=^" E'' ;
+	"nMotorEncoder" "[" MotorPort "]" "=^" E'' ;
+  	"return" E' ;
+  	"return" ;
+	"break^" ;
+	"continue^" ;
+}
+Body
+{
+	E Body 
+	E
+	"none"
+}
+E'
+{
+	"number"
+	"charVal"
+	"boolVal"
+	"stringVal"
+	"SensorValue" "[" SensorPort "]" 
+	"nMotorEncoder" "[" MotorPort "]"	 
+	T "id" ";"
+	"id" "(" ListOfStatements ")" 
+	"id" ".^" "id"
+	"id"
+	"(" E' ")"
+}
+ListOfStatements
+{
+	E'' "," ListOfStatements
+	E''
+	"none"
+}
+CE
+{
+	E' "&&^" CE'
+	E' "||^" CE'
+	E' "==^" CE'
+	E' ">^" CE'
+	E' "<^" CE'
+}
+CE'
+{
+	E' "&&^" CE'
+	E' "||^" CE'
+	E' "==^" CE'
+	E' ">^" CE'
+	E' "<^" CE'
+	E'
+}
+E''
+{
+	E' "+^" E''
+	E'
+}
+ForHeader
+{
+	ForInit ";" ForCond ";" ForIter
+}
+ForInit
+{
+	T "id^" "=^" E''
+	T "id^"
+	"id" "=^" E''
+	"none"
+}
+ForCond
+{
+	CE
+	"none"
+}
+ForIter
+{
+	"id" "=^" E''
+	"id" "+=^" E''
+	"id" "-=^" E''
+	"id" "++^"
+	"id" "--^"
+	"none"
+}
+CaseList
+{
+	CaseItem CaseList
+	"none"
+}
+CaseItem
+{
+	"case^" E' ":" Body BreakOpt
+	"default^" ":" Body BreakOpt
+}
+BreakOpt
+{
+	"break^" ;
+	"none"
+}
+Parma
+{
+	T "id^" "," Parma
+	T "id^"
+	"none"
+}
+Struct
+{
+	"struct^" "id" "{" StructBody "}" 
+}
+StructBody
+{
+	T "id";
+	Function
+	"none"
+}
+ProgramBody
+{
+	Function
+	Struct
+	"none"
+}
+Program
+{
+  ProgramBody TaskMain ProgramBody
+  ProgramBody TaskMain
+}
+Function
+{
+  T "id^" "(" Parma ")" "{" Body "}"
+  "void" "id^" "(" Parma ")" "{" Body "}"
+}
+TaskMain
+{
+	"task^" "main" "(" ")" "{" Body "}"
+}

@@ -1,0 +1,238 @@
+﻿using Obfuscator.Tokens;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+namespace Obfuscator
+{
+    public enum TokenType
+    {
+        // Logical / relational (multi-char)
+        OP_ANDAND = 0,   // &&
+        OP_OROR = 1,   // ||
+        OP_EQEQ = 2,   // ==
+
+        // Keywords
+        KW_RETURN = 3,   // return
+        KW_IF = 4,   // if
+        KW_WHILE = 5,   // while
+        KW_TASK = 6,   // task
+        KW_MAIN = 7,   // main
+        KW_VOID = 8,   // void
+        KW_INT = 9,   // int
+        KW_STRING = 10,  // string
+        KW_BOOL = 11,  // bool
+        KW_FLOAT = 12,  // float
+        KW_STRUCT = 13,  // struct
+        KW_FOR = 14,  // for
+        KW_SWITCH = 15,  // switch
+        KW_CASE = 16,  // case
+        KW_DEFAULT = 17,  // default
+        KW_BREAK = 18,  // break
+        KW_CONTINUE = 19,  // continue
+
+        // RobotC builtins
+        KW_MOTOR = 20, // motor
+        KW_NMOTORENCODER = 21, // nMotorEncoder
+        KW_SENSORVALUE = 22, // SensorValue
+
+        // RobotC constants / ports (split)
+        KW_MOTOR_A = 23, // motorA
+        KW_MOTOR_B = 24, // motorB
+        KW_MOTOR_C = 25, // motorC
+        KW_PORT1 = 26, // port1
+        KW_PORT2 = 27, // port2
+        KW_PORT3 = 28, // port3
+        KW_PORT4 = 29, // port4
+
+        // Literals / identifiers
+        NUMBER = 30, // \d+(\.\d+)?
+        CHARVAL = 31, // '(...)'
+        STRINGVAL = 32, // "..."
+        BOOLVAL = 33, // true|false
+        ID = 34, // [A-Za-z_]\w*
+
+        // Compound ops
+        OP_PLUSEQ = 35, // +=
+        OP_MINUSEQ = 36, // -=
+        OP_PLUSPLUS = 37, // ++
+        OP_MINUSMINUS = 38, // --
+
+        // Single-char ops
+        OP_ASSIGN = 39, // =
+        OP_PLUS = 40, // +
+        OP_MINUS = 41, // -
+        OP_STAR = 42, // *
+        OP_SLASH = 43, // /
+        OP_PERCENT = 44, // %
+        OP_LT = 45, // <
+        OP_GT = 46, // >
+        OP_DOT = 47, // .
+
+        // Punctuation
+        LPAREN = 48, // (
+        RPAREN = 49, // )
+        LBRACE = 50, // {
+        RBRACE = 51, // }
+        LBRACKET = 52, // [
+        RBRACKET = 53, // ]
+        COMMA = 54, // ,
+        SEMI = 55, // ;
+        COLON = 56, // :
+
+        // Non-regex tokens (emitted by the lexer)
+        EOF = 57,
+        ERROR = 58,
+        WHITE_SPACE = 59,
+        NONE = 60,
+    }
+
+
+
+    public class Lexing
+    {
+
+
+        public Lexing(List<Spec> Specs) 
+        {
+            this.Specs = Specs;
+        }
+        public static readonly Dictionary<TokenType, Func<string, int, AbstactToken>> TokenFactory = new()
+        {
+            // End/input control
+            [TokenType.EOF] = (text, len) => new EOFToken(text, len),
+            [TokenType.ERROR] = (text, len) => new ERRORToken(text, len),
+
+            // Identifiers & literals
+            [TokenType.ID] = (text, len) => new IDToken(text, len),
+            [TokenType.NUMBER] = (text, len) => new NUMBERToken(text, len),
+            [TokenType.CHARVAL] = (text, len) => new CHARVALToken(text, len),
+            [TokenType.BOOLVAL] = (text, len) => new BOOLVALToken(text, len),
+            [TokenType.STRINGVAL] = (text, len) => new STRINGVALToken(text, len),
+
+            // Types
+            [TokenType.KW_INT] = (text, len) => new KW_INTToken(text, len),
+            [TokenType.KW_STRING] = (text, len) => new KW_STRINGToken(text, len),
+            [TokenType.KW_BOOL] = (text, len) => new KW_BOOLToken(text, len),
+            [TokenType.KW_FLOAT] = (text, len) => new KW_FLOATToken(text, len),
+            [TokenType.KW_VOID] = (text, len) => new KW_VOIDToken(text, len),
+
+            // Decls/structs
+            [TokenType.KW_STRUCT] = (text, len) => new KW_STRUCTToken(text, len),
+
+            // Control flow
+            [TokenType.KW_IF] = (text, len) => new KW_IFToken(text, len),
+            [TokenType.KW_WHILE] = (text, len) => new KW_WHILEToken(text, len),
+            [TokenType.KW_FOR] = (text, len) => new KW_FORToken(text, len),
+            [TokenType.KW_SWITCH] = (text, len) => new KW_SWITCHToken(text, len),
+            [TokenType.KW_CASE] = (text, len) => new KW_CASEToken(text, len),
+            [TokenType.KW_DEFAULT] = (text, len) => new KW_DEFAULTToken(text, len),
+            [TokenType.KW_RETURN] = (text, len) => new KW_RETURNToken(text, len),
+            [TokenType.KW_BREAK] = (text, len) => new KW_BREAKToken(text, len),
+            [TokenType.KW_CONTINUE] = (text, len) => new KW_CONTINUEToken(text, len),
+
+            // Task
+            [TokenType.KW_TASK] = (text, len) => new KW_TASKToken(text, len),
+            [TokenType.KW_MAIN] = (text, len) => new KW_MAINToken(text, len),
+
+            // RobotC-specific identifiers
+            [TokenType.KW_MOTOR] = (text, len) => new KW_MOTORToken(text, len),
+            [TokenType.KW_NMOTORENCODER] = (text, len) => new KW_NMOTORENCODERToken(text, len),
+            [TokenType.KW_SENSORVALUE] = (text, len) => new KW_SENSORVALUEToken(text, len),
+
+            // RobotC enums / ports
+            [TokenType.KW_MOTOR_A] = (text, len) => new KW_MOTOR_AToken(text, len),
+            [TokenType.KW_MOTOR_B] = (text, len) => new KW_MOTOR_BToken(text, len),
+            [TokenType.KW_MOTOR_C] = (text, len) => new KW_MOTOR_CToken(text, len),
+            [TokenType.KW_PORT1] = (text, len) => new KW_PORT1Token(text, len),
+            [TokenType.KW_PORT2] = (text, len) => new KW_PORT2Token(text, len),
+            [TokenType.KW_PORT3] = (text, len) => new KW_PORT3Token(text, len),
+            [TokenType.KW_PORT4] = (text, len) => new KW_PORT4Token(text, len),
+
+            // Operators
+            [TokenType.OP_ASSIGN] = (text, len) => new OP_ASSIGNToken(text, len),
+            [TokenType.OP_PLUS] = (text, len) => new OP_PLUSToken(text, len),
+            [TokenType.OP_MINUS] = (text, len) => new OP_MINUSToken(text, len),
+            [TokenType.OP_STAR] = (text, len) => new OP_STARToken(text, len),
+            [TokenType.OP_SLASH] = (text, len) => new OP_SLASHToken(text, len),
+            [TokenType.OP_PERCENT] = (text, len) => new OP_PERCENTToken(text, len),
+
+            [TokenType.OP_ANDAND] = (text, len) => new OP_ANDANDToken(text, len),
+            [TokenType.OP_OROR] = (text, len) => new OP_ORORToken(text, len),
+            [TokenType.OP_EQEQ] = (text, len) => new OP_EQEQToken(text, len),
+            [TokenType.OP_GT] = (text, len) => new OP_GTToken(text, len),
+            [TokenType.OP_LT] = (text, len) => new OP_LTToken(text, len),
+
+            [TokenType.OP_PLUSEQ] = (text, len) => new OP_PLUSEQToken(text, len),
+            [TokenType.OP_MINUSEQ] = (text, len) => new OP_MINUSEQToken(text, len),
+            [TokenType.OP_PLUSPLUS] = (text, len) => new OP_PLUSPLUSToken(text, len),
+            [TokenType.OP_MINUSMINUS] = (text, len) => new OP_MINUSMINUSToken(text, len),
+
+            [TokenType.OP_DOT] = (text, len) => new OP_DOTToken(text, len),
+
+            // Punctuation
+            [TokenType.LPAREN] = (text, len) => new LPARENToken(text, len),
+            [TokenType.RPAREN] = (text, len) => new RPARENToken(text, len),
+            [TokenType.LBRACE] = (text, len) => new LBRACEToken(text, len),
+            [TokenType.RBRACE] = (text, len) => new RBRACEToken(text, len),
+            [TokenType.LBRACKET] = (text, len) => new LBRACKETToken(text, len),
+            [TokenType.RBRACKET] = (text, len) => new RBRACKETToken(text, len),
+            [TokenType.COMMA] = (text, len) => new COMMAToken(text, len),
+            [TokenType.SEMI] = (text, len) => new SEMIToken(text, len),
+            [TokenType.COLON] = (text, len) => new COLONToken(text, len),
+            [TokenType.WHITE_SPACE] = (text, len) => new WHITE_SPACEToken(text, len),
+        };
+        public List<Spec> Specs;
+        public AbstactToken GetType(ReadOnlySpan<char> input, int index)
+        {
+            AbstactToken highest = TokenFactory[TokenType.ERROR].Invoke("", 0);
+            input = input.Slice(index);
+            int highestPres = int.MaxValue;
+            for (int i = 0; i < Specs.Count; i++)
+            {
+                if (Regex.IsMatch(input, Specs[i].Pattern))
+                {
+                    if (highestPres > Specs[i].Precedence)
+                    {
+                        Match match = Regex.Match(input.ToString(), Specs[i].Pattern);
+                        if (match.Index == 0)
+                        {
+                            highest = TokenFactory[Specs[i].Type].Invoke(match.Value, match.Length);
+                            highestPres = Specs[i].Precedence;
+                        }
+                    }
+                }
+            }
+            return highest;
+        }
+
+        public List<AbstactToken> Lexering(string path)
+        {
+            string[] lines = File.ReadAllLines(path);
+            List<AbstactToken> tokens = new List<AbstactToken>();
+            for (int i = 0; i < lines.Length; i++)
+            {
+                int currentIndex = 0;
+                while (currentIndex < lines[i].Length)
+                {
+                    AbstactToken currentToken = GetType(lines[i], currentIndex);
+                    if (currentToken.GetTokenType() != TokenType.ERROR)
+                    {
+                        tokens.Add(currentToken);
+                    }
+                    else
+                    {
+                        throw new Exception("Unknown ");
+                    }
+                    currentIndex += currentToken.length;
+                }
+            }
+            return tokens;
+        }
+    }
+}
