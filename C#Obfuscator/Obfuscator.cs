@@ -11,7 +11,9 @@ namespace C_Obfuscation
 {
     public static class Obfuscator
     {
+        //counts unique names
         public static int nameCounter = 0;
+        // generates a new obfuscated name
         public static string NewName() => "a" + (nameCounter++).ToString("X");
         public static void Obfuscate(string inputPath,string outputPath)
         {

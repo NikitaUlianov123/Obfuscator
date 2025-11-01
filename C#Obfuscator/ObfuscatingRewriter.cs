@@ -9,7 +9,9 @@ namespace C_Obfuscation
     // Replaces identifiers and string literals
     internal class ObfuscatingRewriter : CSharpSyntaxRewriter
     {
+        // semantic model to resolve symbols from roslyn syntax nodes
         private SemanticModel _model;
+        // map of symbols to new names
         private Dictionary<ISymbol, string> _map;
         public bool EncodedStringsUsed { get; private set; } 
 
@@ -105,8 +107,7 @@ namespace C_Obfuscation
 
         public override SyntaxToken VisitToken(SyntaxToken token)
         {
-            // fallback: if token maps to a symbol we have renamed, replace text
-            // (Most identifier replacements handled in VisitIdentifierName / declarations)
+            // if token maps to a symbol we have renamed, replace text
             if (token.IsKind(SyntaxKind.IdentifierToken))
             {
                 var sym = _model.GetSymbolInfo(token.Parent).Symbol;

@@ -8,7 +8,9 @@ namespace C_Obfuscation
     // finds symbols to rename
     internal class IdentifierCollector : CSharpSyntaxWalker
     {
+        // semantic model to resolve symbols from roslyn syntax nodes
         private SemanticModel _model;
+        // map of symbols to new names
         private Dictionary<ISymbol, string> _map;
         public IdentifierCollector(SemanticModel model, Dictionary<ISymbol, string> map)
         {
