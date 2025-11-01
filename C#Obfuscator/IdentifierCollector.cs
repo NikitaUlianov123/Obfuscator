@@ -5,8 +5,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace C_Obfuscation
 {
 
-    // Collector: find symbols safe to rename
-    class IdentifierCollector : CSharpSyntaxWalker
+    // finds symbols to rename
+    internal class IdentifierCollector : CSharpSyntaxWalker
     {
         private SemanticModel _model;
         private Dictionary<ISymbol, string> _map;

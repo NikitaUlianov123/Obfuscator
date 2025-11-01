@@ -6,8 +6,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace C_Obfuscation
 {
 
-    // Rewriter: applies renames and encodes string literals
-    class ObfuscatingRewriter : CSharpSyntaxRewriter
+    // Replaces identifiers and string literals
+    internal class ObfuscatingRewriter : CSharpSyntaxRewriter
     {
         private SemanticModel _model;
         private Dictionary<ISymbol, string> _map;

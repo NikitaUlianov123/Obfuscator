@@ -15,28 +15,29 @@ namespace C_Obfuscation
         public static string NewName() => "a" + (nameCounter++).ToString("X");
         public static void Obfuscate(string inputPath,string outputPath)
         {
+            //get code and parse
             var code = File.ReadAllText(inputPath);
             var tree = CSharpSyntaxTree.ParseText(code);
             var root = tree.GetCompilationUnitRoot();
 
-            // build a semantic model so we can avoid renaming public symbols or those used externally
+            // build a model so we can avoid renaming public symbols or those used externally
             var mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
             var compilation = CSharpCompilation.Create("ObfTemp").AddReferences(mscorlib).AddSyntaxTrees(tree);
 
             var model = compilation.GetSemanticModel(tree);
 
-            // maps symbol -> new name
+            // makes rename map
             var renameMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
 
-            // pass 1: collect symbols we can rename (locals, parameters, private fields, private methods, private properties)
+            // collect identifiers to rename
             var collector = new IdentifierCollector(model, renameMap);
             collector.Visit(root);
 
-            // pass 2: rewrite tree applying renames and string literal encoding
+            // rename variables and replace literals
             var rewriter = new ObfuscatingRewriter(model, renameMap);
             var newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
 
-            // inject helper DecodeString method if we encoded any strings
+            // inject helper mehtod for decoding strings if needed
             if (rewriter.EncodedStringsUsed)
             {
                 var helper = SyntaxFactory.ParseMemberDeclaration(@"
@@ -55,8 +56,9 @@ namespace C_Obfuscation
                 newRoot = newRoot.AddMembers(helper);
             }
 
+            //output to file
             File.WriteAllText(outputPath, newRoot.NormalizeWhitespace().ToFullString());
-            Console.WriteLine($"Written obfuscated output to {outputPath}");
+            Console.WriteLine($"{outputPath}");
         }
 
     }
