@@ -13,7 +13,7 @@ namespace C_Obfuscation
         private SemanticModel _model;
         // map of symbols to new names
         private Dictionary<ISymbol, string> _map;
-        public bool EncodedStringsUsed { get; private set; } 
+        public bool EncodedStringsUsed { get; private set; }
 
         public ObfuscatingRewriter(SemanticModel model, Dictionary<ISymbol, string> map)
         {
@@ -92,13 +92,17 @@ namespace C_Obfuscation
         {
             if (node.IsKind(SyntaxKind.StringLiteralExpression))
             {
-                var text = node.Token.ValueText;
+                string text = node.Token.ValueText;
                 if (string.IsNullOrEmpty(text)) return node;
 
                 // encode as byte array literal and call DecodeString
-                var bytes = Encoding.UTF8.GetBytes(text);
-                var byteElements = string.Join(", ", bytes.Select(b => b.ToString()));
-                var replacement = SyntaxFactory.ParseExpression($"__ObfHelpers.DecodeString(new byte[]{{{byteElements}}})");
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = CircularShift(bytes[i]);
+                }
+                string byteElements = string.Join(", ", bytes.Select(b => b.ToString()));
+                ExpressionSyntax replacement = SyntaxFactory.ParseExpression($"__ObfHelpers.DecodeString(new byte[]{{{byteElements}}})");
                 EncodedStringsUsed = true;
                 return replacement;
             }
@@ -118,6 +122,11 @@ namespace C_Obfuscation
             }
             return base.VisitToken(token);
         }
+        byte CircularShift(byte b)
+        {
+            return (byte)((b << 4) | (b >> 4));
+        }
+
 
     }
 }

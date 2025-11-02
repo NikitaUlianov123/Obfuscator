@@ -17,7 +17,7 @@ namespace C_Obfuscation
             _model = model;
             _map = map;
         }
-        
+
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
             var sym = _model.GetDeclaredSymbol(node);
@@ -73,6 +73,7 @@ namespace C_Obfuscation
 
         private bool CanRenameSymbol(ISymbol sym)
         {
+            // Code to check for public/protected/internal accessibility, overrides, entry points, etc.
             if (sym == null) return false;
 
             // keep public/protected/internal API names intact
@@ -87,7 +88,6 @@ namespace C_Obfuscation
             if (sym.Kind == SymbolKind.NamedType) return false; // keep type names for simplicity
 
             // don't rename if symbol is used via reflection attributes (basic heuristic)
-            // (A production tool would inspect attributes and reflection usage more deeply.)
             foreach (var attr in sym.GetAttributes())
             {
                 if (attr.AttributeClass.Name.Contains("Json") || attr.AttributeClass.Name.Contains("Serializable"))

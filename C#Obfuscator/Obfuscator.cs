@@ -15,7 +15,7 @@ namespace C_Obfuscation
         public static int nameCounter = 0;
         // generates a new obfuscated name
         public static string NewName() => "a" + (nameCounter++).ToString("X");
-        public static void Obfuscate(string inputPath,string outputPath)
+        public static void Obfuscate(string inputPath, string outputPath)
         {
             //get code and parse
             var code = File.ReadAllText(inputPath);
@@ -47,7 +47,12 @@ namespace C_Obfuscation
                              {
                                 public static string DecodeString(byte[] data) 
                                 {
-                                    return Encoding.UTF8.GetString(data);
+                                    byte f(byte b)=>(byte)((((b << 4) | (b >> (8 >> 1))) & ~0) + 0 * ((b >> 8) | (b << 8)));
+                                    
+                                    ReadOnlySpan<byte> __s(in byte[] a) => a;
+                                    Span<byte> __w = data;
+                                    for (int __i = 0; __i < __w.Length; __i++) __w[__i] = f(__w[__i]);
+                                    return Encoding.UTF8.GetString(__s(in data).ToArray());
                                 }
                              }");
                 // add using System.Text; if not present
