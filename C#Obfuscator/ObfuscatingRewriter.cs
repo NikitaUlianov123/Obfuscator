@@ -106,6 +106,19 @@ namespace C_Obfuscation
                 EncodedStringsUsed = true;
                 return replacement;
             }
+            else if (node.IsKind(SyntaxKind.CharacterLiteralExpression))
+            {
+                string text = node.Token.ValueText;
+                if (string.IsNullOrEmpty(text)) return node;
+
+                // encode as byte array literal and call DecodeString
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
+                bytes[0] = CircularShift(bytes[0]);
+                string byteElements = string.Join(", ", bytes.Select(b => b.ToString()));
+                ExpressionSyntax replacement = SyntaxFactory.ParseExpression($"__ObfHelpers.DecodeString(new byte[]{{{byteElements}}})[0]");
+                EncodedStringsUsed = true;
+                return replacement;
+            }
             return base.VisitLiteralExpression(node);
         }
 
