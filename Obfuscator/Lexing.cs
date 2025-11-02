@@ -89,7 +89,11 @@ namespace Obfuscator
         EOF = 57,
         ERROR = 58,
         WHITE_SPACE = 59,
-        NONE = 60,
+        KW_DEFINE = 60,
+        KW_DELAY = 61,
+        TERMAIL = 62,
+        NONE = 63,
+        FUNCTION_CALL = 64,
     }
 
 
@@ -186,6 +190,8 @@ namespace Obfuscator
             [TokenType.SEMI] = (text, len) => new SEMIToken(text, len),
             [TokenType.COLON] = (text, len) => new COLONToken(text, len),
             [TokenType.WHITE_SPACE] = (text, len) => new WHITE_SPACEToken(text, len),
+            [TokenType.KW_DEFINE] = (text, len) => new KW_DEFINEToken(text, len),
+            [TokenType.KW_DELAY] = (text, len) => new KW_DELAYToken(text, len),
         };
         public List<Spec> Specs;
         public AbstactToken GetType(ReadOnlySpan<char> input, int index)

@@ -4,6 +4,6 @@ namespace Obfuscator.Tokens
     public sealed class KW_DEFAULTToken : AbstactToken
     {
         public KW_DEFAULTToken(string text, int length) : base(text, length) { }
-        public override TokenType GetTokenType() => TokenType.KW_DEFAULT;
+        public override TokenType GetTokenType() => TokenType.KW_DEFINE;
     }
 }

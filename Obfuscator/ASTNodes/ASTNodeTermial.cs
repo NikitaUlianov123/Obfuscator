@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Obfuscator.Tokens;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +13,7 @@ namespace Obfuscator
         public List<ASTNodeBase> terms { get; set; }
         public ASTNodeTermial(int beginning, int end, List<ASTNodeBase> childern) : base(beginning, end)
         {
+            RootToken = new TERMAILToken("",end);
             terms = childern;
         }
     }

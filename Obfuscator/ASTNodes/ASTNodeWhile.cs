@@ -15,8 +15,8 @@ namespace Obfuscator
         {
             // children: 'while^', '(', CE, ')', '{', Body, '}'
             RootToken = children[0].RootToken;
-            Condition = children[2];
-            Body = children[5];
+            Condition = children[1];
+            Body = children[2];
         }
     }
 }

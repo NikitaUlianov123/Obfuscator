@@ -6,6 +6,11 @@
 	"float"
 	"id"
 }
+Define
+{
+	"#define^" "id" "id"
+	"#define^" "id" "number"
+}
 MotorPort
 {
 	"motorA"
@@ -24,15 +29,16 @@ SensorPort
 E
 {
 	T "id" "=^" E'' ;
-	"id" "(" ListOfStatements ")" ;
+	"id" "(^" ListOfStatements ")" ;
+	"delay^" "(" E' ")" ;
 	"if^" "(" CE ")" "{" Body "}"
 	"while^" "(" CE ")" "{" Body "}"
 	"for^" "(" ForHeader ")" "{" Body "}"
 	"switch^" "(" E' ")" "{" CaseList "}"
-	"motor" "[" MotorPort "]" "=^" E'' ;
-	"nMotorEncoder" "[" MotorPort "]" "=^" E'' ;
-  	"return" E' ;
-  	"return" ;
+	"motor^" "[" MotorPort "]" "=" E'' ;
+	"nMotorEncoder^" "[" MotorPort "]" "=" E'' ;
+  	"return^" E' ;
+  	"return^" "none" ;
 	"break^" ;
 	"continue^" ;
 }
@@ -48,13 +54,12 @@ E'
 	"charVal"
 	"boolVal"
 	"stringVal"
-	"SensorValue" "[" SensorPort "]" 
-	"nMotorEncoder" "[" MotorPort "]"	 
+	"SensorValue^" "[" SensorPort "]" 
+	"nMotorEncoder^" "[" MotorPort "]"	 
 	T "id" ";"
-	"id" "(" ListOfStatements ")" 
+	"id" "(^" ListOfStatements ")" 
 	"id" ".^" "id"
 	"id"
-	"(" E' ")"
 }
 ListOfStatements
 {
@@ -69,6 +74,7 @@ CE
 	E' "==^" CE'
 	E' ">^" CE'
 	E' "<^" CE'
+	E'
 }
 CE'
 {
@@ -86,12 +92,12 @@ E''
 }
 ForHeader
 {
-	ForInit ";" ForCond ";" ForIter
+	ForInit ; ForCond ; ForIter
 }
 ForInit
 {
-	T "id^" "=^" E''
-	T "id^"
+	T "id" "=^" E''
+	T "id"
 	"id" "=^" E''
 	"none"
 }
@@ -126,9 +132,9 @@ BreakOpt
 }
 Parma
 {
-	T "id^" "," Parma
-	T "id^"
-	"none"
+    T "id" "," Parma
+    T "id"
+    "none"
 }
 Struct
 {
@@ -136,14 +142,15 @@ Struct
 }
 StructBody
 {
-	T "id";
-	Function
+	T "id" ; StructBody
+	T "id" ;
 	"none"
 }
 ProgramBody
 {
 	Function
 	Struct
+	Define
 	"none"
 }
 Program

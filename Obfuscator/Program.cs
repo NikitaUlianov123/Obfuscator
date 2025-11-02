@@ -12,8 +12,8 @@ namespace Obfuscator
             Lexing lexing = new Lexing(specs);
             var d = lexing.Lexering("C:\\Users\\logan\\source\\repos\\Obfuscator\\Obfuscator\\codeToRun.txt");
             Parser parsing = new Parser("C:\\Users\\logan\\source\\repos\\Obfuscator\\Obfuscator\\GrammarRobotC.txt");
-            var w = parsing.Parsing(d, "E", 0);
-            ;
+            var w = parsing.Parsing(d, "Program", 0);
+             ;
         }
     }
 }

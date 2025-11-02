@@ -16,8 +16,8 @@ namespace Obfuscator
             // children: type/void, id, '(', params, ')', '{', body, '}'
             ReturnType = children[0];
             Name = children[1];
-            Params = children[3];
-            Body = children[6];
+            Params = children[2];
+            Body = children[3];
             RootToken = ReturnType.RootToken;
         }
     }

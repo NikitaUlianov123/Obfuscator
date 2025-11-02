@@ -14,7 +14,7 @@ namespace Obfuscator
             // children: 'struct^', id, '{', StructBody, '}'
             RootToken = children[0].RootToken;
             Name = children[1];
-            Body = children[3];
+            Body = children[2];
         }
     }
 }

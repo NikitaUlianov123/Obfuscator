@@ -1,7 +1,7 @@
 ﻿[
   { "type": 0,  "pattern": "&&",                 "precedence": 90 },
   { "type": 1,  "pattern": "\\|\\|",             "precedence": 90 },
-  { "type": 2,  "pattern": "==",                 "precedence": 90 },
+  { "type": 2,  "pattern": "==",                 "precedence": 40 },
 
   { "type": 3,  "pattern": "\\breturn\\b",       "precedence": 80 },
   { "type": 4,  "pattern": "\\bif\\b",           "precedence": 80 },
@@ -21,7 +21,7 @@
   { "type": 18, "pattern": "\\bbreak\\b",        "precedence": 80 },
   { "type": 19, "pattern": "\\bcontinue\\b",     "precedence": 80 },
 
-  { "type": 20, "pattern": "\\bmotor\\b",            "precedence": 75 },
+  { "type": 20, "pattern": "\\bmotor\\b",            "precedence": 73 },
   { "type": 21, "pattern": "\\bnMotorEncoder\\b",    "precedence": 75 },
   { "type": 22, "pattern": "\\bSensorValue\\b",      "precedence": 75 },
 
@@ -46,8 +46,8 @@
   { "type": 38, "pattern": "--",       "precedence": 95 },
 
   { "type": 39, "pattern": "=",        "precedence": 50 },
-  { "type": 40, "pattern": "\\+",      "precedence": 50 },
-  { "type": 41, "pattern": "-",        "precedence": 50 },
+  { "type": 40, "pattern": "\\+",      "precedence": 100 },
+  { "type": 41, "pattern": "-",        "precedence": 100 },
   { "type": 42, "pattern": "\\*",      "precedence": 50 },
   { "type": 43, "pattern": "/",        "precedence": 50 },
   { "type": 44, "pattern": "%",        "precedence": 50 },
@@ -65,5 +65,7 @@
   { "type": 55, "pattern": ";",   "precedence": 50 },
   { "type": 56, "pattern": ":",   "precedence": 50 },
   { "type": 57, "pattern": "(?:\\r\\n|\\n|\\r)", "precedence": 100 },
-  { "type": 59, "pattern": "[\\t ]+",            "precedence": 100 }
+  { "type": 59, "pattern": "[\\t ]+",            "precedence": 100 },
+  { "type": 60, "pattern": "(?<!\\w)#define\\b",            "precedence": 40 },
+  { "type": 61, "pattern": "\\bdelay\\b",            "precedence": 40 }
 ]

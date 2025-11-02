@@ -16,7 +16,7 @@ namespace Obfuscator
             // children: 'if^', '(', CE, ')', '{', Body, '}'
             RootToken = children[0].RootToken;
             Condition = children[2];
-            ThenBody = children[5];
+            //ThenBody = children[5];
         }
     }
 }

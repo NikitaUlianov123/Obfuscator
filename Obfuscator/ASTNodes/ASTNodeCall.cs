@@ -13,8 +13,8 @@ namespace Obfuscator
         {
             // children: id, '(', args, ')'
             Callee = children[0];
-            RootToken = children[1].RootToken;
-            Arguments = children[2];
+            RootToken = new FUNCTIONCALLToken("Function " + Callee.RootToken.text, end-begin);
+            Arguments = children[1];
         }
     }
 }

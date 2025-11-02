@@ -15,11 +15,11 @@ namespace Obfuscator
         {
             // children: 'for^','(', header, ')','{', body, '}'
             RootToken = children[0].RootToken;
-            var header = (ASTNodeForHeader)children[2];
-            Init = header.Init;
-            Cond = header.Cond;
-            Iter = header.Iter;
-            Body = children[5];
+            var header = (ASTNodeTermial)children[1];
+            Init = header.terms[0];
+            Cond = header.terms[1];
+            Iter = header.terms[2];
+            Body = children[2];
         }
     }
 }

@@ -29,18 +29,19 @@ namespace Obfuscator
         {
             for (int i = 0; i < nodes.Count; i++)
             {
-                if (nodes[i].End == 0)
+                if (nodes[i].RootToken.GetTokenType() == TokenType.NONE)
                 {
                     nodes.RemoveAt(i);
                     i--;
                 }
             }
-            if (nodes.Count == 0) return null;
+            if (nodes.Count == 0) return new ASTNodeNone(beginning, end, new NONEToken("", 0));
 
             if (nodes.Count == 1) return nodes.First();
 
             return new ASTNodeTermial(beginning, end, nodes);
         }
+        
         public Dictionary<string, TokenType> StringToTokenType = new()
         {
             // ---------- Types ----------
@@ -70,6 +71,8 @@ namespace Obfuscator
             ["\"break\""] = TokenType.KW_BREAK,
             ["\"continue\""] = TokenType.KW_CONTINUE,
             ["\"return\""] = TokenType.KW_RETURN,
+            ["\"#define\""] = TokenType.KW_DEFINE,
+            ["\"delay\""] = TokenType.KW_DELAY,
 
             // ---------- Task / Program structure ----------
             ["\"task\""] = TokenType.KW_TASK,
@@ -207,6 +210,12 @@ namespace Obfuscator
         ["\",\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         [";"] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\":\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"if\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"return\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"while\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"for\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"#define\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"delay\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
     };
 
 
@@ -225,6 +234,9 @@ namespace Obfuscator
                ["\"*\""] = (b, e, ch) => new ASTNodeMul(b, e, ch),
                ["\"/\""] = (b, e, ch) => new ASTNodeDiv(b, e, ch),
                ["\"%\""] = (b, e, ch) => new ASTNodeMod(b, e, ch),
+               ["\"+\""] = (b, e, ch) => new ASTNodeAdd(b, e, ch),
+               ["\"++\""] = (b, e, ch) => new ASTNodePlusPlus(b, e, ch),
+               ["\"--\""] = (b, e, ch) => new ASTNodeMinusMinus(b, e, ch),
 
                // Boolean / Comparison (CE, CE')
                ["\"&&\""] = (b, e, ch) => new ASTNodeAnd(b, e, ch),
@@ -260,9 +272,11 @@ namespace Obfuscator
                ["\"string\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"bool\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"float\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
-               ["\"struct^\""] = (b, e, ch) => new ASTNodeStruct(b, e, ch),
-
+               ["\"struct\""] = (b, e, ch) => new ASTNodeStruct(b, e, ch),
+               ["\"id\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"task\""] = (b, e, ch) => new ASTNodeTaskMain(b, e, ch),
+               ["\"#define\""] = (b, e, ch) => new ASTDefineNode(b, e, ch),
+               ["\"delay\""] = (b, e, ch) => new ASTDelayNode(b, e, ch),
 
                // Aggregates / lists (use these keys only if your reducer emits them as synthetic roots)
                ["\"Body\""] = (b, e, ch) => new ASTNodeBlock(b, e, ch),
@@ -277,6 +291,7 @@ namespace Obfuscator
                // Calls & arg lists (if you mark '(' as the root for calls)
                ["\"(\""] = (b, e, ch) => new ASTNodeCall(b, e, ch),
                ["\"ListOfStatements\""] = (b, e, ch) => new ASTNodeArgList(b, e, ch),
+
            };
 
 
@@ -293,6 +308,10 @@ namespace Obfuscator
         };
         public ASTNodeBase Parsing(List<AbstactToken> tokens, string starting, int current)
         {
+            if(starting == "Define")
+            {
+                ;
+            }
             for (int i = 0; i < grammar.grammarPairs[starting].Count; i++)
             {
                 bool isMatch = true;
@@ -300,10 +319,6 @@ namespace Obfuscator
                 List<ASTNodeBase> childern = new List<ASTNodeBase>();
                 for (int d = 0; d < grammar.grammarPairs[starting][i].text.Count; d++)
                 {
-                    if (tokens[current].GetTokenType() == TokenType.OP_PLUS)
-                    {
-                        ;
-                    }
                     var e = grammar.grammarPairs[starting][i];
                     if (current >= tokens.Count)
                     {
@@ -317,6 +332,10 @@ namespace Obfuscator
                         {
                             break;
                         }
+                    }
+                    if (tokens[current].GetTokenType() == TokenType.OP_PLUS)
+                    {
+                        ;
                     }
                     var temp = StringToTokenType.ContainsKey(grammar.grammarPairs[starting][i].text[d]);
                     //var temps = StringToTokenType[grammar.grammarPairs[starting][i].text[d]] == tokens[current].GetTokenType();
@@ -354,17 +373,17 @@ namespace Obfuscator
                 }
                 if (isMatch)
                 {
-                    if (childern.Count == 1)
-                    {
-                        return childern[0];
-                    }
                     if (grammar.grammarPairs[starting][i].exToken == null)
                     {
                         return MakeTerminal(prevStart, current, childern);
                     }
-                    if (ASTFactoryRobotC.ContainsKey(grammar.grammarPairs[starting][i].exToken))
+                    else if (ASTFactoryRobotC.ContainsKey(grammar.grammarPairs[starting][i].exToken))
                     {
                         return ASTFactoryRobotC[grammar.grammarPairs[starting][i].exToken].Invoke(prevStart, current, childern);
+                    }
+                    else if(ASTFactoryRobotC.ContainsKey(starting))
+                    {
+                        return ASTFactoryRobotC[starting].Invoke(prevStart, current, childern);
                     }
                 }
                 current = prevStart;
