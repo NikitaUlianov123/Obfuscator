@@ -425,3 +425,5 @@ FodyWeavers.xsd
 /C#Obfuscator/obj/C#Obfuscator.csproj.nuget.g.props
 /C#Obfuscator/obj/project.assets.json
 /C#Obfuscator/obj/project.nuget.cache
+/ObfuscatorTester/ObfuscatorTester.csproj
+/ObfuscatorTester/Program.cs
