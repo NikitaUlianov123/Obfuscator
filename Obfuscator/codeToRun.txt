@@ -12,5 +12,5 @@ task main()
 		setPowers(50,50);
 		delay(100);
 	}
-	setPowers(0,0);
+	displayTextLine(1,"hello");
 }

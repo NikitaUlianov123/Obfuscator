@@ -89,6 +89,7 @@ namespace Obfuscator
             ["\"motorB\""] = TokenType.KW_MOTOR_B,
             ["\"motorC\""] = TokenType.KW_MOTOR_C,
 
+
             ["\"port1\""] = TokenType.KW_PORT1,
             ["\"port2\""] = TokenType.KW_PORT2,
             ["\"port3\""] = TokenType.KW_PORT3,
@@ -126,6 +127,34 @@ namespace Obfuscator
             ["\",\""] = TokenType.COMMA,
             [";"] = TokenType.SEMI,
             ["\":\""] = TokenType.COLON,
+
+            // ---------- RobotC display/draw ----------
+            ["\"clearPixel\""] = TokenType.KW_CLEAR_PIXEL,
+            ["\"displayBigStringAt\""] = TokenType.KW_DISPLAY_BIG_STRING_AT,
+            ["\"displayTextLine\""] = TokenType.KW_DISPLAY_TEXT_LINE,
+            ["\"displayCenteredBigTextLine\""] = TokenType.KW_DISPLAY_CENTERED_BIG_TEXT_LINE,
+            ["\"displayCenteredTextLine\""] = TokenType.KW_DISPLAY_CENTERED_TEXT_LINE,
+            ["\"displayBigTextLine\""] = TokenType.KW_DISPLAY_BIG_TEXT_LINE,
+            ["\"displayRICFile\""] = TokenType.KW_DISPLAY_RIC_FILE,
+            ["\"displayString\""] = TokenType.KW_DISPLAY_STRING,
+            ["\"displayStringAt\""] = TokenType.KW_DISPLAY_STRING_AT,
+            ["\"drawEllipse\""] = TokenType.KW_DRAW_ELLIPSE,
+            ["\"drawInvertEllipse\""] = TokenType.KW_DRAW_INVERT_ELLIPSE,
+            ["\"drawInvertRect\""] = TokenType.KW_DRAW_INVERT_RECT,
+            ["\"drawLine\""] = TokenType.KW_DRAW_LINE,
+            ["\"drawRect\""] = TokenType.KW_DRAW_RECT,
+            ["\"eraseDisplay\""] = TokenType.KW_ERASE_DISPLAY,
+            ["\"eraseEllipse\""] = TokenType.KW_ERASE_ELLIPSE,
+            ["\"eraseLine\""] = TokenType.KW_ERASE_LINE,
+            ["\"eraseRect\""] = TokenType.KW_ERASE_RECT,
+            ["\"fillEllipse\""] = TokenType.KW_FILL_ELLIPSE,
+            ["\"fillRect\""] = TokenType.KW_FILL_RECT,
+            ["\"getLcdScreenSize\""] = TokenType.KW_GET_LCD_SCREEN_SIZE,
+            ["\"getPixel\""] = TokenType.KW_GET_PIXEL,
+            ["\"invertLine\""] = TokenType.KW_INVERT_LINE,
+            ["\"invertPixel\""] = TokenType.KW_INVERT_PIXEL,
+            ["\"scrollText\""] = TokenType.KW_SCROLL_TEXT,
+            ["\"setPixel\""] = TokenType.KW_SET_PIXEL,
         };
 
 
@@ -216,6 +245,37 @@ namespace Obfuscator
         ["\"for\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"#define\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"delay\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+
+
+        // ---- ROBOTC DISPLAY/DRAW COMMANDS (as primary identifiers) ----
+        ["\"clearPixel\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayBigStringAt\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayTextLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayCenteredBigTextLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayCenteredTextLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayBigTextLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayRICFile\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayString\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"displayStringAt\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"drawEllipse\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"drawInvertEllipse\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"drawInvertRect\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"drawLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"drawRect\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"eraseDisplay\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"eraseEllipse\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"eraseLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"eraseRect\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"fillEllipse\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"fillRect\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"getLcdScreenSize\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"getPixel\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"invertLine\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"invertPixel\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"scrollText\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"setPixel\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+
+
     };
 
 
@@ -291,7 +351,33 @@ namespace Obfuscator
                // Calls & arg lists (if you mark '(' as the root for calls)
                ["\"(\""] = (b, e, ch) => new ASTNodeCall(b, e, ch),
                ["\"ListOfStatements\""] = (b, e, ch) => new ASTNodeArgList(b, e, ch),
-
+               // ---- ROBOTC DISPLAY/DRAW COMMANDS ----
+               ["\"clearPixel\""] = (b, e, ch) => new ASTClearPixel(b, e, ch),
+               ["\"displayBigStringAt\""] = (b, e, ch) => new ASTDisplayBigStringAt(b, e, ch),
+               ["\"displayTextLine\""] = (b, e, ch) => new ASTDisplayTextLine(b, e, ch),
+               ["\"displayCenteredBigTextLine\""] = (b, e, ch) => new ASTDisplayCenteredBigTextLine(b, e, ch),
+               ["\"displayCenteredTextLine\""] = (b, e, ch) => new ASTDisplayCenteredTextLine(b, e, ch),
+               ["\"displayBigTextLine\""] = (b, e, ch) => new ASTDisplayBigTextLine(b, e, ch),
+               ["\"displayRICFile\""] = (b, e, ch) => new ASTDisplayRICFile(b, e, ch),
+               ["\"displayString\""] = (b, e, ch) => new ASTDisplayString(b, e, ch),
+               ["\"displayStringAt\""] = (b, e, ch) => new ASTDisplayStringAt(b, e, ch),
+               ["\"drawEllipse\""] = (b, e, ch) => new ASTDrawEllipse(b, e, ch),
+               ["\"drawInvertEllipse\""] = (b, e, ch) => new ASTDrawInvertEllipse(b, e, ch),
+               ["\"drawInvertRect\""] = (b, e, ch) => new ASTDrawInvertRect(b, e, ch),
+               ["\"drawLine\""] = (b, e, ch) => new ASTDrawLine(b, e, ch),
+               ["\"drawRect\""] = (b, e, ch) => new ASTDrawRect(b, e, ch),
+               ["\"eraseDisplay\""] = (b, e, ch) => new ASTEraseDisplay(b, e, ch),
+               ["\"eraseEllipse\""] = (b, e, ch) => new ASTEraseEllipse(b, e, ch),
+               ["\"eraseLine\""] = (b, e, ch) => new ASTEraseLine(b, e, ch),
+               ["\"eraseRect\""] = (b, e, ch) => new ASTEraseRect(b, e, ch),
+               ["\"fillEllipse\""] = (b, e, ch) => new ASTFillEllipse(b, e, ch),
+               ["\"fillRect\""] = (b, e, ch) => new ASTFillRect(b, e, ch),
+               ["\"getLcdScreenSize\""] = (b, e, ch) => new ASTGetLcdScreenSize(b, e, ch),
+               ["\"getPixel\""] = (b, e, ch) => new ASTGetPixel(b, e, ch),
+               ["\"invertLine\""] = (b, e, ch) => new ASTInvertLine(b, e, ch),
+               ["\"invertPixel\""] = (b, e, ch) => new ASTInvertPixel(b, e, ch),
+               ["\"scrollText\""] = (b, e, ch) => new ASTScrollText(b, e, ch),
+               ["\"setPixel\""] = (b, e, ch) => new ASTSetPixel(b, e, ch),
            };
 
 

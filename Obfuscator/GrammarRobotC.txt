@@ -41,6 +41,32 @@ E
   	"return^" "none" ;
 	"break^" ;
 	"continue^" ;
+	"clearPixel^" "(" ListOfStatements ")" ;
+    "displayBigStringAt^" "(" ListOfStatements ")" ;
+    "displayTextLine^" "(" ListOfStatements ")" ;
+    "displayCenteredBigTextLine^" "(" ListOfStatements ")" ;
+    "displayCenteredTextLine^" "(" ListOfStatements ")" ;
+    "displayBigTextLine^" "(" ListOfStatements ")" ;
+    "displayRICFile^" "(" ListOfStatements ")" ;
+    "displayString^" "(" ListOfStatements ")" ;
+    "displayStringAt^" "(" ListOfStatements ")" ;
+    "drawEllipse^" "(" ListOfStatements ")" ;
+    "drawInvertEllipse^" "(" ListOfStatements ")" ;
+    "drawInvertRect^" "(" ListOfStatements ")" ;
+    "drawLine^" "(" ListOfStatements ")" ;
+    "drawRect^" "(" ListOfStatements ")" ;
+    "eraseDisplay^" "(" ListOfStatements ")" ;
+    "eraseEllipse^" "(" ListOfStatements ")" ;
+    "eraseLine^" "(" ListOfStatements ")" ;
+    "eraseRect^" "(" ListOfStatements ")" ;
+    "fillEllipse^" "(" ListOfStatements ")" ;
+    "fillRect^" "(" ListOfStatements ")" ;
+    "invertLine^" "(" ListOfStatements ")" ;
+    "invertPixel^" "(" ListOfStatements ")" ;
+    "scrollText^" "(" ListOfStatements ")" ;
+    "setPixel^" "(" ListOfStatements ")" ;
+    "getLcdScreenSize^" "(" ListOfStatements ")" ;   
+    "getPixel^" "(" ListOfStatements ")" ;
 }
 Body
 {

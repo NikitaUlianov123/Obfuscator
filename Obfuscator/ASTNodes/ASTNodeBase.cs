@@ -20,6 +20,8 @@ namespace Obfuscator
         public int Beginning { get; }
         public int End { get; }
         public AbstactToken RootToken { get; protected set; }
+
+        
     }
 
 }

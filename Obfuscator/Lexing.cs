@@ -91,9 +91,35 @@ namespace Obfuscator
         WHITE_SPACE = 59,
         KW_DEFINE = 60,
         KW_DELAY = 61,
-        TERMAIL = 62,
-        NONE = 63,
-        FUNCTION_CALL = 64,
+        KW_CLEAR_PIXEL = 62,
+        KW_DISPLAY_BIG_STRING_AT = 63,
+        KW_DISPLAY_TEXT_LINE = 64,
+        KW_DISPLAY_CENTERED_BIG_TEXT_LINE = 65,
+        KW_DISPLAY_CENTERED_TEXT_LINE = 66,
+        KW_DISPLAY_BIG_TEXT_LINE = 67,
+        KW_DISPLAY_RIC_FILE = 68,
+        KW_DISPLAY_STRING = 69,
+        KW_DISPLAY_STRING_AT = 70,
+        KW_DRAW_ELLIPSE = 71,
+        KW_DRAW_INVERT_ELLIPSE = 72,
+        KW_DRAW_INVERT_RECT = 73,
+        KW_DRAW_LINE = 74,
+        KW_DRAW_RECT = 75,
+        KW_ERASE_DISPLAY = 76,
+        KW_ERASE_ELLIPSE = 77,
+        KW_ERASE_LINE = 78,
+        KW_ERASE_RECT = 79,
+        KW_FILL_ELLIPSE = 80,
+        KW_FILL_RECT = 81,
+        KW_GET_LCD_SCREEN_SIZE = 82,
+        KW_GET_PIXEL = 83,   // covers both overloads
+        KW_INVERT_LINE = 84,
+        KW_INVERT_PIXEL = 85,
+        KW_SCROLL_TEXT = 86,   // covers both overloads
+        KW_SET_PIXEL = 87,
+        TERMAIL = 88,
+        NONE = 89,
+        FUNCTION_CALL = 89,
     }
 
 
@@ -192,6 +218,39 @@ namespace Obfuscator
             [TokenType.WHITE_SPACE] = (text, len) => new WHITE_SPACEToken(text, len),
             [TokenType.KW_DEFINE] = (text, len) => new KW_DEFINEToken(text, len),
             [TokenType.KW_DELAY] = (text, len) => new KW_DELAYToken(text, len),
+
+            [TokenType.KW_CLEAR_PIXEL] = (text, len) => new KW_CLEAR_PIXELToken(text, len),
+            [TokenType.KW_DISPLAY_BIG_STRING_AT] = (text, len) => new KW_DISPLAY_BIG_STRING_ATToken(text, len),
+            [TokenType.KW_DISPLAY_TEXT_LINE] = (text, len) => new KW_DISPLAY_TEXT_LINEToken(text, len),
+            [TokenType.KW_DISPLAY_CENTERED_BIG_TEXT_LINE] = (text, len) => new KW_DISPLAY_CENTERED_BIG_TEXT_LINEToken(text, len),
+            [TokenType.KW_DISPLAY_CENTERED_TEXT_LINE] = (text, len) => new KW_DISPLAY_CENTERED_TEXT_LINEToken(text, len),
+            [TokenType.KW_DISPLAY_BIG_TEXT_LINE] = (text, len) => new KW_DISPLAY_BIG_TEXT_LINEToken(text, len),
+            [TokenType.KW_DISPLAY_RIC_FILE] = (text, len) => new KW_DISPLAY_RIC_FILEToken(text, len),
+            [TokenType.KW_DISPLAY_STRING] = (text, len) => new KW_DISPLAY_STRINGToken(text, len),
+            [TokenType.KW_DISPLAY_STRING_AT] = (text, len) => new KW_DISPLAY_STRING_ATToken(text, len),
+
+            [TokenType.KW_DRAW_ELLIPSE] = (text, len) => new KW_DRAW_ELLIPSEToken(text, len),
+            [TokenType.KW_DRAW_INVERT_ELLIPSE] = (text, len) => new KW_DRAW_INVERT_ELLIPSEToken(text, len),
+            [TokenType.KW_DRAW_INVERT_RECT] = (text, len) => new KW_DRAW_INVERT_RECTToken(text, len),
+            [TokenType.KW_DRAW_LINE] = (text, len) => new KW_DRAW_LINEToken(text, len),
+            [TokenType.KW_DRAW_RECT] = (text, len) => new KW_DRAW_RECTToken(text, len),
+
+            [TokenType.KW_ERASE_DISPLAY] = (text, len) => new KW_ERASE_DISPLAYToken(text, len),
+            [TokenType.KW_ERASE_ELLIPSE] = (text, len) => new KW_ERASE_ELLIPSEToken(text, len),
+            [TokenType.KW_ERASE_LINE] = (text, len) => new KW_ERASE_LINEToken(text, len),
+            [TokenType.KW_ERASE_RECT] = (text, len) => new KW_ERASE_RECTToken(text, len),
+
+            [TokenType.KW_FILL_ELLIPSE] = (text, len) => new KW_FILL_ELLIPSEToken(text, len),
+            [TokenType.KW_FILL_RECT] = (text, len) => new KW_FILL_RECTToken(text, len),
+
+            [TokenType.KW_GET_LCD_SCREEN_SIZE] = (text, len) => new KW_GET_LCD_SCREEN_SIZEToken(text, len),
+            [TokenType.KW_GET_PIXEL] = (text, len) => new KW_GET_PIXELToken(text, len),
+
+            [TokenType.KW_INVERT_LINE] = (text, len) => new KW_INVERT_LINEToken(text, len),
+            [TokenType.KW_INVERT_PIXEL] = (text, len) => new KW_INVERT_PIXELToken(text, len),
+
+            [TokenType.KW_SCROLL_TEXT] = (text, len) => new KW_SCROLL_TEXTToken(text, len),
+            [TokenType.KW_SET_PIXEL] = (text, len) => new KW_SET_PIXELToken(text, len),
         };
         public List<Spec> Specs;
         public AbstactToken GetType(ReadOnlySpan<char> input, int index)
