@@ -5,6 +5,11 @@ VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Obfuscator", "Obfuscator\Obfuscator.csproj", "{46217744-0071-46D2-9FCC-D1F9FAB0F963}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefineReplacerTester", "DefineReplacerTester\DefineReplacerTester.csproj", "{DDDF9D21-5D23-40BA-9617-D9D799F9280D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{46217744-0071-46D2-9FCC-D1F9FAB0F963} = {46217744-0071-46D2-9FCC-D1F9FAB0F963}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +20,10 @@ Global
 		{46217744-0071-46D2-9FCC-D1F9FAB0F963}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46217744-0071-46D2-9FCC-D1F9FAB0F963}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46217744-0071-46D2-9FCC-D1F9FAB0F963}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

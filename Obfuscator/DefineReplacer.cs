@@ -5,18 +5,32 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace Obfuscator
 {
     public class DefineReplacer
     {
-        public static void TransformDefines(string codePath)
+        public static void TransformDefinedFilePath(string codePath)
         {
             string code = File.ReadAllText(codePath);
-            //Doesn't work on macros
+
+            File.WriteAllText(codePath, TransformDefineText(code));
+        }
+        
+
+        public static string TransformDefinedCode(string code)
+        {
+            return TransformDefineText(code);
+        }
+        private static string TransformDefineText(string code)
+        {
+
             string codeStr = string.Empty;
             ;
-            string[] lines = code.Split('\n');
+            string newline = code.Contains("\r\n") ? "\r\n" : "\n";
+            string[] lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+
             for (int lineNum = lines.Length - 1; lineNum >= 0; lineNum--)
             {
                 if (lines[lineNum].StartsWith("#define "))
@@ -40,14 +54,17 @@ namespace Obfuscator
                             break;
                         }
                     }
-                    codeStr = Regex.Replace(codeStr, $@"\b{newName}\b", originalName);
+
+                    string escapedName = Regex.Escape(newName);
+                    string pattern = $@"(?<=\(|\)){escapedName}(?=\r?\n)|(?<![A-Za-z_]){escapedName}(?![A-Za-z_])";
+
+                    codeStr = Regex.Replace(codeStr, pattern, match => originalName);
                 }
-                codeStr = lines[lineNum] + codeStr;
+                codeStr = lines[lineNum] + (lineNum < lines.Length - 1 ? newline : string.Empty) + codeStr;
             }
             ;
-            File.WriteAllText(codePath, codeStr);
-
-
+            return codeStr;
+            
         }
     }
 }
