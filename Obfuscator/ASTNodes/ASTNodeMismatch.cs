@@ -19,5 +19,9 @@ namespace Obfuscator.ASTNodes
         {
             throw new NotImplementedException("Cannot generate code for a mismatched AST node.");
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

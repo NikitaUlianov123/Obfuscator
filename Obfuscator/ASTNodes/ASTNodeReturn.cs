@@ -26,5 +26,9 @@ namespace Obfuscator
                 return "return;";
             }
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
     }
 }

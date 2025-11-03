@@ -16,5 +16,10 @@ namespace Obfuscator
             NameNode = children[1];
             RootToken = TypeNode.RootToken;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            TypeNode.RenamingVariblePass(currentStack);
+            NameNode.RenamingVariblePass(currentStack);
+        }
     }
 }

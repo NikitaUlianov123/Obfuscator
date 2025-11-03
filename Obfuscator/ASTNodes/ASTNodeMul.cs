@@ -20,5 +20,10 @@ namespace Obfuscator
         {
             return $"{Left.CodeGen()} * {Right.CodeGen()}";
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Left.RenamingVariblePass(currentStack);
+            Right.RenamingVariblePass(currentStack);
+        }
     }
 }

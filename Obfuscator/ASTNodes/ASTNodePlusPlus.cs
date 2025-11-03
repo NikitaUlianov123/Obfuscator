@@ -17,5 +17,9 @@ namespace Obfuscator
         {
             return $"{NodeToPlusPlus.CodeGen()}++";
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            NodeToPlusPlus.RenamingVariblePass(currentStack);
+        }
     }
 }

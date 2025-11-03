@@ -22,5 +22,10 @@ namespace Obfuscator
         {
             return $"if ({Condition.CodeGen()}) {{\n{ThenBody.CodeGen()}\n}}";
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Condition.RenamingVariblePass(currentStack);
+            
+        }
     }
 }

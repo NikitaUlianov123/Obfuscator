@@ -21,5 +21,10 @@ namespace Obfuscator
         {
             return $"{Callee.CodeGen()}({Arguments.CodeGen()})";
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Callee.RenamingVariblePass(currentStack);
+            Arguments.RenamingVariblePass(currentStack);
+        }
     }
 }

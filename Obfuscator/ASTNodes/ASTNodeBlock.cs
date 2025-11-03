@@ -22,5 +22,9 @@ namespace Obfuscator
             code += "}";
             return code;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            RenamingPassMulti(currentStack, Statements);
+        }
     }
 }

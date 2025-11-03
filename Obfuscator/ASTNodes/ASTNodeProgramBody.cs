@@ -22,5 +22,9 @@ namespace Obfuscator
             }
             return string.Join("\n", codeLines);
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            RenamingPassMulti(currentStack, Decls);
+        }
     }
 }

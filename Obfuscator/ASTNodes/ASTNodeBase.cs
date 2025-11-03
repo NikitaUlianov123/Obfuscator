@@ -23,6 +23,15 @@ namespace Obfuscator
 
         public abstract string CodeGen();
         
+        public abstract void RenamingVariblePass(StackInterpter currentStack); 
+
+        public void RenamingPassMulti(StackInterpter currentStack, List<ASTNodeBase> list)
+        {
+            for(int i = 0; i < list.Count; i++)
+            {
+                list[i].RenamingVariblePass(currentStack);
+            }
+        }
     }
 
 }

@@ -16,5 +16,11 @@ namespace Obfuscator
             Name = children[1];
             Body = children[2];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+
+            Body.RenamingVariblePass(currentStack);
+            return;
+        }
     }
 }

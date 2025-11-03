@@ -21,5 +21,10 @@ namespace Obfuscator
         {
             return $"{BaseExpr.CodeGen()}[{IndexExpr.CodeGen()}]";
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            BaseExpr.RenamingVariblePass(currentStack);
+            IndexExpr.RenamingVariblePass(currentStack);
+        }
     }
 }

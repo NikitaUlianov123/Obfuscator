@@ -11,5 +11,9 @@ namespace Obfuscator
         {
             RootToken = token; // TokenType.NUMBER
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
     }
 }

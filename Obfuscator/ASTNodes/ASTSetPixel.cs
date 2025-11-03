@@ -8,7 +8,7 @@ namespace Obfuscator
     public sealed class ASTSetPixel : ASTNodeBase
     {
         /// <summary>Arguments list (everything after the root function token)</summary>
-        public IReadOnlyList<ASTNodeBase> Args { get; }
+        public List<ASTNodeBase> Args { get; }
 
         public ASTSetPixel(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
@@ -20,8 +20,12 @@ namespace Obfuscator
             }
             else
             {
-                Args = System.Array.Empty<ASTNodeBase>();
+                Args = new List<ASTNodeBase>();
             }
+        }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            RenamingPassMulti(currentStack, Args);
         }
     }
 }

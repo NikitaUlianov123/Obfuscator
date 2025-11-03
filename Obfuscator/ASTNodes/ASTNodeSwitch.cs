@@ -16,5 +16,9 @@ namespace Obfuscator
             Expr = children[2];
             Cases = children[5];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

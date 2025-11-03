@@ -12,5 +12,9 @@ namespace Obfuscator
         {
             Members = children;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
     }
 }
