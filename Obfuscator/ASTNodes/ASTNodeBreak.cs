@@ -11,5 +11,10 @@ namespace Obfuscator
         {
             RootToken = token;
         }
+
+        public override string CodeGen()
+        {
+            return $"break;";
+        }
     }
 }

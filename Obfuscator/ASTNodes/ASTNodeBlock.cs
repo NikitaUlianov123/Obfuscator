@@ -12,5 +12,15 @@ namespace Obfuscator
         {
             Statements = children;
         }
+        public override string CodeGen()
+        {
+            var code = "{\n";
+            foreach (var stmt in Statements)
+            {
+                code += stmt.CodeGen() + "\n";
+            }
+            code += "}";
+            return code;
+        }
     }
 }
