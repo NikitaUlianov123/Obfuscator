@@ -20,11 +20,10 @@ namespace Obfuscator
             Body = children[3];
             RootToken = ReturnType.RootToken;
         }
-        public override void RenamingVariblePass(StackInterpter currentStack)
+
+        public override string CodeGen()
         {
-            Name.RenamingVariblePass(currentStack); 
-            Params.RenamingVariblePass(currentStack);
-            Body.RenamingVariblePass(currentStack);
+            return $"{ReturnType.CodeGen()} {Name.CodeGen()}({Params.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
         }
     }
 }

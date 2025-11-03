@@ -20,5 +20,10 @@ namespace Obfuscator
             RootToken = children[0].RootToken;
             Value = children[1];
         }
+
+        public override string CodeGen()
+        {
+            return $"delay {Value.CodeGen()}";
+        }
     }
 }

@@ -22,5 +22,10 @@ namespace Obfuscator
             Replace = children[1];
             Value = children[2];
         }
+
+        public override string CodeGen()
+        {
+            return $"#define {Replace.CodeGen()} {Value.CodeGen()}";
+        }
     }
 }

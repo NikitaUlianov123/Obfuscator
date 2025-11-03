@@ -12,6 +12,16 @@ namespace Obfuscator
         {
             Decls = children;
         }
+
+        public override string CodeGen()
+        {
+            var codeLines = new List<string>();
+            foreach (var decl in Decls)
+            {
+                codeLines.Add(decl.CodeGen());
+            }
+            return string.Join("\n", codeLines);
+        }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             RenamingPassMulti(currentStack, Decls);

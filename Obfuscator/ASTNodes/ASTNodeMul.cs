@@ -15,6 +15,11 @@ namespace Obfuscator
             RootToken = children[1].RootToken; // '*^' per grammar
             Right = children[2];
         }
+
+        public override string CodeGen()
+        {
+            return $"{Left.CodeGen()} * {Right.CodeGen()}";
+        }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             Left.RenamingVariblePass(currentStack);

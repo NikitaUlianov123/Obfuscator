@@ -29,6 +29,5 @@ namespace Obfuscator
         {
             RenamingPassMulti(currentStack,Args);
         }
-
     }
 }

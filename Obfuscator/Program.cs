@@ -1,5 +1,4 @@
-﻿using Obfuscator.Tokens;
-
+﻿using System.Globalization;
 using System.Text.Json;
 
 namespace Obfuscator
@@ -8,16 +7,22 @@ namespace Obfuscator
     {
         static void Main(string[] args)
         {
-            string specsPath = "C:\\Users\\logan\\source\\repos\\ObfuscatorCTeam\\Obfuscator\\TokenJson.txt";
+            string[] filePath = Directory.GetCurrentDirectory().Split("\\");
+
+            string relativePath = string.Join('\\', filePath, 0, filePath.Length - 3);
+
+            DefineReplacer.TransformDefinedFilePath($"{relativePath}\\codeToRun.txt");
+
+            string specsPath = $"{relativePath}\\TokenJson.txt";
             string json = File.ReadAllText(specsPath);
             List<Spec>? specs = JsonSerializer.Deserialize<List<Spec>>(json);
             Lexing lexing = new Lexing(specs);
-            List<AbstactToken> d = lexing.Lexering("C:\\Users\\logan\\Source\\Repos\\ObfuscatorCTeam\\Obfuscator\\codeToRun.txt");
-            Parser parsing = new Parser("C:\\Users\\logan\\source\\repos\\ObfuscatorCTeam\\Obfuscator\\GrammarRobotC.txt");
-            ASTNodeBase w = parsing.Parsing(d, "Program", 0);
-            StackInterpter stack = new StackInterpter();
-            w.RenamingVariblePass(stack);
-             ;
+            var d = lexing.Lexering($"{relativePath}\\codeToRun.txt");
+            Parser parsing = new Parser($"{relativePath}\\GrammarRobotC.txt");
+            var w = parsing.Parsing(d, "Define", 0);
+
+            ;
+            
         }
     }
 }

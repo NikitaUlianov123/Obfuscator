@@ -11,6 +11,11 @@ namespace Obfuscator
         {
             RootToken = token; // TokenType.CHARVAL
         }
+
+        public override string CodeGen()
+        {
+            return $"'{RootToken.text}'";
+        }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             return;

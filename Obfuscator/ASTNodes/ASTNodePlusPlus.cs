@@ -13,6 +13,10 @@ namespace Obfuscator
             RootToken = nodes[1].RootToken;
             NodeToPlusPlus = nodes[0];
         }
+        public override string CodeGen()
+        {
+            return $"{NodeToPlusPlus.CodeGen()}++";
+        }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             NodeToPlusPlus.RenamingVariblePass(currentStack);

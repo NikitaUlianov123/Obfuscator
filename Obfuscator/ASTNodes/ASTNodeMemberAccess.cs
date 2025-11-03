@@ -16,6 +16,10 @@ namespace Obfuscator
             RootToken = children[1].RootToken;
             Member = children[2];
         }
+        public override string CodeGen()
+        {
+            return $"{Target.CodeGen()}.{Member.CodeGen()}";
+        }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             Target.RenamingVariblePass(currentStack);
