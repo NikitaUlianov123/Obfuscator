@@ -18,5 +18,9 @@ namespace Obfuscator
             Cond = children[2];
             Iter = children[4];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
     }
 }

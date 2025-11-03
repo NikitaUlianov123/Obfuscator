@@ -13,5 +13,9 @@ namespace Obfuscator
             RootToken = nodes[1].RootToken;
             NodeToMinusMinus = nodes[0];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
     }
 }

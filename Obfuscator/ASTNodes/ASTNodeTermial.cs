@@ -16,5 +16,9 @@ namespace Obfuscator
             RootToken = new TERMAILToken("",end);
             terms = childern;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            RenamingPassMulti(currentStack, terms);
+        }
     }
 }

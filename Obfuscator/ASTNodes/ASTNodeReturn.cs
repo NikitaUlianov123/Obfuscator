@@ -14,5 +14,9 @@ namespace Obfuscator
             RootToken = children[0].RootToken;
             Value = children.Count >= 3 ? children[1] : null;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
     }
 }

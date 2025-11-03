@@ -28,5 +28,13 @@ namespace Obfuscator
                 Init = children[3];
             }
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+
+            currentStack.AddVarible(NameNode.RootToken.text);
+            RootToken.text = currentStack.FindVarible(NameNode.RootToken.text);
+            NameNode.RenamingVariblePass(currentStack);
+            Init.RenamingVariblePass(currentStack);
+        }
     }
 }

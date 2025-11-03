@@ -21,5 +21,12 @@ namespace Obfuscator
             Iter = header.terms[2];
             Body = children[2];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Cond.RenamingVariblePass(currentStack);
+            Iter.RenamingVariblePass(currentStack);
+            Init.RenamingVariblePass(currentStack);
+            Body.RenamingVariblePass(currentStack);
+        }
     }
 }

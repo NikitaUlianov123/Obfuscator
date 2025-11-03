@@ -16,5 +16,10 @@ namespace Obfuscator
             RootToken = new FUNCTIONCALLToken("Function " + Callee.RootToken.text, end-begin);
             Arguments = children[1];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Callee.RenamingVariblePass(currentStack);
+            Arguments.RenamingVariblePass(currentStack);
+        }
     }
 }

@@ -18,5 +18,10 @@ namespace Obfuscator
             Condition = children[1];
             Body = children[2];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Condition.RenamingVariblePass(currentStack);
+            Body.RenamingVariblePass(currentStack);
+        }
     }
 }

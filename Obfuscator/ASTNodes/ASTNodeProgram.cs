@@ -17,5 +17,11 @@ namespace Obfuscator
             After = children[2];
             RootToken = MainTask.RootToken;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Before.RenamingVariblePass(currentStack);
+            MainTask.RenamingVariblePass(currentStack);
+            After.RenamingVariblePass(currentStack);
+        }
     }
 }

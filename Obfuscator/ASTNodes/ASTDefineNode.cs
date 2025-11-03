@@ -9,6 +9,10 @@ namespace Obfuscator
     /// <summary>Variable declaration: T id [= expr]</summary>
     public sealed class ASTDefineNode : ASTNodeBase
     {
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            return;
+        }
         public ASTNodeBase Replace { get; }
         public ASTNodeBase Value { get; }
 

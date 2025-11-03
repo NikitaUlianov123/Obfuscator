@@ -14,5 +14,9 @@ namespace Obfuscator.ASTNodes
         {
             RootToken = token; // TokenType.NONE (or a dedicated token)
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

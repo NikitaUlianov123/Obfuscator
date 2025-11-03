@@ -21,7 +21,15 @@ namespace Obfuscator
         public int End { get; }
         public AbstactToken RootToken { get; protected set; }
 
-        
+        public abstract void RenamingVariblePass(StackInterpter currentStack); 
+
+        public void RenamingPassMulti(StackInterpter currentStack, List<ASTNodeBase> list)
+        {
+            for(int i = 0; i < list.Count; i++)
+            {
+                list[i].RenamingVariblePass(currentStack);
+            }
+        }
     }
 
 }

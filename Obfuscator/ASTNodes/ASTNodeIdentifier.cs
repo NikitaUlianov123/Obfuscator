@@ -12,5 +12,13 @@ namespace Obfuscator
         {
             RootToken = token;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            if(currentStack.FindVarible(RootToken.text) != "")
+            {
+                RootToken.text = currentStack.FindVarible(RootToken.text);
+            }
+
+        }
     }
 }

@@ -14,5 +14,10 @@ namespace Obfuscator
             RootToken = children[0].RootToken;
             Body = children[2];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+
+            Body.RenamingVariblePass(currentStack);
+        }
     }
 }

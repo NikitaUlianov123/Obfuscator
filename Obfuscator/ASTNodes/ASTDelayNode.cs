@@ -11,6 +11,10 @@ namespace Obfuscator
     {
         public ASTNodeBase Value { get; }
 
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Value.RenamingVariblePass(currentStack);
+        }
         public ASTDelayNode(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             RootToken = children[0].RootToken;

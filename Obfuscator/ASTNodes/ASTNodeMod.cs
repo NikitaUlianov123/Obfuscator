@@ -15,5 +15,10 @@ namespace Obfuscator
             RootToken = children[1].RootToken; // '%^' per grammar
             Right = children[2];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Left.RenamingVariblePass(currentStack);
+            Right.RenamingVariblePass(currentStack);
+        }
     }
 }

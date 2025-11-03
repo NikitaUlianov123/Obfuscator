@@ -23,5 +23,9 @@ namespace Obfuscator
                 Args = System.Array.Empty<ASTNodeBase>();
             }
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

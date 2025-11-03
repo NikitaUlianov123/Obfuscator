@@ -1,16 +1,4 @@
-﻿void setPowers(int leftPower, int rightPower)
+﻿task main()
 {
-	motor[motorB] = leftPower;
-	motor[motorC] = rightPower;
-}
-task main()
-{
-	for(int i = 0; i < 4; i++)
-	{
-		setPowers(100,100);
-		delay(100);
-		setPowers(50,50);
-		delay(100);
-	}
-	displayTextLine(1,"hello");
+	int d = 0;
 }

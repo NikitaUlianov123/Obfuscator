@@ -32,5 +32,9 @@ namespace Obfuscator
                 HasBreak = (children[3].RootToken?.GetTokenType() == TokenType.KW_BREAK);
             }
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

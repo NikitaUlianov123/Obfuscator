@@ -12,5 +12,9 @@ namespace Obfuscator
         {
             Decls = children;
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            RenamingPassMulti(currentStack, Decls);
+        }
     }
 }

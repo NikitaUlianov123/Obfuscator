@@ -16,5 +16,10 @@ namespace Obfuscator
             RootToken = children[1].RootToken;
             IndexExpr = children[2];
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            BaseExpr.RenamingVariblePass(currentStack);
+            IndexExpr.RenamingVariblePass(currentStack);
+        }
     }
 }
