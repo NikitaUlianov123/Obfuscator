@@ -18,5 +18,10 @@ namespace Obfuscator
             Cond = children[2];
             Iter = children[4];
         }
+
+        public override string CodeGen()
+        {
+            return $"for ({Init.CodeGen()}; {Cond.CodeGen()}; {Iter.CodeGen()})";
+        }
     }
 }

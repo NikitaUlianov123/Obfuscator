@@ -11,5 +11,10 @@ namespace Obfuscator
         {
             RootToken = token; // TokenType.BOOLVAL
         }
+
+        public override string CodeGen()
+        {
+            return $"{RootToken.text}";
+        }
     }
 }

@@ -14,5 +14,10 @@ namespace Obfuscator
             RootToken = children[0].RootToken;
             Inner = children[1];
         }
+
+        public override string CodeGen()
+        {
+            return $"({Inner.CodeGen()})";
+        }
     }
 }

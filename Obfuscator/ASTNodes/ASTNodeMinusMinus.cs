@@ -13,5 +13,10 @@ namespace Obfuscator
             RootToken = nodes[1].RootToken;
             NodeToMinusMinus = nodes[0];
         }
+
+        public override string CodeGen()
+        {
+            return $"{NodeToMinusMinus.CodeGen()}--";
+        }
     }
 }

@@ -20,5 +20,10 @@ namespace Obfuscator
             Body = children[3];
             RootToken = ReturnType.RootToken;
         }
+
+        public override string CodeGen()
+        {
+            return $"{ReturnType.CodeGen()} {Name.CodeGen()}({Params.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
+        }
     }
 }

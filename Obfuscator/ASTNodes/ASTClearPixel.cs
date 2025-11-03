@@ -23,5 +23,10 @@ namespace Obfuscator
                 Args = System.Array.Empty<ASTNodeBase>();
             }
         }
+
+        public override string CodeGen()
+        {
+            
+        }
     }
 }

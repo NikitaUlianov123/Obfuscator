@@ -14,5 +14,10 @@ namespace Obfuscator.ASTNodes
         {
             RootToken = token; // TokenType.NONE (or a dedicated token)
         }
+
+        public override string CodeGen()
+        {
+            throw new NotImplementedException("Cannot generate code for a mismatched AST node.");
+        }
     }
 }

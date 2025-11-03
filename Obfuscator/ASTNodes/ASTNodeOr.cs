@@ -15,5 +15,9 @@ namespace Obfuscator
             RootToken = children[1].RootToken; // || or && caret op per grammar
             Right = children[2];
         }
+        public override string CodeGen()
+        {
+            return $"{Left.CodeGen()} {RootToken.text} {Right.CodeGen()}";
+        }
     }
 }

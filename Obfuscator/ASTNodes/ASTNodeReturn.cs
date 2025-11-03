@@ -14,5 +14,17 @@ namespace Obfuscator
             RootToken = children[0].RootToken;
             Value = children.Count >= 3 ? children[1] : null;
         }
+
+        public override string CodeGen()
+        {
+            if (Value != null)
+            {
+                return $"return {Value.CodeGen()};";
+            }
+            else
+            {
+                return "return;";
+            }
+        }
     }
 }

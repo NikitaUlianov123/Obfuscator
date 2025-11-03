@@ -16,5 +16,10 @@ namespace Obfuscator
             RootToken = children[1].RootToken;
             IndexExpr = children[2];
         }
+
+        public override string CodeGen()
+        {
+            return $"{BaseExpr.CodeGen()}[{IndexExpr.CodeGen()}]";
+        }
     }
 }

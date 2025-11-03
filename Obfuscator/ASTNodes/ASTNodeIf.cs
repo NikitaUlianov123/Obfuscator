@@ -18,5 +18,9 @@ namespace Obfuscator
             Condition = children[2];
             //ThenBody = children[5];
         }
+        public override string CodeGen()
+        {
+            return $"if ({Condition.CodeGen()}) {{\n{ThenBody.CodeGen()}\n}}";
+        }
     }
 }

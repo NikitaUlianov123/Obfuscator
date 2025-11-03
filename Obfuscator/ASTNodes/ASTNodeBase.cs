@@ -21,6 +21,7 @@ namespace Obfuscator
         public int End { get; }
         public AbstactToken RootToken { get; protected set; }
 
+        public abstract string CodeGen();
         
     }
 
