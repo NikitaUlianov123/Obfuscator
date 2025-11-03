@@ -24,7 +24,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
         {
-            var sym = _model.GetSymbolInfo(node).Symbol;
+            ISymbol? sym = _model.GetSymbolInfo(node).Symbol;
             if (sym != null && _map.TryGetValue(sym, out var newName))
             {
                 return node.WithIdentifier(SyntaxFactory.Identifier(newName));
@@ -34,7 +34,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (sym != null && _map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
@@ -44,7 +44,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitParameter(ParameterSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (sym != null && _map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
@@ -54,7 +54,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (sym != null && _map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
@@ -64,7 +64,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (sym != null && _map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
@@ -78,7 +78,7 @@ namespace C_Obfuscation
             var vars = new List<VariableDeclaratorSyntax>();
             foreach (var v in node.Declaration.Variables)
             {
-                var sym = _model.GetDeclaredSymbol(v);
+                ISymbol? sym = _model.GetDeclaredSymbol(v);
                 if (sym != null && _map.TryGetValue(sym, out var newName))
                 {
                     vars.Add(v.WithIdentifier(SyntaxFactory.Identifier(newName)));
@@ -119,6 +119,28 @@ namespace C_Obfuscation
                 EncodedStringsUsed = true;
                 return replacement;
             }
+            else if (node.IsKind(SyntaxKind.NumericLiteralExpression))
+            {
+                string text = node.Token.ValueText;
+                if (string.IsNullOrEmpty(text)) return node;
+
+                //encode numeric literal as byte array
+                object? value = node.Token.Value;
+                byte[] bytes = value switch
+                {
+                    int i => BitConverter.GetBytes(i),
+                    long l => BitConverter.GetBytes(l),
+                    float f => BitConverter.GetBytes(f),
+                    double d => BitConverter.GetBytes(d),
+                    short s => BitConverter.GetBytes(s),
+                    byte b => new byte[] { b },
+                    _ => throw new NotSupportedException($"Unsupported numeric type: {value.GetType()}")
+                };
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = CircularShift(bytes[i]);
+                }
+            }
             return base.VisitLiteralExpression(node);
         }
 
@@ -127,7 +149,7 @@ namespace C_Obfuscation
             // if token maps to a symbol we have renamed, replace text
             if (token.IsKind(SyntaxKind.IdentifierToken))
             {
-                var sym = _model.GetSymbolInfo(token.Parent).Symbol;
+                ISymbol? sym = _model.GetSymbolInfo(token.Parent).Symbol;
                 if (sym != null && _map.TryGetValue(sym, out var newName))
                 {
                     return SyntaxFactory.Identifier(token.LeadingTrivia, newName, token.TrailingTrivia);

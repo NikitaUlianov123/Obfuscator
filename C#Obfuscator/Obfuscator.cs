@@ -18,26 +18,26 @@ namespace C_Obfuscation
         public static void Obfuscate(string inputPath, string outputPath)
         {
             //get code and parse
-            var code = File.ReadAllText(inputPath);
-            var tree = CSharpSyntaxTree.ParseText(code);
-            var root = tree.GetCompilationUnitRoot();
+            string code = File.ReadAllText(inputPath);
+            SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
+            CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
             // build a model so we can avoid renaming public symbols or those used externally
-            var mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
-            var compilation = CSharpCompilation.Create("ObfTemp").AddReferences(mscorlib).AddSyntaxTrees(tree);
+            PortableExecutableReference mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp").AddReferences(mscorlib).AddSyntaxTrees(tree);
 
-            var model = compilation.GetSemanticModel(tree);
+            SemanticModel model = compilation.GetSemanticModel(tree);
 
             // makes rename map
-            var renameMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
+            Dictionary<ISymbol, string> renameMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
 
             // collect identifiers to rename
-            var collector = new IdentifierCollector(model, renameMap);
+            IdentifierCollector collector = new IdentifierCollector(model, renameMap);
             collector.Visit(root);
 
             // rename variables and replace literals
-            var rewriter = new ObfuscatingRewriter(model, renameMap);
-            var newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
 
             // inject helper mehtod for decoding strings if needed
             if (rewriter.EncodedStringsUsed)

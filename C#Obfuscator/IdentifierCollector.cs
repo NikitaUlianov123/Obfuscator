@@ -20,7 +20,7 @@ namespace C_Obfuscation
 
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -30,7 +30,7 @@ namespace C_Obfuscation
 
         public override void VisitParameter(ParameterSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -40,7 +40,7 @@ namespace C_Obfuscation
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -50,7 +50,7 @@ namespace C_Obfuscation
 
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -62,7 +62,7 @@ namespace C_Obfuscation
         {
             foreach (var v in node.Declaration.Variables)
             {
-                var sym = _model.GetDeclaredSymbol(v);
+                ISymbol? sym = _model.GetDeclaredSymbol(v);
                 if (CanRenameSymbol(sym))
                 {
                     _map[sym] = Obfuscator.NewName();
