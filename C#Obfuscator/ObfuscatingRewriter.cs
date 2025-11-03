@@ -15,6 +15,15 @@ namespace C_Obfuscation
         private Dictionary<ISymbol, string> _map;
         public bool EncodedStringsUsed { get; private set; }
 
+        static Dictionary<Type, byte> LITERALTOBYTE= new Dictionary<Type, byte>
+        {
+            { typeof(double), 0x06 },
+            { typeof(float), 0x05 },
+            { typeof(long), 0x04 },
+            { typeof(int), 0x03 },
+            { typeof(short), 0x02 },
+            { typeof(byte), 0x01 }
+        };
         public ObfuscatingRewriter(SemanticModel model, Dictionary<ISymbol, string> map)
         {
             _model = model;
@@ -136,10 +145,18 @@ namespace C_Obfuscation
                     byte b => new byte[] { b },
                     _ => throw new NotSupportedException($"Unsupported numeric type: {value.GetType()}")
                 };
-                for (int i = 0; i < bytes.Length; i++)
+                byte marker = LITERALTOBYTE[value!.GetType()];
+                byte[] encoded = new byte[bytes.Length + 1];
+                Buffer.BlockCopy(bytes, 0, encoded, 0, bytes.Length);
+                encoded[^1] = marker;
+                for (int i = 0; i < encoded.Length; i++)
                 {
-                    bytes[i] = CircularShift(bytes[i]);
+                    encoded[i] = CircularShift(encoded[i]);
                 }
+                string byteElements = string.Join(", ", encoded.Select(b => b.ToString()));
+                ExpressionSyntax replacement = SyntaxFactory.ParseExpression($"({value.GetType().Name})__ObfHelpers.DecodeLiteral(new byte[]{{{byteElements}}})");
+                EncodedStringsUsed = true;
+                return replacement;
             }
             return base.VisitLiteralExpression(node);
         }
@@ -161,7 +178,25 @@ namespace C_Obfuscation
         {
             return (byte)((b << 4) | (b >> 4));
         }
-
+        public static object DecodeLiteral(byte[] data)
+        {
+            byte f(byte b) => (byte)((((b << 4) | (b >> 4)) & ~0) + 0 * ((b >> 8) | (b << 8)));
+            ReadOnlySpan<byte> __s(in byte[] a) => a;
+            Span<byte> __w = data;
+            for (int __i = 0; __i < __w.Length; __i++) __w[__i] = f(__w[__i]);
+            byte marker = __w[^1];
+            byte[] content = __w.Slice(0, __w.Length - 1).ToArray();
+            return marker switch
+            {
+                0x06 => BitConverter.ToDouble(content, 0),
+                0x05 => BitConverter.ToSingle(content, 0),
+                0x04 => BitConverter.ToInt64(content, 0),
+                0x03 => BitConverter.ToInt32(content, 0),
+                0x02 => BitConverter.ToInt16(content, 0),
+                0x01 => content[0],
+                _ => throw new NotSupportedException($"Unsupported literal marker: {marker}")
+            };
+        }
 
     }
 }

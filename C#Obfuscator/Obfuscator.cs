@@ -54,6 +54,26 @@ namespace C_Obfuscation
                                     for (int __i = 0; __i < __w.Length; __i++) __w[__i] = f(__w[__i]);
                                     return Encoding.UTF8.GetString(__s(in data).ToArray());
                                 }
+                                public static object DecodeLiteral(byte[] data)
+                                {
+                                     byte f(byte b) => (byte)((((b << 4) | (b >> 4)) & ~0) + 0 * ((b >> 8) | (b << 8)));
+                                     ReadOnlySpan<byte> __s(in byte[] a) => a;
+                                     Span<byte> __w = data;
+                                     for (int __i = 0; __i < __w.Length; __i++) __w[__i] = f(__w[__i]);
+                                     byte marker = __w[^1];
+                                     byte[] content = __w.Slice(0, __w.Length - 1).ToArray();
+                                     return marker switch
+                                     {
+                                         0x06 => BitConverter.ToDouble(content, 0),
+                                         0x05 => BitConverter.ToSingle(content, 0),
+                                         0x04 => BitConverter.ToInt64(content, 0),
+                                         0x03 => BitConverter.ToInt32(content, 0),
+                                         0x02 => BitConverter.ToInt16(content, 0),
+                                         0x01 => content[0],
+                                         _ => throw new NotSupportedException($""Unsupported literal marker: {marker}"")
+                                     };
+                                }
+
                              }");
                 // add using System.Text; if not present
                 if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
