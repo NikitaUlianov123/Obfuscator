@@ -50,6 +50,7 @@ namespace DonutMaker
 
             for (int y = 0; y < image.Height; y++)
             {
+                sb.Append("//");
                 for (int x = 0; x < image.Width; x++)
                 {
                     var pixel = image[x, y];
