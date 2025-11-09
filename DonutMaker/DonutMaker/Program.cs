@@ -27,7 +27,8 @@ namespace DonutMaker
 
             Console.WriteLine("---------------------------------------------------------------------------------------------------------");
 
-            string input = File.ReadAllText(@"../../../TestRobotC/MathQuiz.txt");
+            //string input = File.ReadAllText(@"../../../TestRobotC/MathQuiz.txt");
+            string input = File.ReadAllText(@"../../../TestCSharp/Program.txt");
             string[] split = TextFormat.SplitPreprocessor(input);
             string code = TextFormat.MakeOneLine(TextFormat.RemoveComments(split[1]));
             string formatted = TextFormat.ConvertToAscii(@"../../../TestImages/Mountain.png", code.Length);
@@ -35,7 +36,7 @@ namespace DonutMaker
             Console.WriteLine(code);
 
 
-            File.WriteAllText(@"../../../TestOutput/Mountain.png", split[0] + formatted + code);
+            File.WriteAllText(@"../../../TestOutput/Mountain.png", split[0] + "\n" + formatted + code);
 
             ;
 

@@ -67,7 +67,7 @@ namespace DonutMaker
 
         public static string MakeOneLine(string input)
         { 
-            return input.Replace("\r", "").Replace("\n", "").Replace("\t", "");
+            return Regex.Replace(input.Replace("\r", "").Replace("\n", "").Replace("\t", ""), " {2,}", " ");
         }
 
         public static string[] SplitPreprocessor(string code)
