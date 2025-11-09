@@ -39,42 +39,58 @@ namespace C_Obfuscation
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
 
+            
             // inject helper mehtod for decoding strings if needed
             if (rewriter.EncodedStringsUsed)
             {
-                var helper = SyntaxFactory.ParseMemberDeclaration(@"
-                             static class __ObfHelpers 
-                             {
-                                public static string DecodeString(byte[] data) 
-                                {
-                                    byte f(byte b)=>(byte)((((b << 4) | (b >> (8 >> 1))) & ~0) + 0 * ((b >> 8) | (b << 8)));
-                                    
-                                    ReadOnlySpan<byte> __s(in byte[] a) => a;
-                                    Span<byte> __w = data;
-                                    for (int __i = 0; __i < __w.Length; __i++) __w[__i] = f(__w[__i]);
-                                    return Encoding.UTF8.GetString(__s(in data).ToArray());
-                                }
-                                public static object DecodeLiteral(byte[] data)
-                                {
-                                     byte f(byte b) => (byte)((((b << 4) | (b >> 4)) & ~0) + 0 * ((b >> 8) | (b << 8)));
-                                     ReadOnlySpan<byte> __s(in byte[] a) => a;
-                                     Span<byte> __w = data;
-                                     for (int __i = 0; __i < __w.Length; __i++) __w[__i] = f(__w[__i]);
-                                     byte marker = __w[^1];
-                                     byte[] content = __w.Slice(0, __w.Length - 1).ToArray();
-                                     return marker switch
-                                     {
-                                         0x06 => BitConverter.ToDouble(content, 0),
-                                         0x05 => BitConverter.ToSingle(content, 0),
-                                         0x04 => BitConverter.ToInt64(content, 0),
-                                         0x03 => BitConverter.ToInt32(content, 0),
-                                         0x02 => BitConverter.ToInt16(content, 0),
-                                         0x01 => content[0],
-                                         _ => throw new NotSupportedException($""Unsupported literal marker: {marker}"")
-                                     };
-                                }
+                var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
+{
+    private static byte R(byte x)
+    {
+        int t = x;
+        return (byte)(((t << 4) | (t >> 4)) & 0xFF);
+    }
 
-                             }");
+    public static string D(byte[] a)
+    {
+        var b = (byte[])a.Clone();
+        for (int i = 0; i < b.Length; i++) b[i] = R(b[i]);
+        return Encoding.UTF8.GetString(b);
+    }
+
+    public static object L(byte[] z)
+    {
+        var q = (byte[])z.Clone();
+        Func<byte, byte> f = x => R(x);
+        for (int i = 0; i < q.Length; i++) q[i] = f(q[i]);
+        if (q.Length == 0) throw new ArgumentException(new string(new[] { 'E', 'm', 'p', 't', 'y', ' ', 'L', 'i', 't', 'e', 'r', 'a', 'l' }));
+        byte k = q[^1];
+        byte[] c = new byte[q.Length - 1];
+        if (c.Length > 0) Array.Copy(q, c, c.Length);
+
+        return ((Func<byte, object>)(m => m switch
+        {
+            0x06 => BitConverter.ToDouble(c, 0),
+            0x05 => BitConverter.ToSingle(c, 0),
+            0x04 => BitConverter.ToInt64(c, 0),
+            0x03 => BitConverter.ToInt32(c, 0),
+            0x02 => BitConverter.ToInt16(c, 0),
+            0x01 => c.Length > 0 ? (object)c[0] : (object)0,
+            0x30 => BitConverter.ToInt32(c, 0),
+            0x60 => c.Length >= 8 ? BitConverter.ToDouble(c, 0)
+                     : (c.Length >= 4 ? BitConverter.ToInt32(c, 0) : (object)c),
+            _ => ((Func<int, object>)(len => len switch
+            {
+                8 => BitConverter.ToDouble(c, 0),
+                4 => BitConverter.ToInt32(c, 0),
+                2 => BitConverter.ToInt16(c, 0),
+                1 => c[0],
+                0 => 0,
+                _ => throw new NotSupportedException($""??? {len}"")
+            }))(c.Length)
+        }))(k);
+    }
+}");
                 // add using System.Text; if not present
                 if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
                 {

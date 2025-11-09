@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\C#Obfuscator\C#Obfuscator.csproj" />
+    <ProjectReference Include="..\TestCode\TestCode.csproj" />
   </ItemGroup>
 
 </Project>

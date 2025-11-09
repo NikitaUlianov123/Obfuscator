@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Exclude generated Output.cs from compilation to avoid duplicate Program/Main; keep it as content for inspection -->
+  <ItemGroup>
+    <Compile Remove="Output.cs" />
+    <None Include="Output.cs" />
+  </ItemGroup>
+
 </Project>
