@@ -1,8 +1,9 @@
-﻿using System.Text;
-
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing; // for Resize()
+
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DonutMaker
 {
@@ -19,6 +20,18 @@ namespace DonutMaker
             Mask = mask;
             Height = mask.GetLength(0);
             Width = mask.GetLength(1);
+        }
+
+        public static string RemoveComments(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return code;
+
+            // Regex:
+            // 1. Match // comments (until line end)
+            // 2. Match /* ... */ comments (including multiline)
+            string pattern = @"(//[^\r\n]*)|(/\*[\s\S]*?\*/)";
+            return Regex.Replace(code, pattern, "");
         }
 
         public static string ConvertToAscii(string path, int width)

@@ -33,7 +33,7 @@ namespace DonutMaker
 
             Console.WriteLine("---------------------------------------------------------------------------------------------------------");
 
-            string code = TextFormat.MakeOneLine(File.ReadAllText(@"../../../TestRobotC/MathQuiz.txt"));
+            string code = TextFormat.MakeOneLine(TextFormat.RemoveComments(File.ReadAllText(@"../../../TestRobotC/Pong.txt")));
             formatted = TextFormat.ConvertToAscii(@"../../../TestImages/Mountain.png", code.Length);
             Console.Write(formatted);
             Console.WriteLine(code);
