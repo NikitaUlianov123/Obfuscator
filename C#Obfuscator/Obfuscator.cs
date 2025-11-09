@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using C_Obfuscator;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -38,6 +39,10 @@ namespace C_Obfuscation
             // rename variables and replace literals
             var rewriter = new ObfuscatingRewriter(model, renameMap);
             var newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+
+            var demorgan = new DemorganRewriter();
+            newRoot = (CompilationUnitSyntax)demorgan.Visit(newRoot);
+
 
             // inject helper mehtod for decoding strings if needed
             if (rewriter.EncodedStringsUsed)

@@ -17,18 +17,24 @@ namespace C_Obfuscator
             {
                 return null;
             }
+            
+            ExpressionSyntax left = (ExpressionSyntax)Visit(node.Left);
+            ExpressionSyntax right = (ExpressionSyntax)Visit(node.Right);
+            SyntaxKind kind = node.Kind();
 
-
-            if (node.IsKind(SyntaxKind.LogicalAndExpression))
+            if(kind == SyntaxKind.LogicalAndExpression || kind == SyntaxKind.LogicalOrExpression)
             {
-                var left = node.Left;
-                var right = node.Right;
-                var newLeft = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, SyntaxFactory.ParenthesizedExpression(left));
-                var newRight = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, SyntaxFactory.ParenthesizedExpression(right));
-                var newNode = SyntaxFactory.BinaryExpression(SyntaxKind.LogicalOrExpression, newLeft, newRight);
+                PrefixUnaryExpressionSyntax newLeft = LogicalNot(left);
+                PrefixUnaryExpressionSyntax newRight = LogicalNot(right);
+                SyntaxKind newKind = kind == SyntaxKind.LogicalAndExpression ? SyntaxKind.LogicalOrExpression : SyntaxKind.LogicalAndExpression;
+                LogicalNot(SyntaxFactory.BinaryExpression(newKind, newLeft, newRight));
+                ExpressionSyntax newBinary = LogicalNot(SyntaxFactory.BinaryExpression(newKind, newLeft, newRight));
+                return newBinary;
             }
 
             return base.VisitBinaryExpression(node);
         }
+
+        private static PrefixUnaryExpressionSyntax LogicalNot(ExpressionSyntax expr) => SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, SyntaxFactory.ParenthesizedExpression(expr));
     }
 }

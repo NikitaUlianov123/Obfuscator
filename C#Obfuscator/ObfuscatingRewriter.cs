@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace C_Obfuscation
 {
-
     // Replaces identifiers and string literals
     internal class ObfuscatingRewriter : CSharpSyntaxRewriter
     {
