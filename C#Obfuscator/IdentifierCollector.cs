@@ -17,10 +17,10 @@ namespace C_Obfuscation
             _model = model;
             _map = map;
         }
-        
+
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -30,7 +30,7 @@ namespace C_Obfuscation
 
         public override void VisitParameter(ParameterSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -40,7 +40,7 @@ namespace C_Obfuscation
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -50,7 +50,7 @@ namespace C_Obfuscation
 
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            var sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = _model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
                 _map[sym] = Obfuscator.NewName();
@@ -62,7 +62,7 @@ namespace C_Obfuscation
         {
             foreach (var v in node.Declaration.Variables)
             {
-                var sym = _model.GetDeclaredSymbol(v);
+                ISymbol? sym = _model.GetDeclaredSymbol(v);
                 if (CanRenameSymbol(sym))
                 {
                     _map[sym] = Obfuscator.NewName();
@@ -73,6 +73,7 @@ namespace C_Obfuscation
 
         private bool CanRenameSymbol(ISymbol sym)
         {
+            // Code to check for public/protected/internal accessibility, overrides, entry points, etc.
             if (sym == null) return false;
 
             // keep public/protected/internal API names intact
@@ -87,7 +88,6 @@ namespace C_Obfuscation
             if (sym.Kind == SymbolKind.NamedType) return false; // keep type names for simplicity
 
             // don't rename if symbol is used via reflection attributes (basic heuristic)
-            // (A production tool would inspect attributes and reflection usage more deeply.)
             foreach (var attr in sym.GetAttributes())
             {
                 if (attr.AttributeClass.Name.Contains("Json") || attr.AttributeClass.Name.Contains("Serializable"))
@@ -96,5 +96,6 @@ namespace C_Obfuscation
 
             return true;
         }
+
     }
 }
