@@ -69,5 +69,30 @@ namespace DonutMaker
         { 
             return input.Replace("\r", "").Replace("\n", "").Replace("\t", "");
         }
+
+        public static string[] SplitPreprocessor(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return [string.Empty, string.Empty];
+
+            // Normalize newlines
+            code = code.Replace("\r\n", "\n");
+
+            var lines = code.Split('\n');
+
+            var preprocessor = lines
+                .Where(line => line.TrimStart().StartsWith("#"))
+                .Select(line => line.Trim())
+                .ToArray();
+
+            var others = lines
+                .Where(line => !line.TrimStart().StartsWith("#"))
+                .ToArray();
+
+            string preprocessorJoined = string.Join(" ", preprocessor);
+            string codeJoined = string.Join("\n", others);
+
+            return [preprocessorJoined, codeJoined];
+        }
     }
 }
