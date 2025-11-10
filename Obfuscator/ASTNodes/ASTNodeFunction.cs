@@ -25,5 +25,11 @@ namespace Obfuscator
         {
             return $"{ReturnType.CodeGen()} {Name.CodeGen()}({Params.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
         }
+        public override void RenamingVariblePass(StackInterpter currentStack)
+        {
+            Body.RenamingVariblePass(currentStack));
+        }
+
+
     }
 }

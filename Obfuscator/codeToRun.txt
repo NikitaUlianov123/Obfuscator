@@ -1,5 +1,3 @@
-#define a int
-#define y ;
 void setPowers(int leftPower, int rightPower)
 {
 	motor[motorB] = leftPower y

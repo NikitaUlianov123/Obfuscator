@@ -16,5 +16,14 @@ namespace Obfuscator
         {
             return;
         }
+        public override string CodeGen()
+        {
+            string ArgsString = "";
+            for (int i = 0; i < Members.Count; i++)
+            {
+                ArgsString += Members[i].CodeGen();
+            }
+            return ArgsString;
+        }
     }
 }

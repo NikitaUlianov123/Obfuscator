@@ -20,5 +20,9 @@ namespace Obfuscator
         {
             throw new NotImplementedException();
         }
+        public override string CodeGen()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
