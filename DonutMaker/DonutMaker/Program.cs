@@ -31,12 +31,12 @@ namespace DonutMaker
             string input = File.ReadAllText(@"../../../TestCSharp/Program.txt");
             string[] split = TextFormat.SplitPreprocessor(input);
             string code = TextFormat.MakeOneLine(TextFormat.RemoveComments(split[1]));
-            string formatted = TextFormat.ConvertToAscii(@"../../../TestImages/Mountain.png", code.Length);
-            Console.Write(formatted);
-            Console.WriteLine(code);
+            TextFormat.GenerateCodeArt2(@"../../../TestImages/Mountain.png", code, @"../../../TestOutput/Mountain.txt");
+            //Console.Write(formatted);
+            //Console.WriteLine(code);
 
 
-            File.WriteAllText(@"../../../TestOutput/Mountain.png", split[0] + "\n" + formatted + code);
+            //File.WriteAllText(@"../../../TestOutput/Mountain.txt", split[0] + "\n" + formatted + code);
 
             ;
 
