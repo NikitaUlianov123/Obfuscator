@@ -2,22 +2,21 @@
 #define y ;
 void setPowers(int leftPower, int rightPower)
 {
-	motor[motorB] = leftPower;
-	motor[motorC] = rightPower;
+	motor[motorB] = leftPower y
+	motor[motorC] = rightPower y
 }
 task main()
 {
-	for(int i = 0; i < 4; i++)
+	for(int i = 0y i < 4y i++)
 	{
-		setPowers(100,100);
+		setPowers(100,100)y
 
-		delay(100);
+		delay(100)y
 
-		setPowers(50,50);
+		setPowers(50,50)y
 
-		delay(100);
+		delay(100)y
 
 	}
-	displayTextLine(1,"hello");
-
+	displayTextLine(1,"hello")y
 }

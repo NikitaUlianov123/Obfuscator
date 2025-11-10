@@ -25,7 +25,7 @@ namespace Obfuscator
         }
         private static string TransformDefineText(string code)
         {
-
+            // does not yet work on function-like defines
             string codeStr = string.Empty;
             ;
             string newline = code.Contains("\r\n") ? "\r\n" : "\n";
@@ -50,7 +50,7 @@ namespace Obfuscator
                         }
                         else
                         {
-                            originalName = defineArgs[i];
+                            originalName = string.Join(" ", defineArgs.Skip(i).ToArray());
                             break;
                         }
                     }
