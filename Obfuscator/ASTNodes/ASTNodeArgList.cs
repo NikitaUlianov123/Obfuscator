@@ -16,5 +16,9 @@ namespace Obfuscator
         {
             RenamingPassMulti(currentStack, Items);
         }
+        public override string CodeGen()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

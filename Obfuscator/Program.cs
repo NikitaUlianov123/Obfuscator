@@ -19,7 +19,7 @@ namespace Obfuscator
             Lexing lexing = new Lexing(specs);
             var d = lexing.Lexering($"{relativePath}\\codeToRun.txt");
             Parser parsing = new Parser($"{relativePath}\\GrammarRobotC.txt");
-            var w = parsing.Parsing(d, "Define", 0);
+            var w = parsing.Parsing(d, "Program", 0);
 
             ;
             

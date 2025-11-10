@@ -27,5 +27,14 @@ namespace Obfuscator
         {
             throw new NotImplementedException();
         }
+        public override string CodeGen()
+        {
+            string ArgsString = "";
+            for (int i = 0; i < Args.Count; i++)
+            {
+                ArgsString += Args[i].CodeGen();
+            }
+            return $"{RootToken.text}({ArgsString}) ;";
+        }
     }
 }

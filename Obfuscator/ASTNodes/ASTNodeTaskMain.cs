@@ -19,5 +19,9 @@ namespace Obfuscator
 
             Body.RenamingVariblePass(currentStack);
         }
+        public override string CodeGen()
+        {
+            return RootToken.text + Body.CodeGen();
+        }
     }
 }

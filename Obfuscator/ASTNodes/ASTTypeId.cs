@@ -19,5 +19,9 @@ namespace Obfuscator
                 RootToken.text = currentStack.FindVarible(RootToken.text);
             }
         }
+        public override string CodeGen()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
