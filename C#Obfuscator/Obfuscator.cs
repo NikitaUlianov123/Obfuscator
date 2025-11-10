@@ -15,6 +15,18 @@ namespace C_Obfuscation
         public static int nameCounter = 0;
         // generates a new obfuscated name
         public static string NewName() => "a" + (nameCounter++).ToString("X");
+        // rotates bits left by 4
+        static string RotateLeft4Bits(string input)
+        {
+            char[] result = new char[input.Length];
+            for (int i = 0; i < input.Length; i++)
+            {
+                byte b = (byte)input[i];
+                byte rotated = (byte)(((b << 4) | (b >> 4)) & 0xFF);
+                result[i] = (char)rotated;
+            }
+            return new string(result);
+        }
         public static void Obfuscate(string inputPath, string outputPath)
         {
             //get code and parse
@@ -86,7 +98,7 @@ namespace C_Obfuscation
                 2 => BitConverter.ToInt16(c, 0),
                 1 => c[0],
                 0 => 0,
-                _ => throw new NotSupportedException($""??? {len}"")
+                _ => throw new NotSupportedException("""""""")
             }))(c.Length)
         }))(k);
     }
@@ -100,7 +112,159 @@ namespace C_Obfuscation
             }
 
             //output to file
-            File.WriteAllText(outputPath, newRoot.NormalizeWhitespace().ToFullString());
+            string codeToRun = newRoot.NormalizeWhitespace().ToFullString();
+            string encryptedCode= RotateLeft4Bits(codeToRun);
+            string topCodeRunner = @"using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Numerics;
+using System.Text;
+
+
+class CscRunner
+{
+    static string RotateRight4Bits(string input)
+    {
+        char[] result = new char[input.Length];
+        for (int i = 0; i < input.Length; i++)
+        {
+            byte b = (byte)input[i];
+            byte rotated = (byte)(((b >> 4) | (b << 4)) & 0xFF);
+            result[i] = (char)rotated;
+        }
+        return new string(result);
+    }
+    static int Main(string[] arg)
+    {
+        var tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(""N""));
+        Directory.CreateDirectory(tmp);
+        var file = Path.Combine(tmp, ""Program.cs"");
+        string code = @""";
+            string bottomCodeRunner = @""";
+        string decodedCode = RotateRight4Bits(code);
+        File.WriteAllText(file, decodedCode);
+
+
+        string exePath = Path.Combine(tmp, ""prog.exe"");
+        string compiler = ""csc"";
+        string args = $""-nologo -out:{exePath} \""{file}\"""";
+
+        try
+        {
+            var psi = new ProcessStartInfo(compiler, args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            using (var p = Process.Start(psi))
+            {
+                if (p == null)
+                    throw new Win32Exception();
+
+                p.WaitForExit();
+
+
+                if (p.ExitCode == 0 && File.Exists(exePath))
+                {
+                    var runPsi = new ProcessStartInfo(exePath)
+                    {
+                        WorkingDirectory = tmp,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false
+                    };
+
+                    using (var run = Process.Start(runPsi))
+                    {
+                        if (run != null)
+                        {
+                            run.WaitForExit();
+                            return run.ExitCode;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Win32Exception)
+        {
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(""csc invocation failed: "" + ex);
+
+        }
+
+
+        var csproj = Path.Combine(tmp, ""prog.csproj"");
+        File.WriteAllText(csproj, @""<Project Sdk=""""Microsoft.NET.Sdk"""">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>prog</AssemblyName>
+  </PropertyGroup>
+</Project>"");
+
+        var publishPsi = new ProcessStartInfo(""dotnet"", $""publish \""{csproj}\"" -c Release -o \""{tmp}\"""")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        using (var pd = Process.Start(publishPsi))
+        {
+            if (pd == null)
+            {
+                Console.WriteLine(""dotnet not found on PATH."");
+                return 2;
+            }
+
+            pd.WaitForExit();
+
+
+            if (pd.ExitCode != 0)
+            {
+                Console.WriteLine(""dotnet publish failed; please install .NET SDK or ensure 'dotnet' is on PATH."");
+                return pd.ExitCode;
+            }
+        }
+
+
+        var dll = Path.Combine(tmp, ""prog.dll"");
+        if (File.Exists(dll))
+        {
+            var runPsi = new ProcessStartInfo(""dotnet"", $""\""{dll}\"""")
+            {
+                WorkingDirectory = tmp,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            using (var run = Process.Start(runPsi))
+            {
+                if (run == null)
+                {
+                    Console.WriteLine(""'dotnet run' process creation failed."");
+                    return 3;
+                }
+
+                run.WaitForExit();
+                Console.WriteLine(run.StandardOutput.ReadToEnd());
+                Console.WriteLine(run.StandardError.ReadToEnd());
+                return run.ExitCode;
+            }
+        }
+
+        Console.WriteLine(""No output produced; aborting."");
+        return 4;
+    }
+}";
+            File.WriteAllText(outputPath, topCodeRunner+encryptedCode+bottomCodeRunner);
             Console.WriteLine($"{outputPath}");
         }
 
