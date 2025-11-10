@@ -27,7 +27,7 @@ namespace Obfuscator
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
-            Body.RenamingVariblePass(currentStack));
+            Body.RenamingVariblePass(currentStack);
         }
 
 

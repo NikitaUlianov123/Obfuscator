@@ -23,5 +23,11 @@ namespace Obfuscator
             Condition.RenamingVariblePass(currentStack);
             Body.RenamingVariblePass(currentStack);
         }
+
+        public override string CodeGen()
+        {
+            return $"while({Condition.CodeGen()}) \n{{ {Body.CodeGen()} }}\n";
+        }
+        
     }
 }

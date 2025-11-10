@@ -20,5 +20,10 @@ namespace Obfuscator
         {
             RenamingPassMulti(currentStack, terms);
         }
+
+        public override string CodeGen()
+        {
+            return string.Join(", ", terms.ConvertAll(t => t.CodeGen()));
+        }
     }
 }

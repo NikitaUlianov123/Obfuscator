@@ -12,7 +12,7 @@ namespace Obfuscator
             string relativePath = string.Join('\\', filePath, 0, filePath.Length - 3);
 
             DefineReplacer.TransformDefinedFilePath($"{relativePath}\\codeToRun.txt");
-
+            ;
             string specsPath = $"{relativePath}\\TokenJson.txt";
             string json = File.ReadAllText(specsPath);
             List<Spec>? specs = JsonSerializer.Deserialize<List<Spec>>(json);
@@ -22,7 +22,6 @@ namespace Obfuscator
             var w = parsing.Parsing(d, "Program", 0);
 
             ;
-            
         }
     }
 }

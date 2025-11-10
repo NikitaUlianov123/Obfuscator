@@ -20,5 +20,10 @@ namespace Obfuscator
             }
 
         }
+
+        public override string CodeGen()
+        {
+            return RootToken.text;
+        }
     }
 }

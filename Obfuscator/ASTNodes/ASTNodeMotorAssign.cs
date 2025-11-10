@@ -20,5 +20,10 @@ namespace Obfuscator
         {
             return;
         }
+
+        public override string CodeGen()
+        {
+            return $"motor[{Port.CodeGen()}] = {Value.CodeGen()}";
+        }
     }
 }

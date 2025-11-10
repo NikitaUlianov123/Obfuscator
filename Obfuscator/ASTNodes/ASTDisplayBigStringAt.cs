@@ -27,5 +27,9 @@ namespace Obfuscator
         {
             RenamingPassMulti(currentStack, Args);
         }
+        public override string CodeGen()
+        {
+            return $"{RootToken.text}({string.Join(", ", Args.ConvertAll(arg => arg.CodeGen()))})";
+        }
     }
 }

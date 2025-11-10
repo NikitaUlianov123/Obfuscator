@@ -17,7 +17,7 @@ namespace Obfuscator
 
             File.WriteAllText(codePath, TransformDefineText(code));
         }
-        
+
 
         public static string TransformDefinedCode(string code)
         {
@@ -64,7 +64,7 @@ namespace Obfuscator
             }
             ;
             return codeStr;
-            
+
         }
     }
 }
