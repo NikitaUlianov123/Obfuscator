@@ -19,10 +19,13 @@ namespace Obfuscator
         public override string CodeGen()
         {
             string ArgsString = "";
-            for (int i = 0; i < Members.Count; i++)
+            if (Members.Count == 1) return "";
+            ArgsString += Members[0].CodeGen() + Members[1].CodeGen() + ";";
+            if(Members.Count > 2)
             {
-                ArgsString += Members[i].CodeGen();
+                ArgsString += Members[2].CodeGen();
             }
+            
             return ArgsString;
         }
     }

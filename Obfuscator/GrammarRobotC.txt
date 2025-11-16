@@ -174,9 +174,9 @@ StructBody
 }
 ProgramBody
 {
-	Function
-	Struct
-	Define
+	Function ProgramBody
+	Struct ProgramBody
+	Define ProgramBody
 	"none"
 }
 Program

@@ -31,7 +31,7 @@ namespace Obfuscator
 
         public override string CodeGen()
         {
-            return $"for ({Init.CodeGen()}; {Cond.CodeGen()}; {Iter.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
+            return $"for ({Init.CodeGen()} {Cond.CodeGen()}; {Iter.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
         }
     }
 }

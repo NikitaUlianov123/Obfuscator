@@ -21,7 +21,7 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            return RootToken.text + Body.CodeGen();
+            return RootToken.text + " main()" + "{" + Body.CodeGen() + "}";
         }
     }
 }

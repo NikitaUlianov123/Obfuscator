@@ -23,7 +23,7 @@ namespace Obfuscator
 
         public override string CodeGen()
         {
-            return $"delay {Value.CodeGen()}";
+            return $"delay ( {Value.CodeGen()} ) ;";
         }
     }
 }

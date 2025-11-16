@@ -20,6 +20,9 @@ namespace Obfuscator
             var d = lexing.Lexering($"{relativePath}\\codeToRun.txt");
             Parser parsing = new Parser($"{relativePath}\\GrammarRobotC.txt");
             var w = parsing.Parsing(d, "Program", 0);
+            string temp = w.CodeGen();
+
+            File.WriteAllText("C:\\Users\\logan\\Source\\Repos\\ObfuscatorCTeam\\Obfuscator\\OutputTextFile.txt", temp);
 
             ;
         }

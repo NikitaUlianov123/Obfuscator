@@ -4,6 +4,7 @@ using Obfuscator.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -345,12 +346,12 @@ namespace Obfuscator
                ["\"ForHeader\""] = (b, e, ch) => new ASTNodeForHeader(b, e, ch),
                ["\"ProgramBody\""] = (b, e, ch) => new ASTNodeProgramBody(b, e, ch),
                ["\"Program\""] = (b, e, ch) => new ASTNodeProgram(b, e, ch),
-               ["\"Parma\""] = (b, e, ch) => new ASTNodeParamList(b, e, ch),
-               ["\"StructBody\""] = (b, e, ch) => new ASTNodeStructBody(b, e, ch),
+               ["Parma"] = (b, e, ch) => new ASTNodeParamList(b, e, ch),
+               ["StructBody"] = (b, e, ch) => new ASTNodeStructBody(b, e, ch),
 
                // Calls & arg lists (if you mark '(' as the root for calls)
                ["\"(\""] = (b, e, ch) => new ASTNodeCall(b, e, ch),
-               ["\"ListOfStatements\""] = (b, e, ch) => new ASTNodeArgList(b, e, ch),
+               ["ListOfStatements"] = (b, e, ch) => new ASTNodeArgList(b, e, ch),
                // ---- ROBOTC DISPLAY/DRAW COMMANDS ----
                ["\"clearPixel\""] = (b, e, ch) => new ASTClearPixel(b, e, ch),
                ["\"displayBigStringAt\""] = (b, e, ch) => new ASTDisplayBigStringAt(b, e, ch),
@@ -394,10 +395,6 @@ namespace Obfuscator
         };
         public ASTNodeBase Parsing(List<AbstactToken> tokens, string starting, int current)
         {
-            if(starting == "Define")
-            {
-                ;
-            }
             for (int i = 0; i < grammar.grammarPairs[starting].Count; i++)
             {
                 bool isMatch = true;
@@ -459,7 +456,11 @@ namespace Obfuscator
                 }
                 if (isMatch)
                 {
-                    if (grammar.grammarPairs[starting][i].exToken == null)
+                    if (ASTFactoryRobotC.ContainsKey(starting))
+                    {
+                        return ASTFactoryRobotC[starting].Invoke(prevStart, current, childern);
+                    }
+                    else if (grammar.grammarPairs[starting][i].exToken == null)
                     {
                         return MakeTerminal(prevStart, current, childern);
                     }

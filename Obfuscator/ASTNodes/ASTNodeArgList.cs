@@ -18,7 +18,17 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            throw new NotImplementedException();
+            string Output = "";
+            if(Items.Count >= 1)
+            {
+                Output += Items[0].CodeGen();
+            }
+            for(int i = 1;  i < Items.Count; i++)
+            {
+                Output += "," + Items[i].CodeGen();
+            }
+            return Output;
+
         }
     }
 }

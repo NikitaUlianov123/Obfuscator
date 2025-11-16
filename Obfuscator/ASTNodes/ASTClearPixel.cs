@@ -31,7 +31,7 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            string ArgsString = "";
+             string ArgsString = "";
             for (int i = 0; i < Args.Count; i++)
             {
                 ArgsString += Args[i].CodeGen();

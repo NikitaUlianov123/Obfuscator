@@ -23,7 +23,12 @@ namespace Obfuscator
 
         public override string CodeGen()
         {
-            return string.Join(", ", terms.ConvertAll(t => t.CodeGen()));
+            string output = "";
+            for(int i =  0; i < terms.Count; i++)
+            {
+                output += terms[i].CodeGen();
+            }
+            return output;
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            return $"{Name.CodeGen()}" + "{" + Body.CodeGen() + "}"; 
+            return $"struct {Name.CodeGen()}" + "{" + Body.CodeGen() + "}"; 
         }
     }
 }

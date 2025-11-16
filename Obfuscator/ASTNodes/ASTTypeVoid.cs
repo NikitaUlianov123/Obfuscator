@@ -17,7 +17,7 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            throw new NotImplementedException();
+            return "void";
         }
     }
 
