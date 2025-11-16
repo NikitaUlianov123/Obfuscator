@@ -31,7 +31,7 @@ namespace DonutMaker
             string input = File.ReadAllText(@"../../../TestCSharp/Program.txt");
             string[] split = TextFormat.SplitPreprocessor(input);
             string code = TextFormat.MakeOneLine(TextFormat.RemoveComments(split[1]));
-            TextFormat.GenerateCodeArt2(@"../../../TestImages/Mountain.png", code, @"../../../TestOutput/Mountain.txt");
+            TextFormat.GenerateCodeArt2(@"../../../TestImages/cat.png", code, @"../../../TestOutput/Mountain.txt", 70);
             //Console.Write(formatted);
             //Console.WriteLine(code);
 

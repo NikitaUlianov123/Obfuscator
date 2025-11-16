@@ -148,38 +148,47 @@ namespace DonutMaker
         {
             // 1) load image and compute target height in cells
             using var image = Image.Load<Rgba32>(imagePath);
-            // Approximate character aspect ratio (height / width) for monospace fonts.
-            // If each cell contains many characters, the effective width grows, so we'll not adjust cell aspect here;
-            // we assume cell is rectangular block of characters whose height ~ 1 and width ~ cellWidth.
-            // Use baseline char aspect for single-character cells:
-            const float charAspect = 0.55f; // tweak 0.45-0.6 depending on your font
+            // Approximate character aspect ratio (height / width) for monospace fonts
+            // Most monospace fonts: height ≈ 2 × width
+            const float charAspect = 2f;
 
             int targetCellsX = Math.Max(1, cellsWide);
-            int targetCellsY = Math.Max(1, (int)(image.Height * (targetCellsX / (float)image.Width) * charAspect));
+            int targetCellsY = Math.Max(1, (int)(image.Height * targetCellsX / (float)image.Width / charAspect));
+
+            image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
 
             image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
 
             // 2) brightness map
             byte[,] brightness = new byte[targetCellsX, targetCellsY];
             for (int y = 0; y < targetCellsY; y++)
+            {
                 for (int x = 0; x < targetCellsX; x++)
                 {
                     var p = image[x, y];
                     brightness[x, y] = (byte)((p.R * 0.2126f + p.G * 0.7152f + p.B * 0.0722f));
                 }
+            }
 
             // 3) filler snippets (can be adjusted)
             var fillerSnippets = new (int threshold, string snippet)[]
             {
-            //(32, "if(true){}"),
-            //(64, "for(int i=0;i<1;i++){}"),
-            //(96, "try{}catch{}"),
-            //(128, "return;"),
-            (128, "/*##*/"),
-            //(160, "break;"),
-            (192, "/* */"),
-            //(224, "//"),
-            (256, "  ")
+            ////(32, "if(true){}"),
+            ////(64, "for(int i=0;i<1;i++){}"),
+            ////(96, "try{}catch{}"),
+            ////(128, "return;"),
+            //(128, "/*##*/"),
+            ////(160, "break;"),
+            //(192, "/* */"),
+            ////(224, "//"),
+            //(256, "  ")
+
+                //( 43, "/*▓▓*/"),     // darkest
+                ( 86, "/*██*/"),     // dark
+                (129, "/*▓▓*/"),     // medium-dark
+                (171, "/*▒▒*/"),     // medium
+                (214, "/*░░*/"),     // light`
+                (256, "/*  */")      // brightest (space)
             };
 
             string GetSnippet(byte b) => fillerSnippets.First(f => b < f.threshold).snippet;
@@ -254,38 +263,75 @@ namespace DonutMaker
             // place tokens sparsely (e.g., every Nth cell). You can tune placement pattern.
             int placeEvery = Math.Max(6, Math.Min(20, Math.Max(6, cellWidth))); // heuristic
 
+            // vertical scaling factor for ASCII (height per line)
+            float vScale = 0.55f; // tweak 0.5-0.6 for font aspect
+            int vRepeat = Math.Max(1, (int)Math.Round(vScale * cellWidth));
+
+            int placeEveryCells = Math.Max(1, placeEvery / cellWidth); // number of cells between tokens
+
             for (int y = 0; y < targetCellsY; y++)
             {
-                var lineBuilder = new StringBuilder();
+                var baseLineBuilder = new StringBuilder();
 
                 for (int x = 0; x < targetCellsX; x++)
                 {
                     string chosen;
-                    // determine snippet by brightness
                     var filler = GetSnippet(brightness[x, y]);
 
-                    // Insert real token occasionally (pattern can be changed)
-                    bool insertCode = (codeIdx < tokens.Count) && ((x + y * targetCellsX) % placeEvery == 0);
+                    for (int i = 0; i < cellWidth - 6; i++)
+                    {
+                        filler = filler.Insert(2, filler[2].ToString());
+                    }
+
+                    bool insertCode = (codeIdx < tokens.Count) && ((x + y * targetCellsX) % placeEveryCells == 0);
 
                     if (insertCode)
                     {
-                        // take next token
-                        chosen = tokens[codeIdx++];
-                        // if token shorter than cell, pad
-                        chosen = PadCell(chosen);
+                        chosen = PadCell(tokens[codeIdx++]);
                     }
                     else
                     {
-                        // padded filler
                         if (!paddedFillers.TryGetValue(filler, out chosen))
                             chosen = PadCell(filler);
                     }
 
-                    lineBuilder.Append(chosen);
+                    baseLineBuilder.Append(chosen); // always exactly cellWidth chars
                 }
 
-                // Write the line indented into the method body
-                sb.AppendLine("        " + lineBuilder.ToString());
+                string baseLine = baseLineBuilder.ToString();
+
+                // vertical repeats
+                for (int v = 0; v < vRepeat; v++)
+                {
+                    if (v == 0)
+                    {
+                        sb.AppendLine("        " + baseLine);
+                    }
+                    else
+                    {
+                        var fillerLineBuilder = new StringBuilder();
+                        for (int x = 0; x < targetCellsX; x++)
+                        {
+                            var filler = GetSnippet(brightness[x, y]);
+
+                            for (int i = 0; i < cellWidth - 6; i++)
+                            {
+                                filler = filler.Insert(2, filler[2].ToString());
+                            }
+
+                            string segment = baseLine.Substring(x * cellWidth, cellWidth);
+                            if (fillerSnippets.Any(f => segment.Trim() == f.snippet.Trim()))
+                            {
+                                fillerLineBuilder.Append(segment);
+                            }
+                            else
+                            {
+                                fillerLineBuilder.Append(PadCell(filler));
+                            }
+                        }
+                        sb.AppendLine("        " + fillerLineBuilder.ToString());
+                    }
+                }
             }
 
             File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
