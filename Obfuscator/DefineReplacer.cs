@@ -60,7 +60,10 @@ namespace Obfuscator
 
                     codeStr = Regex.Replace(codeStr, pattern, match => originalName);
                 }
-                codeStr = lines[lineNum] + (lineNum < lines.Length - 1 ? newline : string.Empty) + codeStr;
+                else
+                {
+                    codeStr = lines[lineNum] + (lineNum < lines.Length - 1 ? newline : string.Empty) + codeStr;
+                }
             }
             ;
             return codeStr;
