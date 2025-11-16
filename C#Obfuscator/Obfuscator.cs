@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using C_Obfuscator;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace C_Obfuscation
 {
@@ -36,10 +38,13 @@ namespace C_Obfuscation
             collector.Visit(root);
 
             // rename variables and replace literals
+
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            newRoot = (CompilationUnitSyntax)new LoopRewriter().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new DemorganRewriter().Visit(newRoot);
 
-            
+
             // inject helper mehtod for decoding strings if needed
             if (rewriter.EncodedStringsUsed)
             {
@@ -106,3 +111,5 @@ namespace C_Obfuscation
 
     }
 }
+
+
