@@ -115,12 +115,12 @@ namespace C_Obfuscation
             string codeToRun = newRoot.NormalizeWhitespace().ToFullString();
             string encryptedCode= RotateLeft4Bits(codeToRun);
             string topCodeRunner = @"using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Numerics;
+using System.Linq;
+using System.Reflection;
 using System.Text;
-
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 class CscRunner
 {
@@ -135,133 +135,73 @@ class CscRunner
         }
         return new string(result);
     }
-    static int Main(string[] arg)
+    static int Main(string[] args)
     {
-        var tmp = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString(""N""));
-        Directory.CreateDirectory(tmp);
-        var file = Path.Combine(tmp, ""Program.cs"");
-        string code = @""";
+        // Source to compile (same program you used previously)
+        string source = @""";
+
+
             string bottomCodeRunner = @""";
-        string decodedCode = RotateRight4Bits(code);
-        File.WriteAllText(file, decodedCode);
 
+        // Parse
+        var tree = CSharpSyntaxTree.ParseText(RotateRight4Bits(source));
 
-        string exePath = Path.Combine(tmp, ""prog.exe"");
-        string compiler = ""csc"";
-        string args = $""-nologo -out:{exePath} \""{file}\"""";
+        // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)
+        var tpa = ((string)AppContext.GetData(""TRUSTED_PLATFORM_ASSEMBLIES""))?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+        var refs = tpa
+            .Where(p => p != null && p.EndsWith("".dll"", StringComparison.OrdinalIgnoreCase))
+            .Select(p => MetadataReference.CreateFromFile(p))
+            .Cast<MetadataReference>()
+            .ToList();
+
+        // Always include the currently loaded assemblies that may not be in TPA
+        refs.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+        refs.Add(MetadataReference.CreateFromFile(typeof(Console).Assembly.Location));
+        refs = refs.DistinctBy(r => ((PortableExecutableReference)r).FilePath).ToList();
+
+        // Create compilation
+        var comp = CSharpCompilation.Create(
+            assemblyName: ""InMemoryProg"",
+            syntaxTrees: new[] { tree },
+            references: refs,
+            options: new CSharpCompilationOptions(OutputKind.ConsoleApplication));
+
+        using var ms = new MemoryStream();
+        var result = comp.Emit(ms);
+
+        if (!result.Success)
+        {
+            Console.WriteLine(""Compilation failed:"");
+            foreach (var diag in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
+                Console.WriteLine(diag.ToString());
+            return 1;
+        }
+
+        ms.Seek(0, SeekOrigin.Begin);
+        var assembly = Assembly.Load(ms.ToArray());
+
+        // Capture Console output
+        var originalOut = Console.Out;
+        var sw = new StringWriter();
+        Console.SetOut(sw);
 
         try
         {
-            var psi = new ProcessStartInfo(compiler, args)
-            {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
+            var entry = assembly.EntryPoint ?? assembly.GetType(""Program"")?.GetMethod(""Main"", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (entry == null) { Console.SetOut(originalOut); Console.WriteLine(""No entry point.""); return 2; }
 
-            using (var p = Process.Start(psi))
-            {
-                if (p == null)
-                    throw new Win32Exception();
-
-                p.WaitForExit();
-
-
-                if (p.ExitCode == 0 && File.Exists(exePath))
-                {
-                    var runPsi = new ProcessStartInfo(exePath)
-                    {
-                        WorkingDirectory = tmp,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false
-                    };
-
-                    using (var run = Process.Start(runPsi))
-                    {
-                        if (run != null)
-                        {
-                            run.WaitForExit();
-                            return run.ExitCode;
-                        }
-                    }
-                }
-            }
+            object[] invokeArgs = entry.GetParameters().Length == 0 ? null : new object[] { Array.Empty<string>() };
+            var ret = entry.Invoke(null, invokeArgs);
+            // If Main returned int, you could return it; otherwise return 0
+            if (ret is int exitCode) return exitCode;
         }
-        catch (Win32Exception)
+        finally
         {
-
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(""csc invocation failed: "" + ex);
-
+            Console.SetOut(originalOut);
+            Console.WriteLine(sw.ToString());
         }
 
-
-        var csproj = Path.Combine(tmp, ""prog.csproj"");
-        File.WriteAllText(csproj, @""<Project Sdk=""""Microsoft.NET.Sdk"""">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <AssemblyName>prog</AssemblyName>
-  </PropertyGroup>
-</Project>"");
-
-        var publishPsi = new ProcessStartInfo(""dotnet"", $""publish \""{csproj}\"" -c Release -o \""{tmp}\"""")
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
-
-        using (var pd = Process.Start(publishPsi))
-        {
-            if (pd == null)
-            {
-                Console.WriteLine(""dotnet not found on PATH."");
-                return 2;
-            }
-
-            pd.WaitForExit();
-
-
-            if (pd.ExitCode != 0)
-            {
-                Console.WriteLine(""dotnet publish failed; please install .NET SDK or ensure 'dotnet' is on PATH."");
-                return pd.ExitCode;
-            }
-        }
-
-
-        var dll = Path.Combine(tmp, ""prog.dll"");
-        if (File.Exists(dll))
-        {
-            var runPsi = new ProcessStartInfo(""dotnet"", $""\""{dll}\"""")
-            {
-                WorkingDirectory = tmp,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-
-            using (var run = Process.Start(runPsi))
-            {
-                if (run == null)
-                {
-                    Console.WriteLine(""'dotnet run' process creation failed."");
-                    return 3;
-                }
-
-                run.WaitForExit();
-                Console.WriteLine(run.StandardOutput.ReadToEnd());
-                Console.WriteLine(run.StandardError.ReadToEnd());
-                return run.ExitCode;
-            }
-        }
-
-        Console.WriteLine(""No output produced; aborting."");
-        return 4;
+        return 0;
     }
 }";
             File.WriteAllText(outputPath, topCodeRunner+encryptedCode+bottomCodeRunner);
