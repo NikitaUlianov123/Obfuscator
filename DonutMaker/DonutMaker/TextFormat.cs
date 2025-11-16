@@ -171,15 +171,17 @@ namespace DonutMaker
             // 3) filler snippets (can be adjusted)
             var fillerSnippets = new (int threshold, string snippet)[]
             {
-            (32, "if(true){}"),
-            (64, "for(int i=0;i<1;i++){}"),
-            (96, "try{}catch{}"),
+            //(32, "if(true){}"),
+            //(64, "for(int i=0;i<1;i++){}"),
+            //(96, "try{}catch{}"),
             //(128, "return;"),
+            (128, "/*##*/"),
             //(160, "break;"),
             (192, "/* */"),
-            (224, "//"),
+            //(224, "//"),
             (256, "  ")
             };
+
             string GetSnippet(byte b) => fillerSnippets.First(f => b < f.threshold).snippet;
 
             // 4) split input code into tokens (keeps punctuation tokens)
@@ -201,7 +203,7 @@ namespace DonutMaker
             {
                 // choose small but safe width; if the tokens are huge, use a cap
                 const int cap = 30;
-                computedCellWidth = Math.Clamp(Math.Max(maxFillerLen, Math.Min(maxTokenLen, 12)), maxFillerLen, cap);
+                computedCellWidth = Math.Clamp(Math.Max(maxFillerLen, maxTokenLen), maxFillerLen, cap);
             }
             else
             {
@@ -211,7 +213,7 @@ namespace DonutMaker
             int cellWidth = Math.Max(1, computedCellWidth);
 
             // 6) Prepare token queue, splitting long tokens if requested
-            var tokens = new System.Collections.Generic.List<string>();
+            var tokens = new List<string>();
             foreach (var t in rawTokens)
             {
                 if (t.Length <= cellWidth)
