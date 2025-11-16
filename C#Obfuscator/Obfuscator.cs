@@ -17,7 +17,64 @@ namespace C_Obfuscation
         public static int nameCounter = 0;
         // generates a new obfuscated name
         public static string NewName() => "a" + (nameCounter++).ToString("X");
-        public static void Obfuscate(string inputPath, string outputPath)
+        // rotates bits left by 4
+        static string RotateLeft4Bits(string input)
+        {
+            char[] result = new char[input.Length];
+            for (int i = 0; i < input.Length; i++)
+            {
+                byte b = (byte)input[i];
+                byte rotated = (byte)(((b << 4) | (b >> 4)) & 0xFF);
+                result[i] = (char)rotated;
+            }
+            return new string(result);
+        }
+        public static string ObfuscateProject(List<string> codeFilePaths)
+        {
+            List<CompilationUnitSyntax> obfuscatedUnits = new List<CompilationUnitSyntax>();
+            foreach (var path in codeFilePaths)
+            {
+                CompilationUnitSyntax obfUnit = GetObfuscatedNode(path);
+                obfuscatedUnits.Add(obfUnit);
+            }
+            CompilationUnitSyntax lastUnit = obfuscatedUnits.Last();           
+            if (!lastUnit.Usings.Any(u => u.Name.ToString() == "System.Text"))
+            {
+                lastUnit = lastUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
+            }
+            lastUnit = lastUnit.AddMembers(HelperFuncs());
+            //fix
+            string codeToRun = lastUnit.NormalizeWhitespace().ToFullString();
+            string encryptedCode = RotateLeft4Bits(codeToRun);
+            return encryptedCode;
+        }
+
+        public static CompilationUnitSyntax GetObfuscatedNode(string filepath)
+        {
+            //get code and parse
+            string code = File.ReadAllText(filepath);
+            SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
+            CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
+
+            // build a model so we can avoid renaming public symbols or those used externally
+            PortableExecutableReference mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp").AddReferences(mscorlib).AddSyntaxTrees(tree);
+
+            SemanticModel model = compilation.GetSemanticModel(tree);
+
+            // makes rename map
+            Dictionary<ISymbol, string> renameMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
+
+            // collect identifiers to rename
+            IdentifierCollector collector = new IdentifierCollector(model, renameMap);
+            collector.Visit(root);
+
+            // rename variables and replace literals
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            return newRoot;
+        }
+        public static string ObfuscateCSFile(string inputPath)
         {
             //get code and parse
             string code = File.ReadAllText(inputPath);
@@ -41,14 +98,31 @@ namespace C_Obfuscation
 
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
-            newRoot = (CompilationUnitSyntax)new LoopRewriter().Visit(newRoot);
-            newRoot = (CompilationUnitSyntax)new DemorganRewriter().Visit(newRoot);
-
-
-            // inject helper mehtod for decoding strings if needed
-            if (rewriter.EncodedStringsUsed)
+            
+            // add using System.Text; if not present
+            if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
             {
-                var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
+                newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
+            }
+            newRoot = newRoot.AddMembers(HelperFuncs());
+
+
+            //output to file
+            string codeToRun = newRoot.NormalizeWhitespace().ToFullString();
+            string encryptedCode = RotateLeft4Bits(codeToRun);
+            return encryptedCode;
+        }
+        public static string GenerateObfuscatedHelper(string code)
+        {
+            StringBuilder finalCode = new StringBuilder();
+            finalCode.Append(topCodeRunner);
+            finalCode.Append(RotateLeft4Bits(code));
+            finalCode.Append(bottomCodeRunner);
+            return finalCode.ToString();
+        }
+        static MemberDeclarationSyntax HelperFuncs()
+        {
+            var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
 {
     private static byte R(byte x)
     {
@@ -72,6 +146,7 @@ namespace C_Obfuscation
         byte k = q[^1];
         byte[] c = new byte[q.Length - 1];
         if (c.Length > 0) Array.Copy(q, c, c.Length);
+        if (c.Length > 0) Array.Copy(q, c, c.Length);
 
         return ((Func<byte, object>)(m => m switch
         {
@@ -91,25 +166,108 @@ namespace C_Obfuscation
                 2 => BitConverter.ToInt16(c, 0),
                 1 => c[0],
                 0 => 0,
-                _ => throw new NotSupportedException($""??? {len}"")
+                _ => throw new NotSupportedException("""""""")
             }))(c.Length)
         }))(k);
     }
 }");
-                // add using System.Text; if not present
-                if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
-                {
-                    newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
-                }
-                newRoot = newRoot.AddMembers(helper);
+            if (helper == null)
+            {
+                return null;
             }
+            return helper;
+        }
+        static string topCodeRunner = @"using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
-            //output to file
-            File.WriteAllText(outputPath, newRoot.NormalizeWhitespace().ToFullString());
-            Console.WriteLine($"{outputPath}");
+class CscRunner
+{
+    static string RotateRight4Bits(string input)
+    {
+        char[] result = new char[input.Length];
+        for (int i = 0; i < input.Length; i++)
+        {
+            byte b = (byte)input[i];
+            byte rotated = (byte)(((b >> 4) | (b << 4)) & 0xFF);
+            result[i] = (char)rotated;
+        }
+        return new string(result);
+    }
+    static int Main(string[] args)
+    {
+        // Source to compile (same program you used previously)
+        string source = @""";
+        static string bottomCodeRunner = @""";
+
+        // Parse
+        var tree = CSharpSyntaxTree.ParseText(RotateRight4Bits(source));
+
+        // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)
+        var tpa = ((string)AppContext.GetData(""TRUSTED_PLATFORM_ASSEMBLIES""))?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+        var refs = tpa
+            .Where(p => p != null && p.EndsWith("".dll"", StringComparison.OrdinalIgnoreCase))
+            .Select(p => MetadataReference.CreateFromFile(p))
+            .Cast<MetadataReference>()
+            .ToList();
+
+        // Always include the currently loaded assemblies that may not be in TPA
+        refs.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+        refs.Add(MetadataReference.CreateFromFile(typeof(Console).Assembly.Location));
+        refs = refs.DistinctBy(r => ((PortableExecutableReference)r).FilePath).ToList();
+
+        // Create compilation
+        var comp = CSharpCompilation.Create(
+            assemblyName: ""InMemoryProg"",
+            syntaxTrees: new[] { tree },
+            references: refs,
+            options: new CSharpCompilationOptions(OutputKind.ConsoleApplication));
+
+        using var ms = new MemoryStream();
+        var result = comp.Emit(ms);
+
+        if (!result.Success)
+        {
+            Console.WriteLine(""Compilation failed:"");
+            foreach (var diag in result.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
+                Console.WriteLine(diag.ToString());
+            return 1;
         }
 
+        ms.Seek(0, SeekOrigin.Begin);
+        var assembly = Assembly.Load(ms.ToArray());
+
+        // Capture Console output
+        var originalOut = Console.Out;
+        var sw = new StringWriter();
+        Console.SetOut(sw);
+
+        try
+        {
+            var entry = assembly.EntryPoint ?? assembly.GetType(""Program"")?.GetMethod(""Main"", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (entry == null) { Console.SetOut(originalOut); Console.WriteLine(""No entry point.""); return 2; }
+
+            object[] invokeArgs = entry.GetParameters().Length == 0 ? null : new object[] { Array.Empty<string>() };
+            var ret = entry.Invoke(null, invokeArgs);
+            // If Main returned int, you could return it; otherwise return 0
+            if (ret is int exitCode) return exitCode;
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+            Console.WriteLine(sw.ToString());
+        }
+
+        return 0;
     }
+}";
+    }
+
+
 }
 
 

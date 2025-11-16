@@ -12,7 +12,7 @@ namespace C_Obfuscation
             var inputPath = "C:\\Users\\timbr\\source\\repos\\Obfuscator\\TestCode\\Input.cs";
             var outputPath = "C:\\Users\\timbr\\source\\repos\\Obfuscator\\TestCode\\Output.cs";
 
-            Obfuscator.Obfuscate(inputPath, outputPath);
+            Obfuscator.ObfuscateCSFile(inputPath, outputPath);
         }
     }
 }
