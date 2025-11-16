@@ -4,7 +4,14 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            string inputCSPROJ= "C:\\Users\\Tex\\OneDrive\\Documents\\Visual Studio 2022\\Projects\\Obfuscator\\C#Obfuscator\\C#Obfuscator.csproj";
+            string inputImage="";
+            string outputCSPROJ="";
+
+            List<string> allSourceFiles=InputTool.GetCodeFilePaths(inputCSPROJ);
+            ;
+
+
         }
     }
 }

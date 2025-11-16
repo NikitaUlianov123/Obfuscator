@@ -27,7 +27,52 @@ namespace C_Obfuscation
             }
             return new string(result);
         }
-        public static void Obfuscate(string inputPath, string outputPath)
+        public static string ObfuscateProject(List<string> codeFilePaths)
+        {
+            List<CompilationUnitSyntax> obfuscatedUnits = new List<CompilationUnitSyntax>();
+            foreach (var path in codeFilePaths)
+            {
+                CompilationUnitSyntax obfUnit = GetObfuscatedNode(path);
+                obfuscatedUnits.Add(obfUnit);
+            }
+            CompilationUnitSyntax lastUnit = obfuscatedUnits.Last();           
+            if (!lastUnit.Usings.Any(u => u.Name.ToString() == "System.Text"))
+            {
+                lastUnit = lastUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
+            }
+            lastUnit = lastUnit.AddMembers(HelperFuncs());
+            //fix
+            string codeToRun = lastUnit.NormalizeWhitespace().ToFullString();
+            string encryptedCode = RotateLeft4Bits(codeToRun);
+            return encryptedCode;
+        }
+
+        public static CompilationUnitSyntax GetObfuscatedNode(string filepath)
+        {
+            //get code and parse
+            string code = File.ReadAllText(filepath);
+            SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
+            CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
+
+            // build a model so we can avoid renaming public symbols or those used externally
+            PortableExecutableReference mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp").AddReferences(mscorlib).AddSyntaxTrees(tree);
+
+            SemanticModel model = compilation.GetSemanticModel(tree);
+
+            // makes rename map
+            Dictionary<ISymbol, string> renameMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
+
+            // collect identifiers to rename
+            IdentifierCollector collector = new IdentifierCollector(model, renameMap);
+            collector.Visit(root);
+
+            // rename variables and replace literals
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            return newRoot;
+        }
+        public static string ObfuscateCSFile(string inputPath)
         {
             //get code and parse
             string code = File.ReadAllText(inputPath);
@@ -50,12 +95,31 @@ namespace C_Obfuscation
             // rename variables and replace literals
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
-
             
-            // inject helper mehtod for decoding strings if needed
-            if (rewriter.EncodedStringsUsed)
+            // add using System.Text; if not present
+            if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
             {
-                var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
+                newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
+            }
+            newRoot = newRoot.AddMembers(HelperFuncs());
+
+
+            //output to file
+            string codeToRun = newRoot.NormalizeWhitespace().ToFullString();
+            string encryptedCode = RotateLeft4Bits(codeToRun);
+            return encryptedCode;
+        }
+        public static string GenerateObfuscatedHelper(string code)
+        {
+            StringBuilder finalCode = new StringBuilder();
+            finalCode.Append(topCodeRunner);
+            finalCode.Append(RotateLeft4Bits(code));
+            finalCode.Append(bottomCodeRunner);
+            return finalCode.ToString();
+        }
+        static MemberDeclarationSyntax HelperFuncs()
+        {
+            var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
 {
     private static byte R(byte x)
     {
@@ -78,6 +142,7 @@ namespace C_Obfuscation
         if (q.Length == 0) throw new ArgumentException(new string(new[] { 'E', 'm', 'p', 't', 'y', ' ', 'L', 'i', 't', 'e', 'r', 'a', 'l' }));
         byte k = q[^1];
         byte[] c = new byte[q.Length - 1];
+        if (c.Length > 0) Array.Copy(q, c, c.Length);
         if (c.Length > 0) Array.Copy(q, c, c.Length);
 
         return ((Func<byte, object>)(m => m switch
@@ -103,18 +168,13 @@ namespace C_Obfuscation
         }))(k);
     }
 }");
-                // add using System.Text; if not present
-                if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
-                {
-                    newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
-                }
-                newRoot = newRoot.AddMembers(helper);
+            if (helper == null)
+            {
+                return null;
             }
-
-            //output to file
-            string codeToRun = newRoot.NormalizeWhitespace().ToFullString();
-            string encryptedCode= RotateLeft4Bits(codeToRun);
-            string topCodeRunner = @"using System;
+            return helper;
+        }
+        static string topCodeRunner = @"using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -139,9 +199,7 @@ class CscRunner
     {
         // Source to compile (same program you used previously)
         string source = @""";
-
-
-            string bottomCodeRunner = @""";
+        static string bottomCodeRunner = @""";
 
         // Parse
         var tree = CSharpSyntaxTree.ParseText(RotateRight4Bits(source));
@@ -204,9 +262,7 @@ class CscRunner
         return 0;
     }
 }";
-            File.WriteAllText(outputPath, topCodeRunner+encryptedCode+bottomCodeRunner);
-            Console.WriteLine($"{outputPath}");
-        }
-
     }
+
+
 }
