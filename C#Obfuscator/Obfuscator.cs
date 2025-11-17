@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using C_Obfuscator;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace C_Obfuscation
 {
@@ -100,8 +102,18 @@ namespace C_Obfuscation
                 foreach (var e in unit.Externs)
                     externs.Add(e);
 
-                foreach (var a in unit.AttributeLists)
-                    attributes.Add(a);
+            // collect identifiers to rename
+            IdentifierCollector collector = new IdentifierCollector(model, renameMap);
+            collector.Visit(root);
+
+            // rename variables and replace literals
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            
+            // add using System.Text; if not present
+            if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
+            {
+                newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
             }
 
             return SyntaxFactory.CompilationUnit()
@@ -260,3 +272,5 @@ class CscRunner
 
 
 }
+
+
