@@ -6,15 +6,14 @@ namespace ObfuscatingTool
     {
         static void Main(string[] args)
         {
-            string inputCSPROJ= "C:\\Users\\Tex\\OneDrive\\Documents\\Visual Studio 2022\\Projects\\Obfuscator\\C#Obfuscator\\C#Obfuscator.csproj";
+            string inputCSPROJ= "C:\\Users\\timbr\\source\\repos\\Obfuscator\\TestCode\\TestCode.csproj";
             string inputImage="";
             string outputCSPROJ="";
 
-            List<string> allSourceFiles=InputTool.GetCodeFilePaths(inputCSPROJ);
+            List<string> allSourceFiles = InputTool.GetCodeFilePaths(inputCSPROJ);
             string code = Obfuscator.ObfuscateProject(allSourceFiles);
-            ;
 
-
+            ProjectBuilder.BuildProject("C:\\Users\\timbr\\Desktop\\ObfuscatedProject", code);
         }
     }
 }

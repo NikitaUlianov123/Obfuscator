@@ -71,7 +71,8 @@ namespace C_Obfuscation
 
             // rename variables and replace literals
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
-            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            //CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)new LoopRewriter().Visit(root);
             return newRoot;
         }
         static string GenerateObfuscatedHelper(string code)

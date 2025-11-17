@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace C_Obfuscator
+namespace C_Obfuscation
 {
     internal class DemorganRewriter : CSharpSyntaxRewriter
     {
@@ -17,12 +17,12 @@ namespace C_Obfuscator
             {
                 return null;
             }
-            
+
             ExpressionSyntax left = (ExpressionSyntax)Visit(node.Left);
             ExpressionSyntax right = (ExpressionSyntax)Visit(node.Right);
             SyntaxKind kind = node.Kind();
 
-            if(kind == SyntaxKind.LogicalAndExpression || kind == SyntaxKind.LogicalOrExpression)
+            if (kind == SyntaxKind.LogicalAndExpression || kind == SyntaxKind.LogicalOrExpression)
             {
                 PrefixUnaryExpressionSyntax newLeft = LogicalNot(left);
                 PrefixUnaryExpressionSyntax newRight = LogicalNot(right);
