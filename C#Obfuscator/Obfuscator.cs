@@ -1,5 +1,4 @@
-﻿using C_Obfuscator;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -7,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 
 namespace C_Obfuscation
 {
@@ -37,7 +35,7 @@ namespace C_Obfuscation
                 CompilationUnitSyntax obfUnit = GetObfuscatedNode(path);
                 obfuscatedUnits.Add(obfUnit);
             }
-            CompilationUnitSyntax lastUnit = obfuscatedUnits.Last();           
+            CompilationUnitSyntax lastUnit = obfuscatedUnits.Last();
             if (!lastUnit.Usings.Any(u => u.Name.ToString() == "System.Text"))
             {
                 lastUnit = lastUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
@@ -46,7 +44,7 @@ namespace C_Obfuscation
             //fix
             CompilationUnitSyntax combinedUnit = CombineCompilationUnits(obfuscatedUnits.ToArray());
             string finalCode = combinedUnit.NormalizeWhitespace().ToFullString();
-            
+
             string obfuscatedCode = GenerateObfuscatedHelper(finalCode);
             return obfuscatedCode;
         }
@@ -75,8 +73,8 @@ namespace C_Obfuscation
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
             return newRoot;
-        }       
-         static string GenerateObfuscatedHelper(string code)
+        }
+        static string GenerateObfuscatedHelper(string code)
         {
             StringBuilder finalCode = new StringBuilder();
             finalCode.Append(topCodeRunner);
@@ -84,7 +82,7 @@ namespace C_Obfuscation
             finalCode.Append(bottomCodeRunner);
             return finalCode.ToString();
         }
-         static CompilationUnitSyntax CombineCompilationUnits(CompilationUnitSyntax[] units)
+        static CompilationUnitSyntax CombineCompilationUnits(CompilationUnitSyntax[] units)
         {
             var usings = new List<UsingDirectiveSyntax>();
             var members = new List<MemberDeclarationSyntax>();
@@ -102,18 +100,8 @@ namespace C_Obfuscation
                 foreach (var e in unit.Externs)
                     externs.Add(e);
 
-            // collect identifiers to rename
-            IdentifierCollector collector = new IdentifierCollector(model, renameMap);
-            collector.Visit(root);
-
-            // rename variables and replace literals
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
-            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
-            
-            // add using System.Text; if not present
-            if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
-            {
-                newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
+                foreach (var a in unit.AttributeLists)
+                    attributes.Add(a);
             }
 
             return SyntaxFactory.CompilationUnit()
@@ -272,5 +260,3 @@ class CscRunner
 
 
 }
-
-

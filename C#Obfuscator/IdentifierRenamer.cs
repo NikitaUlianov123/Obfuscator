@@ -37,8 +37,8 @@ namespace C_Obfuscation
             if (sym != null && map.TryGetValue(sym, out var newName))
             {
                 IdentifierNameSyntax newnode = node.WithIdentifier(SyntaxFactory.Identifier(newName));
-                new
-                return 
+                ;
+                return newnode;
             }
             return base.VisitIdentifierName(node);
         }
