@@ -191,7 +191,7 @@ namespace DonutMaker
                 (256, "/*  */")      // brightest (space)
             };
 
-            string GetSnippet(byte b) => fillerSnippets.First(f => b < f.threshold).snippet;
+            string GetFillerSnippet(byte b) => fillerSnippets.First(f => b < f.threshold).snippet;
 
             // 4) split input code into tokens (keeps punctuation tokens)
             // We'll split into tokens that are reasonably small so they fit cells.
@@ -245,29 +245,42 @@ namespace DonutMaker
                 }
             }
 
+            
+
+
             if (tokens.Count == 0) tokens.Add(""); // ensure at least one
 
             // 7) helper to pad to cellWidth
-            string PadCell(string s) => s.Length == cellWidth ? s : s + new string(' ', cellWidth - s.Length);
+            string PadCell(string s, byte brightness)
+            {
+                if (s.Length == cellWidth)
+                {
+                    return s;
+                }
+                else if (s.Length >= cellWidth - 4)
+                {
+                    return s + new string(' ', cellWidth - s.Length);
+                }
+                else
+                {
+                    return s + "/*" + new string(GetFillerSnippet(brightness)[2], cellWidth - s.Length - 4) + "*/";
+                }
+            }
 
-            // Also store padded filler variants so we don't re-pad every time
-            var paddedFillers = fillerSnippets.ToDictionary(f => f.snippet, f => PadCell(f.snippet));
 
             // 8) generate output .cs
             var sb = new StringBuilder();
 
-            int codeIdx = 0;
-            int totalCells = targetCellsX * targetCellsY;
-
-            // Strategy for placing real tokens:
-            // place tokens sparsely (e.g., every Nth cell). You can tune placement pattern.
-            int placeEvery = Math.Max(6, Math.Min(20, Math.Max(6, cellWidth))); // heuristic
-
             // vertical scaling factor for ASCII (height per line)
             float vScale = 0.55f; // tweak 0.5-0.6 for font aspect
-            int vRepeat = Math.Max(1, (int)Math.Round(vScale * cellWidth));
+            int cellHeight = Math.Max(1, (int)Math.Round(vScale * cellWidth));
 
-            int placeEveryCells = Math.Max(1, placeEvery / cellWidth); // number of cells between tokens
+            int currToken = 0;
+            int totalCells = targetCellsX * targetCellsY;
+
+            int placeEveryCells = totalCells / tokens.Count; // number of cells between tokens
+
+            int currSpotInCell = 0;
 
             for (int y = 0; y < targetCellsY; y++)
             {
@@ -276,69 +289,64 @@ namespace DonutMaker
                 for (int x = 0; x < targetCellsX; x++)
                 {
                     string chosen;
-                    var filler = GetSnippet(brightness[x, y]);
 
-                    for (int i = 0; i < cellWidth - 6; i++)
-                    {
-                        filler = filler.Insert(2, filler[2].ToString());
-                    }
-
-                    bool insertCode = (codeIdx < tokens.Count) && ((x + y * targetCellsX) % placeEveryCells == 0);
+                    bool insertCode = (currToken < tokens.Count && Random.Shared.Next(placeEveryCells) == 0) || currSpotInCell >= placeEveryCells;
 
                     if (insertCode)
                     {
-                        chosen = PadCell(tokens[codeIdx++]);
+                        chosen = PadCell(tokens[currToken++], brightness[x, y]);
                     }
                     else
                     {
-                        if (!paddedFillers.TryGetValue(filler, out chosen))
-                            chosen = PadCell(filler);
+                        //filler code can be added here later
+                        chosen = PadCell("", brightness[x, y]);
                     }
 
                     baseLineBuilder.Append(chosen); // always exactly cellWidth chars
                 }
 
                 string baseLine = baseLineBuilder.ToString();
+                sb.AppendLine(baseLine);
 
                 // vertical repeats
-                for (int v = 0; v < vRepeat; v++)
-                {
-                    if (v == 0)
-                    {
-                        sb.AppendLine("        " + baseLine);
-                    }
-                    else
-                    {
-                        var fillerLineBuilder = new StringBuilder();
-                        for (int x = 0; x < targetCellsX; x++)
-                        {
-                            var filler = GetSnippet(brightness[x, y]);
+                //for (int v = 0; v < cellHeight; v++)
+                //{
+                //    if (v == 0)
+                //    {
+                //        sb.AppendLine("        " + baseLine);
+                //    }
+                //    else
+                //    {
+                //        var fillerLineBuilder = new StringBuilder();
+                //        for (int x = 0; x < targetCellsX; x++)
+                //        {
+                //            var filler = GetFillerSnippet(brightness[x, y]);
 
-                            for (int i = 0; i < cellWidth - 6; i++)
-                            {
-                                filler = filler.Insert(2, filler[2].ToString());
-                            }
+                //            for (int i = 0; i < cellWidth - 6; i++)
+                //            {
+                //                filler = filler.Insert(2, filler[2].ToString());
+                //            }
 
-                            string segment = baseLine.Substring(x * cellWidth, cellWidth);
-                            if (fillerSnippets.Any(f => segment.Trim() == f.snippet.Trim()))
-                            {
-                                fillerLineBuilder.Append(segment);
-                            }
-                            else
-                            {
-                                fillerLineBuilder.Append(PadCell(filler));
-                            }
-                        }
-                        sb.AppendLine("        " + fillerLineBuilder.ToString());
-                    }
-                }
+                //            string segment = baseLine.Substring(x * cellWidth, cellWidth);
+                //            if (fillerSnippets.Any(f => segment.Trim() == f.snippet.Trim()))
+                //            {
+                //                fillerLineBuilder.Append(segment);
+                //            }
+                //            else
+                //            {
+                //                fillerLineBuilder.Append(PadCell(filler, brightness[x, y]));
+                //            }
+                //        }
+                //        sb.AppendLine("        " + fillerLineBuilder.ToString());
+                //    }
+                //}
             }
 
             File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
 
             Console.WriteLine(sb.ToString());
 
-            Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(codeIdx, tokens.Count)}/{tokens.Count}");
+            Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Count)}/{tokens.Count}");
         }
 
 
