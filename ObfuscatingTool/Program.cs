@@ -1,4 +1,6 @@
-﻿namespace ObfuscatingTool
+﻿using C_Obfuscation;
+
+namespace ObfuscatingTool
 {
     internal class Program
     {
@@ -9,6 +11,7 @@
             string outputCSPROJ="";
 
             List<string> allSourceFiles=InputTool.GetCodeFilePaths(inputCSPROJ);
+            string code = Obfuscator.ObfuscateProject(allSourceFiles);
             ;
 
 

@@ -1,7 +1,7 @@
-﻿using System.Text;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text;
 
 namespace C_Obfuscation
 {
@@ -10,12 +10,12 @@ namespace C_Obfuscation
     internal class ObfuscatingRewriter : CSharpSyntaxRewriter
     {
         // semantic model to resolve symbols from roslyn syntax nodes
-        private SemanticModel _model;
+        private SemanticModel model;
         // map of symbols to new names
-        private Dictionary<ISymbol, string> _map;
+        private Dictionary<ISymbol, string> map;
         public bool EncodedStringsUsed { get; private set; }
 
-        static Dictionary<Type, byte> LITERALTOBYTE= new Dictionary<Type, byte>
+        static Dictionary<Type, byte> LITERALTOBYTE = new Dictionary<Type, byte>
         {
             { typeof(double), 0x06 },
             { typeof(float), 0x05 },
@@ -26,25 +26,27 @@ namespace C_Obfuscation
         };
         public ObfuscatingRewriter(SemanticModel model, Dictionary<ISymbol, string> map)
         {
-            _model = model;
-            _map = map;
+            this.model = model;
+            this.map = map;
             EncodedStringsUsed = false;
         }
 
         public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
         {
-            ISymbol? sym = _model.GetSymbolInfo(node).Symbol;
-            if (sym != null && _map.TryGetValue(sym, out var newName))
+            ISymbol? sym = model.GetDeclaredSymbol(node);
+            if (sym != null && map.TryGetValue(sym, out var newName))
             {
-                return node.WithIdentifier(SyntaxFactory.Identifier(newName));
+                IdentifierNameSyntax newnode = node.WithIdentifier(SyntaxFactory.Identifier(newName));
+                new
+                return 
             }
             return base.VisitIdentifierName(node);
         }
 
         public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
-            if (sym != null && _map.TryGetValue(sym, out var newName))
+            ISymbol? sym = model.GetDeclaredSymbol(node);
+            if (sym != null && map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
@@ -53,8 +55,8 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitParameter(ParameterSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
-            if (sym != null && _map.TryGetValue(sym, out var newName))
+            ISymbol? sym = model.GetDeclaredSymbol(node);
+            if (sym != null && map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
@@ -63,8 +65,8 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
-            if (sym != null && _map.TryGetValue(sym, out var newName))
+            ISymbol? sym = model.GetDeclaredSymbol(node);
+            if (sym != null && map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
@@ -73,8 +75,8 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
-            if (sym != null && _map.TryGetValue(sym, out var newName))
+            ISymbol? sym = model.GetDeclaredSymbol(node);
+            if (sym != null && map.TryGetValue(sym, out var newName))
             {
                 node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
@@ -87,8 +89,8 @@ namespace C_Obfuscation
             var vars = new List<VariableDeclaratorSyntax>();
             foreach (var v in node.Declaration.Variables)
             {
-                ISymbol? sym = _model.GetDeclaredSymbol(v);
-                if (sym != null && _map.TryGetValue(sym, out var newName))
+                ISymbol? sym = model.GetDeclaredSymbol(v);
+                if (sym != null && map.TryGetValue(sym, out var newName))
                 {
                     vars.Add(v.WithIdentifier(SyntaxFactory.Identifier(newName)));
                 }
@@ -164,10 +166,11 @@ namespace C_Obfuscation
         public override SyntaxToken VisitToken(SyntaxToken token)
         {
             // if token maps to a symbol we have renamed, replace text
+
             if (token.IsKind(SyntaxKind.IdentifierToken))
             {
-                ISymbol? sym = _model.GetSymbolInfo(token.Parent).Symbol;
-                if (sym != null && _map.TryGetValue(sym, out var newName))
+                ISymbol? sym = GetSymbolFromToken(model, token);
+                if (sym != null && map.TryGetValue(sym, out var newName))
                 {
                     return SyntaxFactory.Identifier(token.LeadingTrivia, newName, token.TrailingTrivia);
                 }
@@ -196,6 +199,28 @@ namespace C_Obfuscation
                 0x01 => content[0],
                 _ => throw new NotSupportedException($"Unsupported literal marker: {marker}")
             };
+        }
+        private ISymbol? GetSymbolFromToken(SemanticModel model, SyntaxToken token)
+        {
+            SyntaxNode? node = token.Parent;
+
+            while (node != null)
+            {
+                var info = model.GetSymbolInfo(node);
+                if (info.Symbol != null)
+                    return info.Symbol;
+
+                if (info.CandidateSymbols.Length > 0)
+                    return info.CandidateSymbols[0];
+
+                var decl = model.GetDeclaredSymbol(node);
+                if (decl != null)
+                    return decl;
+
+                node = node.Parent;
+            }
+
+            return null;
         }
 
     }

@@ -9,51 +9,52 @@ namespace C_Obfuscation
     internal class IdentifierCollector : CSharpSyntaxWalker
     {
         // semantic model to resolve symbols from roslyn syntax nodes
-        private SemanticModel _model;
+        private SemanticModel model;
         // map of symbols to new names
-        private Dictionary<ISymbol, string> _map;
+        private Dictionary<ISymbol, string> map;
         public IdentifierCollector(SemanticModel model, Dictionary<ISymbol, string> map)
         {
-            _model = model;
-            _map = map;
+            this.model = model;
+            this.map = map;
         }
 
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
+            
+            ISymbol? sym = model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
-                _map[sym] = Obfuscator.NewName();
+                map[sym] = Obfuscator.NewName();
             }
             base.VisitVariableDeclarator(node);
         }
 
         public override void VisitParameter(ParameterSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
-                _map[sym] = Obfuscator.NewName();
+                map[sym] = Obfuscator.NewName();
             }
             base.VisitParameter(node);
         }
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
-                _map[sym] = Obfuscator.NewName();
+                map[sym] = Obfuscator.NewName();
             }
             base.VisitMethodDeclaration(node);
         }
 
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            ISymbol? sym = _model.GetDeclaredSymbol(node);
+            ISymbol? sym = model.GetDeclaredSymbol(node);
             if (CanRenameSymbol(sym))
             {
-                _map[sym] = Obfuscator.NewName();
+                map[sym] = Obfuscator.NewName();
             }
             base.VisitPropertyDeclaration(node);
         }
@@ -62,10 +63,10 @@ namespace C_Obfuscation
         {
             foreach (var v in node.Declaration.Variables)
             {
-                ISymbol? sym = _model.GetDeclaredSymbol(v);
+                ISymbol? sym = model.GetDeclaredSymbol(v);
                 if (CanRenameSymbol(sym))
                 {
-                    _map[sym] = Obfuscator.NewName();
+                    map[sym] = Obfuscator.NewName();
                 }
             }
             base.VisitFieldDeclaration(node);

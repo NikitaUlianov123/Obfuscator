@@ -42,12 +42,14 @@ namespace C_Obfuscation
             }
             lastUnit = lastUnit.AddMembers(HelperFuncs());
             //fix
-            string codeToRun = lastUnit.NormalizeWhitespace().ToFullString();
-            string encryptedCode = RotateLeft4Bits(codeToRun);
-            return encryptedCode;
+            CompilationUnitSyntax combinedUnit = CombineCompilationUnits(obfuscatedUnits.ToArray());
+            string finalCode = combinedUnit.NormalizeWhitespace().ToFullString();
+            
+            string obfuscatedCode = GenerateObfuscatedHelper(finalCode);
+            return obfuscatedCode;
         }
 
-        public static CompilationUnitSyntax GetObfuscatedNode(string filepath)
+        static CompilationUnitSyntax GetObfuscatedNode(string filepath)
         {
             //get code and parse
             string code = File.ReadAllText(filepath);
@@ -71,51 +73,43 @@ namespace C_Obfuscation
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
             return newRoot;
-        }
-        public static string ObfuscateCSFile(string inputPath)
-        {
-            //get code and parse
-            string code = File.ReadAllText(inputPath);
-            SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
-            CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
-
-            // build a model so we can avoid renaming public symbols or those used externally
-            PortableExecutableReference mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
-            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp").AddReferences(mscorlib).AddSyntaxTrees(tree);
-
-            SemanticModel model = compilation.GetSemanticModel(tree);
-
-            // makes rename map
-            Dictionary<ISymbol, string> renameMap = new Dictionary<ISymbol, string>(SymbolEqualityComparer.Default);
-
-            // collect identifiers to rename
-            IdentifierCollector collector = new IdentifierCollector(model, renameMap);
-            collector.Visit(root);
-
-            // rename variables and replace literals
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
-            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
-            
-            // add using System.Text; if not present
-            if (!newRoot.Usings.Any(u => u.Name.ToString() == "System.Text"))
-            {
-                newRoot = newRoot.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
-            }
-            newRoot = newRoot.AddMembers(HelperFuncs());
-
-
-            //output to file
-            string codeToRun = newRoot.NormalizeWhitespace().ToFullString();
-            string encryptedCode = RotateLeft4Bits(codeToRun);
-            return encryptedCode;
-        }
-        public static string GenerateObfuscatedHelper(string code)
+        }       
+         static string GenerateObfuscatedHelper(string code)
         {
             StringBuilder finalCode = new StringBuilder();
             finalCode.Append(topCodeRunner);
             finalCode.Append(RotateLeft4Bits(code));
             finalCode.Append(bottomCodeRunner);
             return finalCode.ToString();
+        }
+         static CompilationUnitSyntax CombineCompilationUnits(CompilationUnitSyntax[] units)
+        {
+            var usings = new List<UsingDirectiveSyntax>();
+            var members = new List<MemberDeclarationSyntax>();
+            var externs = new List<ExternAliasDirectiveSyntax>();
+            var attributes = new List<AttributeListSyntax>();
+
+            foreach (var unit in units)
+            {
+                foreach (var u in unit.Usings)
+                    usings.Add(u);
+
+                foreach (var m in unit.Members)
+                    members.Add(m);
+
+                foreach (var e in unit.Externs)
+                    externs.Add(e);
+
+                foreach (var a in unit.AttributeLists)
+                    attributes.Add(a);
+            }
+
+            return SyntaxFactory.CompilationUnit()
+                .WithUsings(SyntaxFactory.List(usings))
+                .WithExterns(SyntaxFactory.List(externs))
+                .WithAttributeLists(SyntaxFactory.List(attributes))
+                .WithMembers(SyntaxFactory.List(members))
+                .NormalizeWhitespace();
         }
         static MemberDeclarationSyntax HelperFuncs()
         {
