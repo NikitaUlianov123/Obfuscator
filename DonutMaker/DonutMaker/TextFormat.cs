@@ -146,12 +146,11 @@ namespace DonutMaker
         int preferredCellWidth = 0,
         bool splitLongChunks = true)
         {
-            // 1) load image and compute target height in cells
             using var image = Image.Load<Rgba32>(imagePath);
-            // Approximate character aspect ratio (height / width) for monospace fonts
-            // Most monospace fonts: height ≈ 2 × width
-            const float charAspect = 2f;
 
+            const float charAspect = 0.25f;
+
+            //compute target height in cells
             int targetCellsX = Math.Max(1, cellsWide);
             int targetCellsY = Math.Max(1, (int)(image.Height * targetCellsX / (float)image.Width / charAspect));
 
@@ -159,7 +158,7 @@ namespace DonutMaker
 
             image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
 
-            // 2) brightness map
+            //making brightness map
             byte[,] brightness = new byte[targetCellsX, targetCellsY];
             for (int y = 0; y < targetCellsY; y++)
             {
@@ -170,87 +169,30 @@ namespace DonutMaker
                 }
             }
 
-            // 3) filler snippets (can be adjusted)
-            var fillerSnippets = new (int threshold, string snippet)[]
+            //filler snippets
+            var fillerChars = new (int threshold, char snippet)[]
             {
-            ////(32, "if(true){}"),
-            ////(64, "for(int i=0;i<1;i++){}"),
-            ////(96, "try{}catch{}"),
-            ////(128, "return;"),
-            //(128, "/*##*/"),
-            ////(160, "break;"),
-            //(192, "/* */"),
-            ////(224, "//"),
-            //(256, "  ")
-
-                //( 43, "/*▓▓*/"),     // darkest
-                ( 86, "/*██*/"),     // dark
-                (129, "/*▓▓*/"),     // medium-dark
-                (171, "/*▒▒*/"),     // medium
-                (214, "/*░░*/"),     // light`
-                (256, "/*  */")      // brightest (space)
+                ( 86, '█'),
+                (129, '▓'),
+                (171, '▒'),
+                (214, '░'),
+                (256, ' ')
             };
 
-            string GetFillerSnippet(byte b) => fillerSnippets.First(f => b < f.threshold).snippet;
+            char GetFillerChar(byte b) => fillerChars.First(f => b < f.threshold).snippet;
 
-            // 4) split input code into tokens (keeps punctuation tokens)
-            // We'll split into tokens that are reasonably small so they fit cells.
-            var rawTokens = Regex.Split(code, @"(\s+|[;{}()\[\]=,+\-*/\.])")
+
+            //split input code into tokens
+            var tokens = Regex.Split(code, @"(\s+|[;{}()\[\]=,+\-*/\.])")
                                  .Where(s => s != null && s.Length > 0)
                                  .ToArray();
 
-            // Optionally collapse purely whitespace tokens (but we may want to preserve spaces)
-            // Keep them as tokens so they get inserted as ' ' cells when chosen.
-
-            // 5) determine cell width
-            int maxFillerLen = fillerSnippets.Max(f => f.snippet.Length);
-            int maxTokenLen = rawTokens.Any() ? rawTokens.Max(t => t.Length) : 0;
-            int computedCellWidth = Math.Max(maxFillerLen, Math.Min(maxTokenLen, preferredCellWidth == 0 ? maxTokenLen : preferredCellWidth));
-
-            // If user didn't set preferredCellWidth, pick a reasonable width:
-            if (preferredCellWidth == 0)
-            {
-                // choose small but safe width; if the tokens are huge, use a cap
-                const int cap = 30;
-                computedCellWidth = Math.Clamp(Math.Max(maxFillerLen, maxTokenLen), maxFillerLen, cap);
-            }
-            else
-            {
-                computedCellWidth = Math.Max(computedCellWidth, preferredCellWidth);
-            }
-
-            int cellWidth = Math.Max(1, computedCellWidth);
-
-            // 6) Prepare token queue, splitting long tokens if requested
-            var tokens = new List<string>();
-            foreach (var t in rawTokens)
-            {
-                if (t.Length <= cellWidth)
-                {
-                    tokens.Add(t);
-                }
-                else if (splitLongChunks)
-                {
-                    // split into chunks of size <= cellWidth
-                    for (int i = 0; i < t.Length; i += cellWidth)
-                    {
-                        int len = Math.Min(cellWidth, t.Length - i);
-                        tokens.Add(t.Substring(i, len));
-                    }
-                }
-                else
-                {
-                    // truncate
-                    tokens.Add(t.Substring(0, cellWidth));
-                }
-            }
+            //determine cell width
+            int maxTokenLen = tokens.Max(t => t.Length);
+            int cellWidth = Math.Min(maxTokenLen, preferredCellWidth == 0 ? maxTokenLen : preferredCellWidth);
 
             
-
-
-            if (tokens.Count == 0) tokens.Add(""); // ensure at least one
-
-            // 7) helper to pad to cellWidth
+            //helper to pad to cellWidth
             string PadCell(string s, byte brightness)
             {
                 if (s.Length == cellWidth)
@@ -263,34 +205,29 @@ namespace DonutMaker
                 }
                 else
                 {
-                    return s + "/*" + new string(GetFillerSnippet(brightness)[2], cellWidth - s.Length - 4) + "*/";
+                    return s + "/*" + new string(GetFillerChar(brightness), cellWidth - s.Length - 4) + "*/";
                 }
             }
 
 
-            // 8) generate output .cs
             var sb = new StringBuilder();
-
-            // vertical scaling factor for ASCII (height per line)
-            float vScale = 0.55f; // tweak 0.5-0.6 for font aspect
-            int cellHeight = Math.Max(1, (int)Math.Round(vScale * cellWidth));
 
             int currToken = 0;
             int totalCells = targetCellsX * targetCellsY;
 
-            int placeEveryCells = totalCells / tokens.Count; // number of cells between tokens
+            int placeEveryCells = totalCells / tokens.Length; // number of cells between tokens
 
             int currSpotInCell = 0;
 
             for (int y = 0; y < targetCellsY; y++)
             {
-                var baseLineBuilder = new StringBuilder();
-
                 for (int x = 0; x < targetCellsX; x++)
                 {
                     string chosen;
 
-                    bool insertCode = (currToken < tokens.Count && Random.Shared.Next(placeEveryCells) == 0) || currSpotInCell >= placeEveryCells;
+                    //if we can fit one token every 10 cells, it will have a 1/10 chance to place in a cell, until it hits 10 then it's
+                    //a guaranteed placement
+                    bool insertCode = (currToken < tokens.Length && Random.Shared.Next(placeEveryCells) == 0) || currSpotInCell >= placeEveryCells;
 
                     if (insertCode)
                     {
@@ -302,51 +239,17 @@ namespace DonutMaker
                         chosen = PadCell("", brightness[x, y]);
                     }
 
-                    baseLineBuilder.Append(chosen); // always exactly cellWidth chars
+                    sb.Append(chosen); // always exactly cellWidth chars
                 }
 
-                string baseLine = baseLineBuilder.ToString();
-                sb.AppendLine(baseLine);
-
-                // vertical repeats
-                //for (int v = 0; v < cellHeight; v++)
-                //{
-                //    if (v == 0)
-                //    {
-                //        sb.AppendLine("        " + baseLine);
-                //    }
-                //    else
-                //    {
-                //        var fillerLineBuilder = new StringBuilder();
-                //        for (int x = 0; x < targetCellsX; x++)
-                //        {
-                //            var filler = GetFillerSnippet(brightness[x, y]);
-
-                //            for (int i = 0; i < cellWidth - 6; i++)
-                //            {
-                //                filler = filler.Insert(2, filler[2].ToString());
-                //            }
-
-                //            string segment = baseLine.Substring(x * cellWidth, cellWidth);
-                //            if (fillerSnippets.Any(f => segment.Trim() == f.snippet.Trim()))
-                //            {
-                //                fillerLineBuilder.Append(segment);
-                //            }
-                //            else
-                //            {
-                //                fillerLineBuilder.Append(PadCell(filler, brightness[x, y]));
-                //            }
-                //        }
-                //        sb.AppendLine("        " + fillerLineBuilder.ToString());
-                //    }
-                //}
+                sb.AppendLine();
             }
 
             File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
 
             Console.WriteLine(sb.ToString());
 
-            Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Count)}/{tokens.Count}");
+            Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Length)}/{tokens.Length}");
         }
 
 
