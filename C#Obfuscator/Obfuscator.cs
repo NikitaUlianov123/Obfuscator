@@ -70,6 +70,8 @@ namespace C_Obfuscation
             collector.Visit(root);
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(renameMap);
             var newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            newRoot = (CompilationUnitSyntax)new LoopRewriter().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new DemorganRewriter().Visit(newRoot);
             return newRoot;
         }
         static string GenerateObfuscatedHelper(string code)

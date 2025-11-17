@@ -28,9 +28,6 @@ namespace ObfuscatingTool
                         new XElement("Nullable", "enable")
                     ),
                     new XElement("ItemGroup",
-                        new XElement("Compile", new XAttribute("Include", "*.cs"))
-                    ),
-                    new XElement("ItemGroup",
                         new XElement("PackageReference", new XAttribute("Include", "Microsoft.CodeAnalysis"), new XAttribute("Version", "4.14.0"))
                     )
                 )
