@@ -4,58 +4,51 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace C_Obfuscation
 {
-
-    // finds symbols to rename
+    // Collects all symbols that should be renamed.
     internal class IdentifierCollector : CSharpSyntaxWalker
     {
-        // semantic model to resolve symbols from roslyn syntax nodes
-        private SemanticModel model;
-        // map of symbols to new names
-        private Dictionary<ISymbol, string> map;
-        public IdentifierCollector(SemanticModel model, Dictionary<ISymbol, string> map)
+        private readonly SemanticModel model;
+
+        // Now the map is string->string (symbolKey => newName)
+        private readonly Dictionary<string, string> map;
+
+        public IdentifierCollector(SemanticModel model, Dictionary<string, string> map)
         {
             this.model = model;
             this.map = map;
         }
 
+        // Convert any symbol to a stable identity string
+        private static string SymbolKey(ISymbol sym)
+        {
+            return sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            
-            ISymbol? sym = model.GetDeclaredSymbol(node);
-            if (CanRenameSymbol(sym))
-            {
-                map[sym] = Obfuscator.NewName();
-            }
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
             base.VisitVariableDeclarator(node);
         }
 
         public override void VisitParameter(ParameterSyntax node)
         {
-            ISymbol? sym = model.GetDeclaredSymbol(node);
-            if (CanRenameSymbol(sym))
-            {
-                map[sym] = Obfuscator.NewName();
-            }
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
             base.VisitParameter(node);
         }
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            ISymbol? sym = model.GetDeclaredSymbol(node);
-            if (CanRenameSymbol(sym))
-            {
-                map[sym] = Obfuscator.NewName();
-            }
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
             base.VisitMethodDeclaration(node);
         }
 
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            ISymbol? sym = model.GetDeclaredSymbol(node);
-            if (CanRenameSymbol(sym))
-            {
-                map[sym] = Obfuscator.NewName();
-            }
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
             base.VisitPropertyDeclaration(node);
         }
 
@@ -63,40 +56,65 @@ namespace C_Obfuscation
         {
             foreach (var v in node.Declaration.Variables)
             {
-                ISymbol? sym = model.GetDeclaredSymbol(v);
-                if (CanRenameSymbol(sym))
+                var sym = model.GetDeclaredSymbol(v);
+                TryAddSymbol(sym);
+            }
+
+            base.VisitFieldDeclaration(node);
+        }
+
+        // Helper to check if a symbol should be renamed, then add it to the map
+        private void TryAddSymbol(ISymbol sym)
+        {
+            if (CanRenameSymbol(sym))
+            {
+                string key = SymbolKey(sym);
+
+                if (!map.ContainsKey(key))
                 {
-                    map[sym] = Obfuscator.NewName();
+                    map[key] = Obfuscator.NewName();
                 }
             }
-            base.VisitFieldDeclaration(node);
         }
 
         private bool CanRenameSymbol(ISymbol sym)
         {
-            // Code to check for public/protected/internal accessibility, overrides, entry points, etc.
-            if (sym == null) return false;
-
-            // keep public/protected/internal API names intact
-            if (sym.DeclaredAccessibility == Accessibility.Public
-                || sym.DeclaredAccessibility == Accessibility.Protected
-                || sym.DeclaredAccessibility == Accessibility.ProtectedOrInternal
-                || sym.DeclaredAccessibility == Accessibility.Internal)
+            if (sym == null)
                 return false;
 
-            // don't rename overrides, interface implementations, entry point, or extern
-            if (sym.IsOverride || sym.IsImplicitlyDeclared || sym.IsStatic && sym.Name == "Main") return false;
-            if (sym.Kind == SymbolKind.NamedType) return false; // keep type names for simplicity
+            // don't rename public API
+            switch (sym.DeclaredAccessibility)
+            {
+                case Accessibility.Public:
+                case Accessibility.Internal:
+                case Accessibility.Protected:
+                case Accessibility.ProtectedOrInternal:
+                    return false;
+            }
 
-            // don't rename if symbol is used via reflection attributes (basic heuristic)
+            if (sym.IsOverride)
+                return false;
+
+            if (sym.IsImplicitlyDeclared)
+                return false;
+
+            // don't rename Main
+            if (sym.IsStatic && sym.Name == "Main")
+                return false;
+
+            // Don't rename types (class, struct, interface)
+            if (sym.Kind == SymbolKind.NamedType)
+                return false;
+
+            // Skip symbols used by serializers or reflection (rough heuristic)
             foreach (var attr in sym.GetAttributes())
             {
-                if (attr.AttributeClass.Name.Contains("Json") || attr.AttributeClass.Name.Contains("Serializable"))
+                string n = attr.AttributeClass?.Name ?? "";
+                if (n.Contains("Json") || n.Contains("Serializable"))
                     return false;
             }
 
             return true;
         }
-
     }
 }
