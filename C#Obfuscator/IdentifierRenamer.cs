@@ -8,11 +8,10 @@ using System.Text;
 
 namespace C_Obfuscation
 {
-    // Rewriter that applies renames using annotations (no SemanticModel usage here).
-    // Also performs the literal encoding/obfuscation (kept as in your original).
+    
     internal class ObfuscatingRewriter : CSharpSyntaxRewriter
     {
-        // map: symbolKey -> newName
+        // map: newName
         private readonly Dictionary<string, string> renameMap;
         public bool EncodedStringsUsed { get; private set; }
 
@@ -32,7 +31,7 @@ namespace C_Obfuscation
             EncodedStringsUsed = false;
         }
 
-        // Helper: get rename key annotation from a node, if present
+        //retrieve rename key from node annotation
         private static string? TryGetRenameKey(SyntaxNode? node)
         {
             if (node == null) return null;
@@ -40,7 +39,7 @@ namespace C_Obfuscation
             return a?.Data;
         }
 
-        // Helper: rename an identifier token preserving trivia
+        //rename identifier token if parent has annotation
         private SyntaxToken RenameIdentifierTokenIfNeeded(SyntaxToken token)
         {
             if (!token.IsKind(SyntaxKind.IdentifierToken)) return token;
@@ -55,9 +54,7 @@ namespace C_Obfuscation
             return token;
         }
 
-        // -----------------------------
-        // Declarations / identifier nodes
-        // -----------------------------
+        //visit identifier names
         public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
         {
             string? key = TryGetRenameKey(node);
@@ -68,7 +65,7 @@ namespace C_Obfuscation
 
             return base.VisitIdentifierName(node);
         }
-
+        //visit various declaration nodes
         public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
             string? key = TryGetRenameKey(node);
@@ -80,7 +77,7 @@ namespace C_Obfuscation
 
             return base.VisitVariableDeclarator(newNode);
         }
-
+        //visit parameter declarations
         public override SyntaxNode VisitParameter(ParameterSyntax node)
         {
             string? key = TryGetRenameKey(node);
@@ -92,7 +89,7 @@ namespace C_Obfuscation
 
             return base.VisitParameter(newNode);
         }
-
+        //visit method declarations
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             string? key = TryGetRenameKey(node);
@@ -104,7 +101,7 @@ namespace C_Obfuscation
 
             return base.VisitMethodDeclaration(newNode);
         }
-
+        //visit property declarations
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
             string? key = TryGetRenameKey(node);
@@ -116,7 +113,7 @@ namespace C_Obfuscation
 
             return base.VisitPropertyDeclaration(newNode);
         }
-
+        //visit field declarations
         public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
             var vars = new List<VariableDeclaratorSyntax>();
@@ -138,9 +135,7 @@ namespace C_Obfuscation
             return base.VisitFieldDeclaration(newNode);
         }
 
-        // -----------------------------
-        // Tokens: ensure any identifier tokens that weren't handled get renamed
-        // -----------------------------
+        // visit tokens to rename identifiers
         public override SyntaxToken VisitToken(SyntaxToken token)
         {
             // For identifier tokens, check parent annotation
@@ -152,9 +147,7 @@ namespace C_Obfuscation
             return base.VisitToken(token);
         }
 
-        // -----------------------------
-        // Literal obfuscation (kept as your original logic)
-        // -----------------------------
+        // visit literal expressions to encode strings and numbers
         public override SyntaxNode VisitLiteralExpression(LiteralExpressionSyntax node)
         {
             if (node.IsKind(SyntaxKind.StringLiteralExpression))
@@ -217,13 +210,13 @@ namespace C_Obfuscation
 
             return base.VisitLiteralExpression(node);
         }
-
+        // helper for circular bit shift
         private byte CircularShift(byte b)
         {
             return (byte)((b << 4) | (b >> 4));
         }
 
-        // fallback decode helper - left unchanged from prior
+        // decode literal from byte array
         public static object DecodeLiteral(byte[] data)
         {
             byte f(byte b) => (byte)((((b << 4) | (b >> 4)) & ~0) + 0 * ((b >> 8) | (b << 8)));

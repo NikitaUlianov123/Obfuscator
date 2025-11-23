@@ -17,13 +17,13 @@ namespace C_Obfuscation
             this.model = model;
             this.map = map;
         }
-
+        // generate a unique key for a symbol
         private static string SymbolKey(ISymbol sym)
         {
             
             return sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
-
+        // attempt to add a symbol to the rename map
         private void TryAddSymbol(ISymbol sym)
         {
             if (sym == null) return;
@@ -35,7 +35,7 @@ namespace C_Obfuscation
                 map[key] = Obfuscator.NewName();
             }
         }
-
+        // determine if a symbol is eligible for renaming
         private bool CanRenameSymbol(ISymbol sym)
         {
             if (sym == null) return false;
@@ -68,7 +68,7 @@ namespace C_Obfuscation
             return true;
         }
 
-        
+        // visit variable declarators
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
             var sym = model.GetDeclaredSymbol(node);
@@ -84,7 +84,7 @@ namespace C_Obfuscation
 
             base.VisitVariableDeclarator(node);
         }
-
+        // visit parameter declarations
         public override void VisitParameter(ParameterSyntax node)
         {
             var sym = model.GetDeclaredSymbol(node);
@@ -100,7 +100,7 @@ namespace C_Obfuscation
 
             base.VisitParameter(node);
         }
-
+        // visit method declarations
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
             var sym = model.GetDeclaredSymbol(node);
@@ -116,7 +116,7 @@ namespace C_Obfuscation
 
             base.VisitMethodDeclaration(node);
         }
-
+        // visit property declarations
         public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
             var sym = model.GetDeclaredSymbol(node);
@@ -132,14 +132,14 @@ namespace C_Obfuscation
 
             base.VisitPropertyDeclaration(node);
         }
-
+        // visit field declarations
         public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
             
             base.VisitFieldDeclaration(node);
         }
 
-       
+        // visit identifier names
         public override void VisitIdentifierName(IdentifierNameSyntax node)
         {
             

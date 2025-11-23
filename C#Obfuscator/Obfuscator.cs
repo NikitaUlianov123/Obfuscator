@@ -101,6 +101,7 @@ namespace C_Obfuscation
        
         static string GenerateObfuscatedHelper(string encodedUserCode)
         {
+            // we will append encoded user code into that spot and then append bottomCodeRunner
             var sb = new StringBuilder();
             sb.Append(topCodeRunner);           
             sb.Append(encodedUserCode);
@@ -110,11 +111,13 @@ namespace C_Obfuscation
 
         static CompilationUnitSyntax CombineCompilationUnits(CompilationUnitSyntax[] units)
         {
+            //get all usings, members, externs, attributes
             var usings = new List<UsingDirectiveSyntax>();
             var members = new List<MemberDeclarationSyntax>();
             var externs = new List<ExternAliasDirectiveSyntax>();
             var attributes = new List<AttributeListSyntax>();
 
+            //combine
             foreach (var unit in units)
             {
                 usings.AddRange(unit.Usings);
@@ -123,7 +126,7 @@ namespace C_Obfuscation
                 attributes.AddRange(unit.AttributeLists);
             }
 
-           
+            //ensure required usings exist
             var requiredUsings = new[]
             {
         "System",
@@ -131,7 +134,7 @@ namespace C_Obfuscation
         "System.Linq",
         "System.Collections.Generic"
     };
-
+            // add any missing required usings
             foreach (var u in requiredUsings)
             {
                 if (!usings.Any(e => e.Name.ToString() == u))
@@ -139,7 +142,7 @@ namespace C_Obfuscation
                     usings.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(u)));
                 }
             }
-
+            //create new compilation unit
             return SyntaxFactory.CompilationUnit()
                 .WithUsings(SyntaxFactory.List(usings))
                 .WithExterns(SyntaxFactory.List(externs))
@@ -151,6 +154,7 @@ namespace C_Obfuscation
 
         static MemberDeclarationSyntax HelperFuncs()
         {
+            // insert helper functions
             var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
 {
     private static byte R(byte x)
