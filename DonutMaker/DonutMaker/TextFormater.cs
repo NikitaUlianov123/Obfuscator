@@ -114,7 +114,7 @@ namespace DonutMaker
             int currToken = 0;
             int totalCells = targetCellsX * targetCellsY;
 
-            int placeEveryCells = totalCells / tokens.Length; // number of cells between tokens
+            int placeEveryCells = totalCells / (tokens.Length + 1); // number of cells between tokens
 
             int currSpotInCell = 0;
 
@@ -126,11 +126,12 @@ namespace DonutMaker
 
                     //if we can fit one token every 10 cells, it will have a 1/10 chance to place in a cell, until it hits 10 then it's
                     //a guaranteed placement
-                    bool insertCode = (currToken < tokens.Length && Random.Shared.Next(placeEveryCells) == 0) || currSpotInCell >= placeEveryCells;
+                    bool insertCode = currToken < tokens.Length && (Random.Shared.Next(placeEveryCells) == 0 || currSpotInCell++ >= placeEveryCells);
 
                     if (insertCode)
                     {
                         chosen = PadCell(tokens[currToken++], (byte)(255 - brightness[x, y]));
+                        currSpotInCell = 0;
                     }
                     else
                     {
