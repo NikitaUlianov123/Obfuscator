@@ -387,7 +387,6 @@ namespace Obfuscator
             TokenType.SEMI,
             TokenType.COLON,
             TokenType.COMMA,
-            TokenType.OP_DOT,
             TokenType.LPAREN,
             TokenType.RPAREN,
             TokenType.LBRACE,

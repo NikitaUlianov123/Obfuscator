@@ -31,9 +31,16 @@ VaribleDec
     T "id" "=^" E'' ;
 	T "id" ;
 }
+Dot
+{
+	"id" ".^" "id"
+	"id" ".^" Dot
+}
 E
 {
 	VaribleDec
+	"id" "^=" E' ;
+	Dot "^=" E' ;
 	"id" "(^" ListOfStatements ")" ;
 	"delay^" "(" E' ")" ;
 	"if^" "(" CE ")" "{" Body "}"
@@ -88,7 +95,7 @@ E'
 	"SensorValue^" "[" SensorPort "]" 
 	"nMotorEncoder^" "[" MotorPort "]"	 
 	"id" "(^" ListOfStatements ")" 
-	"id" ".^" "id"
+	Dot
 	"id"
 }
 ListOfStatements

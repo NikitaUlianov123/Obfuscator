@@ -1,3 +1,1 @@
-struct temp{intt;intd;}void setPowers(int leftPower,int rightPower) {
-motor[motorB] = leftPower ;motor[motorC] = rightPower ;
-}task main(){int a = 5;int b = 6;int c = a+b;int d = b-c;int e = a * d;int f = e / a;}
+d.d = 0;
