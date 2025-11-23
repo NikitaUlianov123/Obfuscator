@@ -325,7 +325,7 @@ namespace Obfuscator
                // but if you already tag the root as 'motor' or 'nMotorEncoder', you can use:)
                ["\"motor\""] = (b, e, ch) => new ASTNodeMotorAssign(b, e, ch),
                ["\"nMotorEncoder\""] = (b, e, ch) => new ASTNodeEncoderAssign(b, e, ch),
-
+               ["VaribleDec"] = (b, e, ch) => new ASTNodeVarDec(b, e, ch),
                // Functions / Structs / Task
                // If your reduce action uses the return type token as the root, these will fire:
                ["\"void\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
@@ -456,21 +456,17 @@ namespace Obfuscator
                 }
                 if (isMatch)
                 {
-                    if (ASTFactoryRobotC.ContainsKey(starting))
-                    {
-                        return ASTFactoryRobotC[starting].Invoke(prevStart, current, childern);
-                    }
-                    else if (grammar.grammarPairs[starting][i].exToken == null)
-                    {
-                        return MakeTerminal(prevStart, current, childern);
-                    }
-                    else if (ASTFactoryRobotC.ContainsKey(grammar.grammarPairs[starting][i].exToken))
+                    if (grammar.grammarPairs[starting][i].exToken != null && ASTFactoryRobotC.ContainsKey(grammar.grammarPairs[starting][i].exToken))
                     {
                         return ASTFactoryRobotC[grammar.grammarPairs[starting][i].exToken].Invoke(prevStart, current, childern);
                     }
-                    else if(ASTFactoryRobotC.ContainsKey(starting))
+                    else if (ASTFactoryRobotC.ContainsKey(starting))
                     {
                         return ASTFactoryRobotC[starting].Invoke(prevStart, current, childern);
+                    }
+                    else
+                    {
+                        return MakeTerminal(prevStart, current, childern);
                     }
                 }
                 current = prevStart;

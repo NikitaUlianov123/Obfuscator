@@ -26,9 +26,14 @@ SensorPort
 	"port4"
 	"id"
 }
+VaribleDec
+{
+    T "id" "=^" E'' ;
+	T "id" ;
+}
 E
 {
-	T "id" "=^" E'' ;
+	VaribleDec
 	"id" "(^" ListOfStatements ")" ;
 	"delay^" "(" E' ")" ;
 	"if^" "(" CE ")" "{" Body "}"
@@ -82,7 +87,6 @@ E'
 	"stringVal"
 	"SensorValue^" "[" SensorPort "]" 
 	"nMotorEncoder^" "[" MotorPort "]"	 
-	T "id" ";"
 	"id" "(^" ListOfStatements ")" 
 	"id" ".^" "id"
 	"id"
@@ -114,6 +118,9 @@ CE'
 E''
 {
 	E' "+^" E''
+	E' "-^" E''
+	E' "*^" E''
+	E' "/^" E''
 	E'
 }
 ForHeader
@@ -177,6 +184,7 @@ ProgramBody
 	Function ProgramBody
 	Struct ProgramBody
 	Define ProgramBody
+	VaribleDec ProgramBody
 	"none"
 }
 Program
