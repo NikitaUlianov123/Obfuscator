@@ -13,6 +13,8 @@ namespace C_Obfuscation
     {
         // counts unique names
         public static int nameCounter = 0;
+        // holds the last unencoded obfuscated code for debugging
+        public static string ObfuscatedCode = "";
         // generates a new obfuscated name
         public static string NewName() => "a" + (nameCounter++).ToString("X");
 
@@ -29,6 +31,8 @@ namespace C_Obfuscation
             return new string(result);
         }
 
+       
+
         public static string ObfuscateProject(List<string> codeFilePaths)
         {
             List<CompilationUnitSyntax> obfuscatedUnits = new List<CompilationUnitSyntax>();
@@ -38,19 +42,24 @@ namespace C_Obfuscation
                 obfuscatedUnits.Add(obfUnit);
             }
 
-            // Merge units and add helper if needed
+            // Merge units
             CompilationUnitSyntax combinedUnit = CombineCompilationUnits(obfuscatedUnits.ToArray());
 
-            // Ensure the helper class and using exist in the combined unit
-            if (!combinedUnit.Usings.Any(u => u.Name.ToString() == "System.Text"))
+            // Ensure the helper class exists in the combined unit (so obfuscated user code can call _O)
+            if (!combinedUnit.Members.OfType<ClassDeclarationSyntax>().Any(c => c.Identifier.Text == "_O"))
             {
-                combinedUnit = combinedUnit.AddUsings(SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Text")));
+                combinedUnit = combinedUnit.AddMembers(HelperFuncs());
             }
-            combinedUnit = combinedUnit.AddMembers(HelperFuncs());
 
-            string finalCode = combinedUnit.NormalizeWhitespace().ToFullString();
-            string obfuscatedCode = GenerateObfuscatedHelper(finalCode);
-            return obfuscatedCode;
+            // userCode is the obfuscated user program (NOT the runner)
+            string userCode = combinedUnit.NormalizeWhitespace().ToFullString();
+            ObfuscatedCode = userCode; // keep plain obfuscated code for debugging if needed
+
+            // encode only the user code and insert into the runner template
+            string encodedUserCode = RotateLeft4Bits(userCode);
+            string finalRunner = GenerateObfuscatedHelper(encodedUserCode);
+
+            return finalRunner;
         }
 
         static CompilationUnitSyntax GetObfuscatedNode(string filepath)
@@ -60,8 +69,7 @@ namespace C_Obfuscation
             SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
 
-            // build a model so we can avoid renaming public symbols or those used externally
-            // include at least mscorlib
+            // build a model so we can avoid renaming public symbols or those used externally           
             var refs = new List<MetadataReference>
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
@@ -73,7 +81,7 @@ namespace C_Obfuscation
 
             SemanticModel model = compilation.GetSemanticModel(tree);
 
-            // make rename map (symbolKey -> newName)
+            // make rename map 
             Dictionary<string, string> renameMap = new Dictionary<string, string>();
 
             // collector annotates the original root and fills renameMap
@@ -82,18 +90,22 @@ namespace C_Obfuscation
 
             // rewriter runs only on the annotated root and uses only the renameMap
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(renameMap);
+            DemorganRewriter demorganRewriter = new DemorganRewriter();
+            LoopRewriter loopRewriter = new LoopRewriter();
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
-
+            newRoot=(CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)loopRewriter.Visit(newRoot);
             return newRoot;
         }
 
-        static string GenerateObfuscatedHelper(string code)
+       
+        static string GenerateObfuscatedHelper(string encodedUserCode)
         {
-            StringBuilder finalCode = new StringBuilder();
-            finalCode.Append(topCodeRunner);
-            finalCode.Append(RotateLeft4Bits(code));
-            finalCode.Append(bottomCodeRunner);
-            return finalCode.ToString();
+            var sb = new StringBuilder();
+            sb.Append(topCodeRunner);           
+            sb.Append(encodedUserCode);
+            sb.Append(bottomCodeRunner);
+            return sb.ToString();
         }
 
         static CompilationUnitSyntax CombineCompilationUnits(CompilationUnitSyntax[] units)
@@ -105,17 +117,27 @@ namespace C_Obfuscation
 
             foreach (var unit in units)
             {
-                foreach (var u in unit.Usings)
-                    usings.Add(u);
+                usings.AddRange(unit.Usings);
+                members.AddRange(unit.Members);
+                externs.AddRange(unit.Externs);
+                attributes.AddRange(unit.AttributeLists);
+            }
 
-                foreach (var m in unit.Members)
-                    members.Add(m);
+           
+            var requiredUsings = new[]
+            {
+        "System",
+        "System.Text",
+        "System.Linq",
+        "System.Collections.Generic"
+    };
 
-                foreach (var e in unit.Externs)
-                    externs.Add(e);
-
-                foreach (var a in unit.AttributeLists)
-                    attributes.Add(a);
+            foreach (var u in requiredUsings)
+            {
+                if (!usings.Any(e => e.Name.ToString() == u))
+                {
+                    usings.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(u)));
+                }
             }
 
             return SyntaxFactory.CompilationUnit()
@@ -125,6 +147,7 @@ namespace C_Obfuscation
                 .WithMembers(SyntaxFactory.List(members))
                 .NormalizeWhitespace();
         }
+
 
         static MemberDeclarationSyntax HelperFuncs()
         {
@@ -184,6 +207,8 @@ namespace C_Obfuscation
             return helper;
         }
 
+       
+        // we will append encoded user code into that spot and then append bottomCodeRunner
         static string topCodeRunner = @"using System;
 using System.IO;
 using System.Linq;
