@@ -9,7 +9,7 @@ namespace DonutMaker
             //string input = File.ReadAllText(@"../../../TestRobotC/MathQuiz.txt");
             string input = File.ReadAllText(@"../../../TestCSharp/Program.txt");
 
-            Console.WriteLine(TextFormater.GenerateCodeArt(@"../../../TestImages/miata.png", input, true, @"../../../TestOutput/Mountain.txt"));
+            Console.WriteLine(TextFormater.GenerateCodeArt(@"../../../TestImages/miata.png", input, true, @"../../../TestOutput/Output.txt"));
         }
     }
 }

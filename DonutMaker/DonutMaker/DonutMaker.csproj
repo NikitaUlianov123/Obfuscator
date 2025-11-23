@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <Folder Include="TestCSharp\" />
-    <Folder Include="TestOutput\" />
   </ItemGroup>
 
 </Project>
