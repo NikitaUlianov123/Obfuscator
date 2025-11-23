@@ -26,12 +26,13 @@ namespace DonutMaker
 
 
             Console.WriteLine("---------------------------------------------------------------------------------------------------------");
-
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.White;
             //string input = File.ReadAllText(@"../../../TestRobotC/MathQuiz.txt");
             string input = File.ReadAllText(@"../../../TestCSharp/Program.txt");
             string[] split = TextFormat.SplitPreprocessor(input);
             string code = TextFormat.MakeOneLine(TextFormat.RemoveComments(split[1]));
-            TextFormat.GenerateCodeArt2(@"../../../TestImages/cat.png", code, @"../../../TestOutput/Mountain.txt", 70);
+            TextFormat.GenerateCodeArt2(@"../../../TestImages/4am.png", code, @"../../../TestOutput/Mountain.txt", 70);
             //Console.Write(formatted);
             //Console.WriteLine(code);
 

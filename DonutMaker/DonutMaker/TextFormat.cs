@@ -34,109 +34,6 @@ namespace DonutMaker
             return Regex.Replace(code, pattern, "");
         }
 
-        public static string ConvertToAscii(string path, int width)
-        {
-            using var image = Image.Load<Rgba32>(path);
-
-            // Maintain aspect ratio
-            double ratio = (double)image.Height / image.Width;
-            int height = (int)(width * ratio * 0.5); // 0.5 = adjust for font aspect ratio
-
-            // Resize the image
-            image.Mutate(x => x.Resize(width, height));
-
-            var sb = new StringBuilder();
-            const string chars = "@%#*+=-:. "; // darkest → lightest
-
-            for (int y = 0; y < image.Height; y++)
-            {
-                sb.Append("//");
-                for (int x = 0; x < image.Width; x++)
-                {
-                    var pixel = image[x, y];
-                    byte gray = (byte)((pixel.R + pixel.G + pixel.B) / 3);
-
-                    int index = gray * (chars.Length - 1) / 255;
-                    sb.Append(chars[chars.Length - 1 - index]); // invert if you want dark=solid
-                }
-                sb.AppendLine();
-            }
-
-            return sb.ToString();
-        }
-
-
-        public static void GenerateCodeArt(string imagePath, string code, string outputPath, int maxWidth)
-        {
-            //Load image and resize
-            using var image = Image.Load<Rgba32>(imagePath);
-            int height = (int)(image.Height * (maxWidth / (float)image.Width));
-            image.Mutate(x => x.Resize(maxWidth, height));
-
-            //Convert to brightness map
-            byte[,] brightness = new byte[image.Width, image.Height];
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    var p = image[x, y];
-                    byte b = (byte)((p.R + p.G + p.B) / 3);
-                    brightness[x, y] = b;
-                }
-            }
-
-            // 3️⃣ Define filler snippets for brightness ranges
-            var fillerSnippets = new (int threshold, string snippet)[]
-            {
-                (32, "if(true){}"),
-                (64, "for(int i=0;i<1;i++){}"),
-                (96, "try{}catch{}"),
-                //(128, "return;"),
-                //(160, "break;"),
-                (192, "/* */"),
-                (224, "//"),
-                (256, "  ")
-            };
-
-            string GetSnippetForBrightness(byte b)
-                => fillerSnippets.First(f => b < f.threshold).snippet;
-
-            //Split input code into safe chunks
-            string[] codeChunks = Regex.Split(code, @"(\s+|[;{}()\[\]=,+\-*/])")
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .ToArray();
-
-            //Generate C# art
-            var sb = new StringBuilder();
-            //sb.AppendLine("using System;");
-            //sb.AppendLine("class Art { static void Main() {");
-
-            int codeIndex = 0;
-            for (int y = 0; y < image.Height; y++)
-            {
-                for (int x = 0; x < image.Width; x++)
-                {
-                    byte b = brightness[x, y];
-                    string snippet = GetSnippetForBrightness(b);
-
-                    // Occasionally insert real code snippet
-                    if (codeIndex < codeChunks.Length && (x + y * image.Width) % 9 == 0)
-                        snippet = codeChunks[codeIndex++];
-
-                    sb.Append(snippet + " ");
-                }
-                sb.AppendLine();
-            }
-
-            //sb.AppendLine("} }");
-
-            //Save to file
-            File.WriteAllText(outputPath, sb.ToString());
-            Console.WriteLine(sb.ToString());
-        }
-
-
-
 
         public static void GenerateCodeArt2(
         string imagePath,
@@ -172,11 +69,31 @@ namespace DonutMaker
             //filler snippets
             var fillerChars = new (int threshold, char snippet)[]
             {
-                ( 86, '█'),
-                (129, '▓'),
-                (171, '▒'),
-                (214, '░'),
+                ( 15, '█'),
+                ( 30, '@'),
+                ( 45, 'W'),
+                ( 60, 'M'),
+                ( 75, '#'),
+                ( 90, '8'),
+                (105, 'B'),
+                (120, '%'),
+                (135, '▓'),
+                (150, 'S'),
+                (165, 'K'),
+                (180, '▒'),
+                (195, 'X'),
+                (210, 'o'),
+                (225, 'c'),
+                (235, '░'),
+                (245, ':'),
+                (250, ','),
+                (253, '.'),
                 (256, ' ')
+                //( 86, '█'),
+                //(129, '▓'),
+                //(171, '▒'),
+                //(214, '░'),
+                //(256, ' ')
             };
 
             char GetFillerChar(byte b) => fillerChars.First(f => b < f.threshold).snippet;
@@ -191,7 +108,7 @@ namespace DonutMaker
             int maxTokenLen = tokens.Max(t => t.Length);
             int cellWidth = Math.Min(maxTokenLen, preferredCellWidth == 0 ? maxTokenLen : preferredCellWidth);
 
-            
+
             //helper to pad to cellWidth
             string PadCell(string s, byte brightness)
             {
@@ -231,12 +148,12 @@ namespace DonutMaker
 
                     if (insertCode)
                     {
-                        chosen = PadCell(tokens[currToken++], brightness[x, y]);
+                        chosen = PadCell(tokens[currToken++], (byte)(255 - brightness[x, y]));
                     }
                     else
                     {
                         //filler code can be added here later
-                        chosen = PadCell("", brightness[x, y]);
+                        chosen = PadCell("", (byte)(255 - brightness[x, y]));
                     }
 
                     sb.Append(chosen); // always exactly cellWidth chars
