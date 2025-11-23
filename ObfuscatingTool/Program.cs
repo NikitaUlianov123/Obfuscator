@@ -12,7 +12,7 @@ namespace ObfuscatingTool
 
             List<string> allSourceFiles = InputTool.GetCodeFilePaths(inputCSPROJ);
             string code = Obfuscator.ObfuscateProject(allSourceFiles);
-            Console.WriteLine(Obfuscator.ObfuscatedCode);
+            
             ProjectBuilder.BuildProject(outputCSPROJ, code);
         }
     }
