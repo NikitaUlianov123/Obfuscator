@@ -59,7 +59,7 @@ namespace DonutMaker
         {
             using var image = Image.Load<Rgba32>(imagePath);
 
-            const float charAspect = 0.12f;
+            const float charAspect = 0.15f;
 
             //compute target height in cells
             int targetCellsX = Math.Max(1, cellsWide);
@@ -165,12 +165,12 @@ namespace DonutMaker
             return Regex.Replace(code, pattern, "");
         }
 
-        public static string MakeOneLine(string input)
+        private static string MakeOneLine(string input)
         {
             return Regex.Replace(input.Replace("\r", "").Replace("\n", "").Replace("\t", ""), " {2,}", " ");
         }
 
-        public static string[] SplitPreprocessor(string code)
+        private static string[] SplitPreprocessor(string code)
         {
             if (string.IsNullOrWhiteSpace(code))
                 return [string.Empty, string.Empty];
