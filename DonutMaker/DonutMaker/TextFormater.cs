@@ -154,6 +154,47 @@ namespace DonutMaker
             //Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Length)}/{tokens.Length}");
         }
 
+        public static string CondenseAndFormatCSharp(string input)
+        {
+            // 1. Collapse all whitespace sequences to single spaces
+            var collapsed = Regex.Replace(input, @"\s+", " ");
+
+            // 2. Insert line breaks after tokens that should start a new line or block
+            collapsed = Regex.Replace(collapsed, @"(?<=[{};])", "\n");
+
+            // 3. Remove extra spaces before punctuation
+            collapsed = Regex.Replace(collapsed, @"\s+([{}();,\]])", "$1");
+
+            // 4. Remove spaces after '(' and before ')'
+            collapsed = Regex.Replace(collapsed, @"\(\s+", "(");
+            collapsed = Regex.Replace(collapsed, @"\s+\)", ")");
+
+            // 5. Now split into lines
+            var lines = collapsed.Split('\n')
+                                 .Select(l => l.Trim())
+                                 .Where(l => l.Length > 0)
+                                 .ToList();
+
+            // 6. Re-indent based on braces
+            int indent = 0;
+            var sb = new StringBuilder();
+
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("}"))
+                    indent--;
+
+                sb.AppendLine(new string(' ', indent * 4) + line);
+
+                if (line.EndsWith("{"))
+                    indent++;
+            }
+
+            return sb.ToString();
+        }
+
+
+
         public static string RemoveComments(string code)
         {
             if (string.IsNullOrEmpty(code))
