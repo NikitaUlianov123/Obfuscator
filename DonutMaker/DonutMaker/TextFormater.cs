@@ -7,68 +7,11 @@ using System.Text.RegularExpressions;
 
 namespace DonutMaker
 {
-    public class TextFormat
+    public class TextFormater
     {
-        public int Width { get; }
-        public int Height { get; }
-        public bool[,] Mask { get; }
-
-        public bool this[int y, int x] => Mask[y, x];
-
-        public TextFormat(bool[,] mask)
-        {
-            Mask = mask;
-            Height = mask.GetLength(0);
-            Width = mask.GetLength(1);
-        }
-
-        public static string RemoveComments(string code)
-        {
-            if (string.IsNullOrEmpty(code))
-                return code;
-
-            // Regex:
-            // 1. Match // comments (until line end)
-            // 2. Match /* ... */ comments (including multiline)
-            string pattern = @"(//[^\r\n]*)|(/\*[\s\S]*?\*/)";
-            return Regex.Replace(code, pattern, "");
-        }
-
-
-        public static void GenerateCodeArt2(
-        string imagePath,
-        string code,
-        string outputPath,
-        int cellsWide = 100,
-        int preferredCellWidth = 0,
-        bool splitLongChunks = true)
-        {
-            using var image = Image.Load<Rgba32>(imagePath);
-
-            const float charAspect = 0.25f;
-
-            //compute target height in cells
-            int targetCellsX = Math.Max(1, cellsWide);
-            int targetCellsY = Math.Max(1, (int)(image.Height * targetCellsX / (float)image.Width / charAspect));
-
-            image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
-
-            image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
-
-            //making brightness map
-            byte[,] brightness = new byte[targetCellsX, targetCellsY];
-            for (int y = 0; y < targetCellsY; y++)
-            {
-                for (int x = 0; x < targetCellsX; x++)
-                {
-                    var p = image[x, y];
-                    brightness[x, y] = (byte)((p.R * 0.2126f + p.G * 0.7152f + p.B * 0.0722f));
-                }
-            }
-
-            //filler snippets
-            var fillerChars = new (int threshold, char snippet)[]
-            {
+        //filler snippets
+        private static readonly (int threshold, char snippet)[] fillerChars =
+        [
                 ( 15, '█'),
                 ( 30, '@'),
                 ( 45, 'W'),
@@ -89,14 +32,53 @@ namespace DonutMaker
                 (250, ','),
                 (253, '.'),
                 (256, ' ')
-                //( 86, '█'),
-                //(129, '▓'),
-                //(171, '▒'),
-                //(214, '░'),
-                //(256, ' ')
-            };
+        ];
 
-            char GetFillerChar(byte b) => fillerChars.First(f => b < f.threshold).snippet;
+        private static char GetFillerChar(byte b) => fillerChars.First(f => b < f.threshold).snippet;
+
+
+        public static string GenerateCodeArt(string imagePath, string code, bool writeToFile = false, string outputPath = "")
+        {
+            string[] split = SplitPreprocessor(code);
+            string preprocessor = split[0];
+            string mainCode = TextFormater.MakeOneLine(TextFormater.RemoveComments(split[1]));
+
+            string result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
+
+            if (writeToFile)
+            {
+                File.WriteAllText(outputPath, result, Encoding.UTF8);
+            }
+            return result;
+        }
+
+        private static string GenerateCodeArt2(
+        string imagePath,
+        string code,
+        int cellsWide = 100)
+        {
+            using var image = Image.Load<Rgba32>(imagePath);
+
+            const float charAspect = 0.12f;
+
+            //compute target height in cells
+            int targetCellsX = Math.Max(1, cellsWide);
+            int targetCellsY = Math.Max(1, (int)(image.Height * targetCellsX / (float)image.Width / charAspect));
+
+            image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
+
+            //making brightness map
+            byte[,] brightness = new byte[targetCellsX, targetCellsY];
+            for (int y = 0; y < targetCellsY; y++)
+            {
+                for (int x = 0; x < targetCellsX; x++)
+                {
+                    var pixel = image[x, y];
+                    brightness[x, y] = (byte)((pixel.R * 0.2126f + pixel.G * 0.7152f + pixel.B * 0.0722f));
+                }
+            }
+
+            
 
 
             //split input code into tokens
@@ -106,7 +88,7 @@ namespace DonutMaker
 
             //determine cell width
             int maxTokenLen = tokens.Max(t => t.Length);
-            int cellWidth = Math.Min(maxTokenLen, preferredCellWidth == 0 ? maxTokenLen : preferredCellWidth);
+            int cellWidth = Math.Min(maxTokenLen, maxTokenLen);
 
 
             //helper to pad to cellWidth
@@ -162,13 +144,26 @@ namespace DonutMaker
                 sb.AppendLine();
             }
 
-            File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
+            return sb.ToString();
 
-            Console.WriteLine(sb.ToString());
+            //File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
 
-            Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Length)}/{tokens.Length}");
+            //Console.WriteLine(sb.ToString());
+
+            //Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Length)}/{tokens.Length}");
         }
 
+        public static string RemoveComments(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return code;
+
+            // Regex:
+            // 1. Match // comments (until line end)
+            // 2. Match /* ... */ comments (including multiline)
+            string pattern = @"(//[^\r\n]*)|(/\*[\s\S]*?\*/)";
+            return Regex.Replace(code, pattern, "");
+        }
 
         public static string MakeOneLine(string input)
         {
@@ -186,12 +181,12 @@ namespace DonutMaker
             var lines = code.Split('\n');
 
             var preprocessor = lines
-                .Where(line => line.TrimStart().StartsWith("#"))
+                .Where(line => line.TrimStart().StartsWith('#'))
                 .Select(line => line.Trim())
                 .ToArray();
 
             var others = lines
-                .Where(line => !line.TrimStart().StartsWith("#"))
+                .Where(line => !line.TrimStart().StartsWith('#'))
                 .ToArray();
 
             string preprocessorJoined = string.Join(" ", preprocessor);
@@ -199,5 +194,8 @@ namespace DonutMaker
 
             return [preprocessorJoined, codeJoined];
         }
+
+
+
     }
 }
