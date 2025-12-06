@@ -22,7 +22,9 @@ public class LinkedList<T> : IEnumerable<T>
     public void AddFirst(T value)
     {
         var node = new Node(value) { Next = head };
+
         head = node;
+
         if (tail == null)
             tail = node;
         Count++;
@@ -48,6 +50,7 @@ public class LinkedList<T> : IEnumerable<T>
         if (head == null)
         {
             value = default;
+
             return false;
         }
         value = head.Value;
@@ -75,9 +78,11 @@ public class LinkedList<T> : IEnumerable<T>
         var current = head;
         while (current!.Next != tail)
             current = current.Next!;
+
         value = tail!.Value;
         current.Next = null;
         tail = current;
+
         Count--;
         return true;
     }
@@ -112,24 +117,25 @@ public class Program
     public static void Main()
     {
         var list = new LinkedList<string>();
-        Console.WriteLine("== Adding items ==");
+        Console.WriteLine("== Adding items" + " ==");
         list.AddLast("apple");
         list.AddLast("banana");
         list.AddLast("cherry");
         list.AddFirst("FIRST");
         PrintList(list);
-        Console.WriteLine("\n== Removing first ==");
+        Console.WriteLine("\\n== Removing f" + "irst ==");
         list.RemoveFirst(out var removedFirst);
         Console.WriteLine($"Removed: {removedFirst}");
         PrintList(list);
-        Console.WriteLine("\n== Removing last ==");
+        Console.WriteLine("\\n== Removing l" + "ast ==");
         list.RemoveLast(out var removedLast);
         Console.WriteLine($"Removed: {removedLast}");
         PrintList(list);
-        Console.WriteLine("\n== Finding item matching 'starts with b' ==");
+        Console.WriteLine("\\n== Finding it" + "em matching 'st" + "arts with b' ==");
+
         var found = list.Find(s => s!.StartsWith("b", StringComparison.OrdinalIgnoreCase));
         Console.WriteLine("Found: " + (found ?? "<none>"));
-        Console.WriteLine("\n== Final contents ==");
+        Console.WriteLine("\\n== Final cont" + "ents ==");
         PrintList(list);
     }
 

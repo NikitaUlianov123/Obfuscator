@@ -42,7 +42,7 @@ namespace DonutMaker
         {
             string[] split = SplitPreprocessor(code);
             string preprocessor = split[0];
-            string mainCode = TextFormater.MakeOneLine(TextFormater.RemoveComments(split[1]));
+            string mainCode = MakeOneLine(SplitLongLiterals(RemoveComments(split[1])));
 
             string result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
 
@@ -53,11 +53,21 @@ namespace DonutMaker
             return result;
         }
 
-        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 100)
+        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 70)
         {
-            using var image = Image.Load<Rgba32>(imagePath);
+            // split input code into tokens
+            var tokens = TokenizeCode(code);
 
-            const float charAspect = 0.15f;
+            //determine cell width
+            int maxTokenLen = tokens.Max(t => t.Length);
+            int cellWidth = Math.Min(maxTokenLen, maxTokenLen);
+
+            using var image = Image.Load<Rgba32>(imagePath);
+            #region Determine scaling
+
+            // --- Character aspect ratio influenced by token size ---
+            // Bigger tokens -> wider cell -> smaller aspect ratio
+            float charAspect = (1f / maxTokenLen) * 2;//0.07f;//0.15f;
 
             //compute target height in cells
             int targetCellsX = Math.Max(1, cellsWide);
@@ -76,15 +86,7 @@ namespace DonutMaker
                 }
             }
 
-
-
-
-            //split input code into tokens
-            var tokens = TokenizeCode(code);
-
-            //determine cell width
-            int maxTokenLen = tokens.Max(t => t.Length);
-            int cellWidth = Math.Min(maxTokenLen, maxTokenLen);
+            #endregion
 
 
             //helper to pad to cellWidth
@@ -263,6 +265,264 @@ namespace DonutMaker
             return tokens;
         }
 
+        private static string SplitLongLiterals(string code, int chunkSize = 15)
+        {
+            if (chunkSize < 1) throw new ArgumentOutOfRangeException(nameof(chunkSize));
+            var sb = new StringBuilder();
+            int i = 0;
+            int n = code.Length;
+
+            while (i < n)
+            {
+                char c = code[i];
+
+                // If we see a quote that begins a string literal, handle it.
+                if (c == '"')
+                {
+                    // Determine prefix characters right before quote: e.g. @, $, $@
+                    int prefixStart = i - 1;
+                    while (prefixStart >= 0)
+                    {
+                        char p = code[prefixStart];
+                        if (p == '@') { prefixStart--; continue; }
+                        if (p == '$') { prefixStart--; continue; }
+                        break;
+                    }
+                    // But we only treat @/$ if immediately adjacent (no whitespace)
+                    int prefixIdx = i - 1;
+                    string prefix = "";
+                    if (prefixIdx >= 0)
+                    {
+                        // gather contiguous sequence of @ and $ immediately before the quote
+                        int j = prefixIdx;
+                        while (j >= 0 && (code[j] == '@' || code[j] == '$')) j--;
+                        if (j + 1 == prefixIdx - ((prefixIdx - j) - 0)) { /*noop*/ }
+                        int start = j + 1;
+                        if (start <= prefixIdx)
+                        {
+                            var pfx = code.Substring(start, prefixIdx - start + 1);
+                            // only accept if it's composed solely of @ and $ (and not separated by spaces)
+                            bool ok = true;
+                            foreach (var ch in pfx) if (ch != '@' && ch != '$') { ok = false; break; }
+                            if (ok) prefix = pfx;
+                        }
+                    }
+
+                    // If this is an interpolated string (prefix contains $), skip splitting it.
+                    if (prefix.Contains("$"))
+                    {
+                        // Just copy the string literal as-is (scan to its end properly)
+                        int startIdx = i;
+                        sb.Append(code[i]); i++;
+                        bool inVerbatim = prefix.Contains("@");
+                        if (inVerbatim)
+                        {
+                            // verbatim: double quotes "" escape
+                            while (i < n)
+                            {
+                                sb.Append(code[i]);
+                                if (code[i] == '"' && i + 1 < n && code[i + 1] == '"')
+                                {
+                                    // "" inside verbatim -> skip both as content
+                                    i += 2;
+                                    continue;
+                                }
+                                if (code[i] == '"') { i++; break; }
+                                i++;
+                            }
+                        }
+                        else
+                        {
+                            // normal interpolated -> still respect backslash escapes
+                            while (i < n)
+                            {
+                                sb.Append(code[i]);
+                                if (code[i] == '\\' && i + 1 < n)
+                                {
+                                    sb.Append(code[i + 1]); i += 2; continue;
+                                }
+                                if (code[i] == '"') { i++; break; }
+                                i++;
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Normal or verbatim string: parse content
+                    bool isVerbatim = (i > 0 && code[i - 1] == '@');
+                    // copy any prefix (the @) that immediately precedes the quote
+                    // but only copy if it's exactly adjacent (no spaces)
+                    int prefixLen = 0;
+                    if (i > 0 && (code[i - 1] == '@' || code[i - 1] == '$'))
+                    {
+                        // only include @ if directly adjacent and not something like ident@
+                        int p = i - 1;
+                        while (p >= 0 && (code[p] == '@' || code[p] == '$')) p--;
+                        if (p == i - prefixLen - 1 || true) { /* allow; we've already filtered interpolated above */ }
+                    }
+
+                    // Read literal content into a buffer (unescaped for verbatim it's literal content)
+                    int startQuoteIdx = i;
+                    i++; // skip opening "
+                    var content = new StringBuilder();
+                    if (isVerbatim)
+                    {
+                        // verbatim: "" -> represents a single " inside content
+                        while (i < n)
+                        {
+                            if (code[i] == '"' && i + 1 < n && code[i + 1] == '"')
+                            {
+                                content.Append('"');
+                                i += 2;
+                                continue;
+                            }
+                            if (code[i] == '"')
+                            {
+                                i++; // consume closing quote
+                                break;
+                            }
+                            content.Append(code[i]);
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        while (i < n)
+                        {
+                            if (code[i] == '\\' && i + 1 < n)
+                            {
+                                // keep escape as two characters in content (so we never split inside)
+                                // but for chunking we count the actual logical char (we'll preserve escape in output)
+                                // we append the escape as-is but mark it as two-char sequence
+                                content.Append(code[i]); // '\'
+                                content.Append(code[i + 1]); // e.g. 'n' or '"'
+                                i += 2;
+                                continue;
+                            }
+                            if (code[i] == '"')
+                            {
+                                i++; // consume closing quote
+                                break;
+                            }
+                            content.Append(code[i]);
+                            i++;
+                        }
+                    }
+
+                    string contentStr = content.ToString();
+
+                    // If small enough, emit original (including prefix like @ if present)
+                    string prefixText = "";
+                    // recompute immediate prefix (only @ for verbatim)
+                    if (isVerbatim)
+                    {
+                        // If there is an @ directly before the quote, include it.
+                        if (startQuoteIdx - 1 >= 0 && code[startQuoteIdx - 1] == '@')
+                            prefixText = "@";
+                    }
+
+                    if (contentStr.Length <= chunkSize)
+                    {
+                        // Emit possibly prefix + quoted content with proper escaping
+                        if (isVerbatim)
+                        {
+                            sb.Append(prefixText);
+                            sb.Append('"');
+                            // need to re-escape any " in content as ""
+                            sb.Append(contentStr.Replace("\"", "\"\""));
+                            sb.Append('"');
+                        }
+                        else
+                        {
+                            sb.Append('"');
+                            sb.Append(EscapeForNormalLiteral(contentStr));
+                            sb.Append('"');
+                        }
+                    }
+                    else
+                    {
+                        // Split into chunks, trying not to split inside a backslash escape (for normal strings)
+                        var parts = new List<string>();
+                        if (isVerbatim)
+                        {
+                            int idx = 0;
+                            while (idx < contentStr.Length)
+                            {
+                                int take = Math.Min(chunkSize, contentStr.Length - idx);
+                                // no escape worries for verbatim except we must preserve quotes as doubled when re-emitting
+                                parts.Add(contentStr.Substring(idx, take));
+                                idx += take;
+                            }
+
+                            // Emit: @"part1" + @"part2" + ...
+                            for (int pi = 0; pi < parts.Count; pi++)
+                            {
+                                if (pi > 0) sb.Append(" + ");
+                                sb.Append("@\"");
+                                sb.Append(parts[pi].Replace("\"", "\"\""));
+                                sb.Append('"');
+                            }
+                        }
+                        else
+                        {
+                            // For normal strings, we must ensure we don't split in the middle of a backslash escape sequence.
+                            int idx = 0;
+                            while (idx < contentStr.Length)
+                            {
+                                int len = Math.Min(chunkSize, contentStr.Length - idx);
+
+                                // adjust len backwards if it ends on a solitary backslash char in the pair
+                                // Note: content stores backslashes and their escape target as two chars (e.g. "\\n" or "\\\""),
+                                // so we avoid splitting between '\' and its following char.
+                                // If the last char in the chunk is '\' we move back one.
+                                while (len > 0 && contentStr[idx + len - 1] == '\\')
+                                {
+                                    // If there's only one char left and it's a single backslash, reduce len by 1
+                                    len--;
+                                }
+
+                                if (len == 0) len = Math.Min(chunkSize, contentStr.Length - idx); // fallback to avoid infinite loop
+
+                                string part = contentStr.Substring(idx, len);
+                                parts.Add(part);
+                                idx += len;
+                            }
+
+                            for (int pi = 0; pi < parts.Count; pi++)
+                            {
+                                if (pi > 0) sb.Append(" + ");
+                                sb.Append('"');
+                                sb.Append(EscapeForNormalLiteral(parts[pi]));
+                                sb.Append('"');
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
+                // not a quote, copy char
+                sb.Append(c);
+                i++;
+            }
+
+            return sb.ToString();
+
+            static string EscapeForNormalLiteral(string s)
+            {
+                // s may already contain sequences like \" or \\ from how we accumulated; make sure we produce valid escapes:
+                // We'll escape backslashes first, then double quotes.
+                return s.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            }
+        }
+
+        private static string EscapeInsideNormalLiteral(string segment)
+        {
+            // Ensure correct escaping of quotes and backslashes
+            return segment
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"");
+        }
 
 
 
