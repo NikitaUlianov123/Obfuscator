@@ -14,7 +14,7 @@ namespace DonutMaker
 
             Console.WriteLine("------------------------------------");
 
-            Console.WriteLine(TextFormater.CondenseAndFormatCSharp(TextFormater.RemoveComments(File.ReadAllText(@"../../../TestOutput/Output.txt"))));
+            File.WriteAllText(@"../../../TestOutput/DeObfOutput.txt", TextFormater.CondenseAndFormatCSharp(TextFormater.RemoveComments(File.ReadAllText(@"../../../TestOutput/Output.txt"))));
         }
     }
 }

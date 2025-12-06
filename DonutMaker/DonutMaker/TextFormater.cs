@@ -52,10 +52,7 @@ namespace DonutMaker
             return result;
         }
 
-        private static string GenerateCodeArt2(
-        string imagePath,
-        string code,
-        int cellsWide = 100)
+        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 100)
         {
             using var image = Image.Load<Rgba32>(imagePath);
 
@@ -78,13 +75,11 @@ namespace DonutMaker
                 }
             }
 
-            
+
 
 
             //split input code into tokens
-            var tokens = Regex.Split(code, @"(\s+|[;{}()\[\]=,+\-*/\.])")
-                                 .Where(s => s != null && s.Length > 0)
-                                 .ToArray();
+            var tokens = TokenizeCode(code);
 
             //determine cell width
             int maxTokenLen = tokens.Max(t => t.Length);
@@ -114,7 +109,7 @@ namespace DonutMaker
             int currToken = 0;
             int totalCells = targetCellsX * targetCellsY;
 
-            int placeEveryCells = totalCells / (tokens.Length + 1); // number of cells between tokens
+            int placeEveryCells = totalCells / (tokens.Count + 1); // number of cells between tokens
 
             int currSpotInCell = 0;
 
@@ -126,7 +121,7 @@ namespace DonutMaker
 
                     //if we can fit one token every 10 cells, it will have a 1/10 chance to place in a cell, until it hits 10 then it's
                     //a guaranteed placement
-                    bool insertCode = currToken < tokens.Length && (Random.Shared.Next(placeEveryCells) == 0 || currSpotInCell++ >= placeEveryCells);
+                    bool insertCode = currToken < tokens.Count && (Random.Shared.Next(placeEveryCells) == 0 || currSpotInCell++ >= placeEveryCells);
 
                     if (insertCode)
                     {
@@ -153,6 +148,119 @@ namespace DonutMaker
 
             //Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Length)}/{tokens.Length}");
         }
+
+        private static List<string> TokenizeCode(string code)
+        {
+            var tokens = new List<string>();
+            var current = new System.Text.StringBuilder();
+
+            bool inString = false;
+            bool inVerbatimString = false;
+            char stringDelimiter = '\0';
+
+            string[] MultiOps =
+            {
+                ">=", "<=", "==", "!=", "++", "--",
+                "+=", "-=", "*=", "/=", "%=",
+                "&&", "||", "->", "=>",
+                "<<", ">>", "??"
+            };
+
+            for (int i = 0; i < code.Length; i++)
+            {
+                char c = code[i];
+
+                // inside string literal
+                if (inString)
+                {
+                    current.Append(c);
+
+                    if (!inVerbatimString && c == '\\' && i + 1 < code.Length)
+                    {
+                        current.Append(code[i + 1]);
+                        i++;
+                        continue;
+                    }
+
+                    if (c == stringDelimiter)
+                    {
+                        if (inVerbatimString && i + 1 < code.Length && code[i + 1] == '"')
+                        {
+                            current.Append('"');
+                            i++;
+                            continue;
+                        }
+
+                        tokens.Add(current.ToString());
+                        current.Clear();
+                        inString = false;
+                        inVerbatimString = false;
+                    }
+
+                    continue;
+                }
+
+                // detect start of string
+                if (c == '"' || c == '\'')
+                {
+                    inString = true;
+                    stringDelimiter = c;
+                    current.Append(c);
+
+                    if (i > 0 && code[i - 1] == '@')
+                        inVerbatimString = true;
+
+                    continue;
+                }
+
+                // detect multi-char operator
+                bool matchedMulti = false;
+                foreach (var op in MultiOps)
+                {
+                    if (i + op.Length <= code.Length &&
+                        string.Compare(code, i, op, 0, op.Length) == 0)
+                    {
+                        if (current.Length > 0)
+                        {
+                            tokens.Add(current.ToString());
+                            current.Clear();
+                        }
+
+                        tokens.Add(op);
+                        i += op.Length - 1;
+                        matchedMulti = true;
+                        break;
+                    }
+                }
+                if (matchedMulti)
+                    continue;
+
+                // single-char punctuation
+                if (char.IsWhiteSpace(c) ||
+                    "{}[]();,+-*/=.<>&|!?".Contains(c))
+                {
+                    if (current.Length > 0)
+                    {
+                        tokens.Add(current.ToString());
+                        current.Clear();
+                    }
+
+                    tokens.Add(c.ToString());
+                    continue;
+                }
+
+                // normal identifier/number fragment
+                current.Append(c);
+            }
+
+            if (current.Length > 0)
+                tokens.Add(current.ToString());
+
+            return tokens;
+        }
+
+
+
 
         public static string CondenseAndFormatCSharp(string input)
         {
