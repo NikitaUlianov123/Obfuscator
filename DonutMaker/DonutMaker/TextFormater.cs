@@ -152,7 +152,7 @@ namespace DonutMaker
         private static List<string> TokenizeCode(string code)
         {
             var tokens = new List<string>();
-            var current = new System.Text.StringBuilder();
+            var current = new StringBuilder();
 
             bool inString = false;
             bool inVerbatimString = false;
@@ -165,6 +165,7 @@ namespace DonutMaker
                 "&&", "||", "->", "=>",
                 "<<", ">>", "??"
             };
+            string singleTokens = "{}[]();,+-*/=.<>&|!?";
 
             for (int i = 0; i < code.Length; i++)
             {
@@ -175,6 +176,7 @@ namespace DonutMaker
                 {
                     current.Append(c);
 
+                    //skip escape characters
                     if (!inVerbatimString && c == '\\' && i + 1 < code.Length)
                     {
                         current.Append(code[i + 1]);
@@ -208,7 +210,9 @@ namespace DonutMaker
                     current.Append(c);
 
                     if (i > 0 && code[i - 1] == '@')
+                    {
                         inVerbatimString = true;
+                    }
 
                     continue;
                 }
@@ -217,8 +221,7 @@ namespace DonutMaker
                 bool matchedMulti = false;
                 foreach (var op in MultiOps)
                 {
-                    if (i + op.Length <= code.Length &&
-                        string.Compare(code, i, op, 0, op.Length) == 0)
+                    if (i + op.Length <= code.Length && string.Compare(code, i, op, 0, op.Length) == 0)
                     {
                         if (current.Length > 0)
                         {
@@ -232,12 +235,10 @@ namespace DonutMaker
                         break;
                     }
                 }
-                if (matchedMulti)
-                    continue;
+                if (matchedMulti) continue;
 
                 // single-char punctuation
-                if (char.IsWhiteSpace(c) ||
-                    "{}[]();,+-*/=.<>&|!?".Contains(c))
+                if (char.IsWhiteSpace(c) || singleTokens.Contains(c))
                 {
                     if (current.Length > 0)
                     {
@@ -254,7 +255,9 @@ namespace DonutMaker
             }
 
             if (current.Length > 0)
+            {
                 tokens.Add(current.ToString());
+            }
 
             return tokens;
         }
