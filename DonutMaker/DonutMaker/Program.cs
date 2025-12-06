@@ -7,14 +7,15 @@ namespace DonutMaker
         static void Main()
         {
             //string input = File.ReadAllText(@"../../../TestRobotC/MathQuiz.txt");
-            //string input = File.ReadAllText(@"../../../TestCSharp/Program.txt");
-            string input = File.ReadAllText(@"../../../TestCSharp/Simple.txt");
+            //string input = File.ReadAllText(@"../../../TestCSharp/ForLoop.txt");
+            //string input = File.ReadAllText(@"../../../TestCSharp/Simple.txt");
+            string input = File.ReadAllText(@"../../../TestCSharp/LinkedList.txt");
 
             Console.WriteLine(TextFormater.GenerateCodeArt(@"../../../TestImages/miata.png", input, true, @"../../../TestOutput/Output.txt"));
 
             Console.WriteLine("------------------------------------");
 
-            File.WriteAllText(@"../../../TestOutput/DeObfOutput.txt", TextFormater.CondenseAndFormatCSharp(TextFormater.RemoveComments(File.ReadAllText(@"../../../TestOutput/Output.txt"))));
+            File.WriteAllText(@"../../../TestOutput/DeObfOutput.txt", TextFormater.Deimagify(File.ReadAllText(@"../../../TestOutput/Output.txt")));
         }
     }
 }

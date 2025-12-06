@@ -8,11 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpier.Core" Version="1.2.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="TestCSharp\" />
   </ItemGroup>
 
 </Project>

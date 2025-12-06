@@ -1,36 +1,142 @@
 using System;
-using System.Threading;
-namespace SimpleConsoleApp
+using System.Collections;
+using System.Collections.Generic;
+
+public class LinkedList<T> : IEnumerable<T>
 {
-    internal class Program
+    private class Node
     {
-        static void Main(string [] args){
-            Console.WriteLine("=== Simple Console Demo ===");
-            Console. WriteLine("Type anything and I'll animate it.");
-            Console . WriteLine("Type 'exit' to quit.");
-            Console . WriteLine();
-            while(true){
-                Console .Write("Input: ");
-                string? input = Console .ReadLine();
-                if(input == null) continue;
-                if(input . Equals("exit", StringComparison .OrdinalIgnoreCase)) break;
-                Console. WriteLine("\nAnimating forward...");
-                TypeWriter(input, 40);
-                string reversed = Reverse(input);
-                Console .WriteLine("\nAnimating backward...");
-                TypeWriter(reversed, 40);
-                Console . WriteLine("\n");}
-                Console . WriteLine("Goodbye!");}
-                static void TypeWriter(string text, int delayMs){
-                    foreach(char c in text){
-                        Console .Write(c);
-                        Thread . Sleep(delayMs);}
-                        Console.WriteLine();}
-                        static string Reverse(string s){
-                            char [] arr = new char [ s . Length];
-                            int j = 0;
-                            for(int i = s . Length - 1;
-                            i >= 0;
-                            i --){
-                                arr[ j++] = s [ i];}
-                                return new string(arr);}}}
+        public T Value;
+        public Node? Next;
+
+        public Node(T value)
+        {
+            Value = value;
+        }
+    }
+
+    private Node? head;
+    private Node? tail;
+    public int Count { get; private set; }
+
+    public void AddFirst(T value)
+    {
+        var node = new Node(value) { Next = head };
+        head = node;
+        if (tail == null)
+            tail = node;
+        Count++;
+    }
+
+    public void AddLast(T value)
+    {
+        var node = new Node(value);
+        if (tail == null)
+        {
+            head = tail = node;
+        }
+        else
+        {
+            tail.Next = node;
+            tail = node;
+        }
+        Count++;
+    }
+
+    public bool RemoveFirst(out T? value)
+    {
+        if (head == null)
+        {
+            value = default;
+            return false;
+        }
+        value = head.Value;
+        head = head.Next;
+        if (head == null)
+            tail = null;
+        Count--;
+        return true;
+    }
+
+    public bool RemoveLast(out T? value)
+    {
+        if (head == null)
+        {
+            value = default;
+            return false;
+        }
+        if (head == tail)
+        {
+            value = head.Value;
+            head = tail = null;
+            Count--;
+            return true;
+        }
+        var current = head;
+        while (current!.Next != tail)
+            current = current.Next!;
+        value = tail!.Value;
+        current.Next = null;
+        tail = current;
+        Count--;
+        return true;
+    }
+
+    public T? Find(Predicate<T> match)
+    {
+        var current = head;
+        while (current != null)
+        {
+            if (match(current.Value))
+                return current.Value;
+            current = current.Next;
+        }
+        return default;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        var current = head;
+        while (current != null)
+        {
+            yield return current.Value;
+            current = current.Next;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var list = new LinkedList<string>();
+        Console.WriteLine("== Adding items ==");
+        list.AddLast("apple");
+        list.AddLast("banana");
+        list.AddLast("cherry");
+        list.AddFirst("FIRST");
+        PrintList(list);
+        Console.WriteLine("\n== Removing first ==");
+        list.RemoveFirst(out var removedFirst);
+        Console.WriteLine($"Removed: {removedFirst}");
+        PrintList(list);
+        Console.WriteLine("\n== Removing last ==");
+        list.RemoveLast(out var removedLast);
+        Console.WriteLine($"Removed: {removedLast}");
+        PrintList(list);
+        Console.WriteLine("\n== Finding item matching 'starts with b' ==");
+        var found = list.Find(s => s!.StartsWith("b", StringComparison.OrdinalIgnoreCase));
+        Console.WriteLine("Found: " + (found ?? "<none>"));
+        Console.WriteLine("\n== Final contents ==");
+        PrintList(list);
+    }
+
+    private static void PrintList<T>(LinkedList<T> list)
+    {
+        Console.WriteLine($"List (Count={list.Count}):");
+        foreach (var item in list)
+            Console.WriteLine(" - " + item);
+    }
+}

@@ -107,13 +107,15 @@ public class Program
     public static void Main()
     {
         var list = new LinkedList<string>();
-
+        //comment
         Console.WriteLine("== Adding items ==");
         list.AddLast("apple");
         list.AddLast("banana");
         list.AddLast("cherry");
         list.AddFirst("FIRST");
-
+        /*
+        multiline
+        comment*/
         PrintList(list);
 
         Console.WriteLine("\n== Removing first ==");
