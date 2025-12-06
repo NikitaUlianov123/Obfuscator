@@ -1,148 +1,160 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
-public class LinkedList<T> : IEnumerable<T>
+namespace BstDemo
 {
-    private class Node
+    class Program
     {
-        public T Value;
-        public Node? Next;
-
-        public Node(T value)
+        static void Main()
         {
-            Value = value;
+            Console.WriteLine("=== Binary Sear" + "ch Tree Demo ==" + "=\\n");
+            var bst = new BinarySearchTree();
+            int[] values = { 8, 3, 10, 1, 6, 14, 4, 7, 13 };
+            Console.WriteLine("Inserting value" + "s: " + string.Join(",", values));
+            foreach (var v in values)
+                bst.Insert(v);
+            Console.WriteLine("\\nIn-order trav" + "ersal (sorted):");
+            bst.PrintInOrder();
+            Console.WriteLine("\\n");
+            Console.WriteLine("Pre-order trave" + "rsal:");
+            bst.PrintPreOrder();
+            Console.WriteLine("\\n");
+            Console.WriteLine("Post-order trav" + "ersal:");
+            bst.PrintPostOrder();
+            Console.WriteLine("\\n");
+            Console.WriteLine("Visual structur" + "e:");
+            bst.PrintTree();
+            Console.WriteLine("\\n");
+            Console.WriteLine("Searching for 7" + ": " + (bst.Search(7) ? "Found" : "Not Found"));
+            Console.WriteLine("Searching for 2" + "0: " + (bst.Search(20) ? "Found" : "Not Found"));
+            Console.WriteLine("\\nRemoving node" + " 3 (which has c" + "hildren)");
+            bst.Remove(3);
+            Console.WriteLine("In-order after " + "removal:");
+            bst.PrintInOrder();
+            Console.WriteLine("\\n");
+            Console.WriteLine("Visual structur" + "e after removal" + ":");
+            bst.PrintTree();
+            Console.WriteLine("\\n");
         }
     }
 
-    private Node? head;
-    private Node? tail;
-    public int Count { get; private set; }
-
-    public void AddFirst(T value)
+    class BinarySearchTree
     {
-        var node = new Node(value) { Next = head };
-
-        head = node;
-
-        if (tail == null)
-            tail = node;
-        Count++;
-    }
-
-    public void AddLast(T value)
-    {
-        var node = new Node(value);
-        if (tail == null)
+        class Node
         {
-            head = tail = node;
+            public int Value;
+            public Node Left,
+                Right;
+
+            public Node(int value) => Value = value;
         }
-        else
+
+        Node root;
+
+        public void Insert(int value)
         {
-            tail.Next = node;
-            tail = node;
+            root = InsertRec(root, value);
         }
-        Count++;
-    }
 
-    public bool RemoveFirst(out T? value)
-    {
-        if (head == null)
+        Node InsertRec(Node node, int value)
         {
-            value = default;
+            if (node == null)
+                return new Node(value);
+            if (value < node.Value)
+                node.Left = InsertRec(node.Left, value);
+            else if (value > node.Value)
+                node.Right = InsertRec(node.Right, value);
+            return node;
+        }
 
+        public bool Search(int value)
+        {
+            var n = root;
+            while (n != null)
+            {
+                if (value == n.Value)
+                    return true;
+                n = value < n.Value ? n.Left : n.Right;
+            }
             return false;
         }
-        value = head.Value;
-        head = head.Next;
-        if (head == null)
-            tail = null;
-        Count--;
-        return true;
-    }
 
-    public bool RemoveLast(out T? value)
-    {
-        if (head == null)
+        public void Remove(int value)
         {
-            value = default;
-            return false;
+            root = RemoveRec(root, value);
         }
-        if (head == tail)
+
+        Node RemoveRec(Node node, int value)
         {
-            value = head.Value;
-            head = tail = null;
-            Count--;
-            return true;
+            if (node == null)
+                return null;
+            if (value < node.Value)
+                node.Left = RemoveRec(node.Left, value);
+            else if (value > node.Value)
+                node.Right = RemoveRec(node.Right, value);
+            else
+            {
+                if (node.Left == null)
+                    return node.Right;
+                if (node.Right == null)
+                    return node.Left;
+                Node successor = node.Right;
+                while (successor.Left != null)
+                    successor = successor.Left;
+                node.Value = successor.Value;
+                node.Right = RemoveRec(node.Right, successor.Value);
+            }
+            return node;
         }
-        var current = head;
-        while (current!.Next != tail)
-            current = current.Next!;
 
-        value = tail!.Value;
-        current.Next = null;
-        tail = current;
+        public void PrintInOrder() => PrintInOrderRec(root);
 
-        Count--;
-        return true;
-    }
-
-    public T? Find(Predicate<T> match)
-    {
-        var current = head;
-        while (current != null)
+        void PrintInOrderRec(Node node)
         {
-            if (match(current.Value))
-                return current.Value;
-            current = current.Next;
+            if (node == null)
+                return;
+            PrintInOrderRec(node.Left);
+            Console.Write(node.Value + " ");
+            PrintInOrderRec(node.Right);
         }
-        return default;
-    }
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        var current = head;
-        while (current != null)
+        public void PrintPreOrder() => PrintPreOrderRec(root);
+
+        void PrintPreOrderRec(Node node)
         {
-            yield return current.Value;
-            current = current.Next;
+            if (node == null)
+                return;
+            Console.Write(node.Value + " ");
+            PrintPreOrderRec(node.Left);
+            PrintPreOrderRec(node.Right);
         }
-    }
 
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-}
+        public void PrintPostOrder() => PrintPostOrderRec(root);
 
-public class Program
-{
-    public static void Main()
-    {
-        var list = new LinkedList<string>();
-        Console.WriteLine("== Adding items" + " ==");
-        list.AddLast("apple");
-        list.AddLast("banana");
-        list.AddLast("cherry");
-        list.AddFirst("FIRST");
-        PrintList(list);
-        Console.WriteLine("\\n== Removing f" + "irst ==");
-        list.RemoveFirst(out var removedFirst);
-        Console.WriteLine($"Removed: {removedFirst}");
-        PrintList(list);
-        Console.WriteLine("\\n== Removing l" + "ast ==");
-        list.RemoveLast(out var removedLast);
-        Console.WriteLine($"Removed: {removedLast}");
-        PrintList(list);
-        Console.WriteLine("\\n== Finding it" + "em matching 'st" + "arts with b' ==");
+        void PrintPostOrderRec(Node node)
+        {
+            if (node == null)
+                return;
+            PrintPostOrderRec(node.Left);
+            PrintPostOrderRec(node.Right);
+            Console.Write(node.Value + " ");
+        }
 
-        var found = list.Find(s => s!.StartsWith("b", StringComparison.OrdinalIgnoreCase));
-        Console.WriteLine("Found: " + (found ?? "<none>"));
-        Console.WriteLine("\\n== Final cont" + "ents ==");
-        PrintList(list);
-    }
+        public void PrintTree()
+        {
+            PrintTreeRec(root, "", true);
+        }
 
-    private static void PrintList<T>(LinkedList<T> list)
-    {
-        Console.WriteLine($"List (Count={list.Count}):");
-        foreach (var item in list)
-            Console.WriteLine(" - " + item);
+        void PrintTreeRec(Node node, string indent, bool isLast)
+        {
+            if (node == null)
+            {
+                Console.WriteLine(indent + "(null)");
+                return;
+            }
+            Console.WriteLine(indent + (isLast ? "?? " : "?? ") + node.Value);
+            indent += isLast ? " " : "? ";
+            PrintTreeRec(node.Left, indent, false);
+            PrintTreeRec(node.Right, indent, true);
+        }
     }
 }
