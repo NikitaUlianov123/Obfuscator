@@ -60,14 +60,15 @@ namespace DonutMaker
 
             //determine cell width
             int maxTokenLen = tokens.Max(t => t.Length);
-            int cellWidth = Math.Min(maxTokenLen, maxTokenLen);
+            int cellWidth = Math.Min(maxTokenLen, maxTokenLen) + 4;//for the *//*
 
             using var image = Image.Load<Rgba32>(imagePath);
+
             #region Determine scaling
 
             // --- Character aspect ratio influenced by token size ---
             // Bigger tokens -> wider cell -> smaller aspect ratio
-            float charAspect = (1f / maxTokenLen) * 2;//0.07f;//0.15f;
+            float charAspect = (1f / cellWidth) * 2;//0.07f;//0.15f;
 
             //compute target height in cells
             int targetCellsX = Math.Max(1, cellsWide);
@@ -96,13 +97,9 @@ namespace DonutMaker
                 {
                     return s;
                 }
-                else if (s.Length >= cellWidth - 4)
-                {
-                    return s + new string(' ', cellWidth - s.Length);
-                }
                 else
                 {
-                    return s + "/*" + new string(GetFillerChar(brightness), cellWidth - s.Length - 4) + "*/";
+                    return s + new string(GetFillerChar(brightness), cellWidth - s.Length);
                 }
             }
 
@@ -118,6 +115,8 @@ namespace DonutMaker
 
             for (int y = 0; y < targetCellsY; y++)
             {
+                sb.Append("/*"); // start of line comment
+
                 for (int x = 0; x < targetCellsX; x++)
                 {
                     string chosen;
@@ -128,7 +127,7 @@ namespace DonutMaker
 
                     if (insertCode)
                     {
-                        chosen = PadCell(tokens[currToken++], (byte)(255 - brightness[x, y]));
+                        chosen = PadCell("*/" + tokens[currToken++] + "/*", (byte)(255 - brightness[x, y]));
                         currSpotInCell = 0;
                     }
                     else
@@ -140,7 +139,10 @@ namespace DonutMaker
                     sb.Append(chosen); // always exactly cellWidth chars
                 }
 
+                sb.Append("*/"); // end of line comment
+
                 sb.AppendLine();
+
             }
 
             return sb.ToString();
@@ -162,12 +164,12 @@ namespace DonutMaker
             char stringDelimiter = '\0';
 
             string[] MultiOps =
-            {
+            [
                 ">=", "<=", "==", "!=", "++", "--",
                 "+=", "-=", "*=", "/=", "%=",
                 "&&", "||", "->", "=>",
                 "<<", ">>", "??"
-            };
+            ];
             string singleTokens = "{}[]();,+-*/=.<>&|!?";
 
             for (int i = 0; i < code.Length; i++)
@@ -267,7 +269,8 @@ namespace DonutMaker
 
         private static string SplitLongLiterals(string code, int chunkSize = 15)
         {
-            if (chunkSize < 1) throw new ArgumentOutOfRangeException(nameof(chunkSize));
+            ArgumentOutOfRangeException.ThrowIfLessThan(chunkSize, 1);
+
             var sb = new StringBuilder();
             int i = 0;
             int n = code.Length;
@@ -309,12 +312,11 @@ namespace DonutMaker
                     }
 
                     // If this is an interpolated string (prefix contains $), skip splitting it.
-                    if (prefix.Contains("$"))
+                    if (prefix.Contains('$'))
                     {
                         // Just copy the string literal as-is (scan to its end properly)
-                        int startIdx = i;
                         sb.Append(code[i]); i++;
-                        bool inVerbatim = prefix.Contains("@");
+                        bool inVerbatim = prefix.Contains('@');
                         if (inVerbatim)
                         {
                             // verbatim: double quotes "" escape
@@ -516,15 +518,6 @@ namespace DonutMaker
             }
         }
 
-        private static string EscapeInsideNormalLiteral(string segment)
-        {
-            // Ensure correct escaping of quotes and backslashes
-            return segment
-                .Replace("\\", "\\\\")
-                .Replace("\"", "\\\"");
-        }
-
-
 
         public static string Deimagify(string input)
         {
@@ -574,8 +567,5 @@ namespace DonutMaker
 
             return [preprocessorJoined, codeJoined];
         }
-
-
-
     }
 }
