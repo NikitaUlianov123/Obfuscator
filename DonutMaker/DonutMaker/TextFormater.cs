@@ -68,15 +68,16 @@ namespace DonutMaker
 
             // --- Character aspect ratio influenced by token size ---
             // Bigger tokens -> wider cell -> smaller aspect ratio
-            float charAspect = (1f / cellWidth) * 2;//0.07f;//0.15f;
+            float charAspect = (1f / cellWidth) * 2;
 
             //compute target height in cells
             int targetCellsX = Math.Max(1, cellsWide);
             int targetCellsY = Math.Max(1, (int)(image.Height * targetCellsX / (float)image.Width / charAspect));
 
+            //blur the image (so it looks better when pixelated)
+            image.Mutate(x => x.MedianBlur(7, true));
 
-            image.Mutate(x => x.MedianBlur(7, true));//GaussianBlur(4.0f)); // radius 3.0f is "typical"
-
+            //scaling image to computed size
             image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
             
 
@@ -113,7 +114,7 @@ namespace DonutMaker
             int currToken = 0;
             int totalCells = targetCellsX * targetCellsY;
 
-            int placeEveryCells = totalCells / (tokens.Count + 1); // number of cells between tokens
+            int placeEveryCells = totalCells / (tokens.Count + 1); //max number of cells between tokens
 
             int currSpotInCell = 0;
 
@@ -150,12 +151,6 @@ namespace DonutMaker
             }
 
             return sb.ToString();
-
-            //File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
-
-            //Console.WriteLine(sb.ToString());
-
-            //Console.WriteLine($"Generated '{outputPath}' — cells: {targetCellsX}×{targetCellsY}, cellWidth={cellWidth}, tokens used={Math.Min(currToken, tokens.Length)}/{tokens.Length}");
         }
 
         private static List<string> TokenizeCode(string code)
@@ -527,7 +522,6 @@ namespace DonutMaker
         {
             return CSharpFormatter.Format(RemoveComments(input)).Code;
         }
-
 
 
         private static string RemoveComments(string code)
