@@ -74,7 +74,11 @@ namespace DonutMaker
             int targetCellsX = Math.Max(1, cellsWide);
             int targetCellsY = Math.Max(1, (int)(image.Height * targetCellsX / (float)image.Width / charAspect));
 
+
+            image.Mutate(x => x.MedianBlur(7, true));//GaussianBlur(4.0f)); // radius 3.0f is "typical"
+
             image.Mutate(x => x.Resize(targetCellsX, targetCellsY));
+            
 
             //making brightness map
             byte[,] brightness = new byte[targetCellsX, targetCellsY];
@@ -530,7 +534,7 @@ namespace DonutMaker
         {
             if (string.IsNullOrEmpty(code))
                 return code;
-
+            
             // Regex:
             // 1. Match // comments (until line end)
             // 2. Match /* ... */ comments (including multiline)
