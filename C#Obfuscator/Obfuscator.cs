@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -56,12 +57,12 @@ namespace C_Obfuscation
             ObfuscatedCode = userCode; // keep plain obfuscated code for debugging if needed
 
             // encode only the user code and insert into the runner template
-            string encodedUserCode = RotateLeft4Bits(userCode);
-            string finalRunner = GenerateObfuscatedHelper(encodedUserCode);
+            //string encodedUserCode = RotateLeft4Bits(userCode);
+            string finalRunner = GenerateObfuscatedHelper(userCode);
 
             return finalRunner;
         }
-
+        
         static CompilationUnitSyntax GetObfuscatedNode(string filepath)
         {
             // get code and parse
@@ -104,9 +105,24 @@ namespace C_Obfuscation
             // we will append encoded user code into that spot and then append bottomCodeRunner
             var sb = new StringBuilder();
             sb.Append(topCodeRunner);           
-            sb.Append(encodedUserCode);
+            sb.Append(ChunkToVerbatimConcat(encodedUserCode));
             sb.Append(bottomCodeRunner);
             return sb.ToString();
+        }
+        public static string ChunkToVerbatimConcat(string input, int chunkSize = 10)
+        {
+            StringInfo strInfo = new StringInfo(input);
+           
+            var parts = new List<string>();
+
+            for (int i = 0; i < strInfo.LengthInTextElements; i += chunkSize)
+            {
+                int len = Math.Min(chunkSize, strInfo.LengthInTextElements - i);
+                string chunk = strInfo.SubstringByTextElements(i, len);
+                parts.Add($@"@""{RotateLeft4Bits(chunk)}""");
+            }
+
+            return "string source = " + string.Join(" + ", parts) + ";";
         }
 
         static CompilationUnitSyntax CombineCompilationUnits(CompilationUnitSyntax[] units)
@@ -237,8 +253,8 @@ class CscRunner
     static int Main(string[] args)
     {
         // Source to compile (same program you used previously)
-        string source = @""";
-        static string bottomCodeRunner = @""";
+        ";
+        static string bottomCodeRunner = @"
 
         // Parse
         var tree = CSharpSyntaxTree.ParseText(RotateRight4Bits(source));
