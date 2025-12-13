@@ -21,7 +21,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitBreakStatement(BreakStatementSyntax node)
         {
-            var gotoEnd = SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(EndLabel))
+            GotoStatementSyntax gotoEnd = SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(EndLabel))
                             .WithLeadingTrivia(node.GetLeadingTrivia())
                             .WithTrailingTrivia(node.GetTrailingTrivia());
             return gotoEnd;
@@ -29,7 +29,7 @@ namespace C_Obfuscation
 
         public override SyntaxNode? VisitContinueStatement(ContinueStatementSyntax node)
         {
-            var gotoContinue = SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(ContinueLabel))
+            GotoStatementSyntax gotoContinue = SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(ContinueLabel))
                                 .WithLeadingTrivia(node.GetLeadingTrivia())
                                 .WithTrailingTrivia(node.GetTrailingTrivia());
             return gotoContinue;

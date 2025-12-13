@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\C#DeObfuscator\C#DeObfuscator.csproj" />
     <ProjectReference Include="..\C#Obfuscator\C#Obfuscator.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,18 @@
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace C_DeObfuscator
+{
+    public class DeObfuscator
+    {
+        public static string GetDeObfuscatedCode(string code)
+        {
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(code);
+            CompilationUnitSyntax root = syntaxTree.GetCompilationUnitRoot();
+
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(root);
+            return newRoot.NormalizeWhitespace().ToFullString();
+        }
+    }
+}
