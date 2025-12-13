@@ -1,15 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 
 namespace C_Obfuscation
 {
-    // Collects all symbols that should be renamed.
+    
     internal class IdentifierCollector : CSharpSyntaxWalker
     {
         private readonly SemanticModel model;
-
-        // Now the map is string->string (symbolKey => newName)
+        
         private readonly Dictionary<string, string> map;
 
         public IdentifierCollector(SemanticModel model, Dictionary<string, string> map)
@@ -17,104 +17,146 @@ namespace C_Obfuscation
             this.model = model;
             this.map = map;
         }
-
-        // Convert any symbol to a stable identity string
+        // generate a unique key for a symbol
         private static string SymbolKey(ISymbol sym)
         {
+            
             return sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
-
-        public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
-        {
-            var sym = model.GetDeclaredSymbol(node);
-            TryAddSymbol(sym);
-            base.VisitVariableDeclarator(node);
-        }
-
-        public override void VisitParameter(ParameterSyntax node)
-        {
-            var sym = model.GetDeclaredSymbol(node);
-            TryAddSymbol(sym);
-            base.VisitParameter(node);
-        }
-
-        public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
-        {
-            var sym = model.GetDeclaredSymbol(node);
-            TryAddSymbol(sym);
-            base.VisitMethodDeclaration(node);
-        }
-
-        public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
-        {
-            var sym = model.GetDeclaredSymbol(node);
-            TryAddSymbol(sym);
-            base.VisitPropertyDeclaration(node);
-        }
-
-        public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
-        {
-            foreach (var v in node.Declaration.Variables)
-            {
-                var sym = model.GetDeclaredSymbol(v);
-                TryAddSymbol(sym);
-            }
-
-            base.VisitFieldDeclaration(node);
-        }
-
-        // Helper to check if a symbol should be renamed, then add it to the map
+        // attempt to add a symbol to the rename map
         private void TryAddSymbol(ISymbol sym)
         {
-            if (CanRenameSymbol(sym))
-            {
-                string key = SymbolKey(sym);
+            if (sym == null) return;
+            if (!CanRenameSymbol(sym)) return;
 
-                if (!map.ContainsKey(key))
-                {
-                    map[key] = Obfuscator.NewName();
-                }
+            string key = SymbolKey(sym);
+            if (!map.ContainsKey(key))
+            {
+                map[key] = Obfuscator.NewName();
             }
         }
-
+        // determine if a symbol is eligible for renaming
         private bool CanRenameSymbol(ISymbol sym)
         {
-            if (sym == null)
-                return false;
+            if (sym == null) return false;
 
-            // don't rename public API
+            // keep public/protected/internal API names intact
             switch (sym.DeclaredAccessibility)
             {
                 case Accessibility.Public:
-                case Accessibility.Internal:
                 case Accessibility.Protected:
                 case Accessibility.ProtectedOrInternal:
+                case Accessibility.Internal:
                     return false;
             }
 
-            if (sym.IsOverride)
-                return false;
+            // don't rename overrides, implicit decls, or the entrypoint Main
+            if (sym.IsOverride || sym.IsImplicitlyDeclared) return false;
+            if (sym.IsStatic && sym.Name == "Main") return false;
 
-            if (sym.IsImplicitlyDeclared)
-                return false;
+            // don't rename types
+            if (sym.Kind == SymbolKind.NamedType) return false;
 
-            // don't rename Main
-            if (sym.IsStatic && sym.Name == "Main")
-                return false;
-
-            // Don't rename types (class, struct, interface)
-            if (sym.Kind == SymbolKind.NamedType)
-                return false;
-
-            // Skip symbols used by serializers or reflection (rough heuristic)
+            // avoid renaming if attributes suggest reflection usage
             foreach (var attr in sym.GetAttributes())
             {
-                string n = attr.AttributeClass?.Name ?? "";
+                var n = attr.AttributeClass?.Name ?? "";
                 if (n.Contains("Json") || n.Contains("Serializable"))
                     return false;
             }
 
             return true;
+        }
+
+        // visit variable declarators
+        public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
+        {
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
+
+            if (sym != null && CanRenameSymbol(sym))
+            {
+                string key = SymbolKey(sym);
+                var anno = new SyntaxAnnotation("RenameKey", key);
+                var newNode = node.WithAdditionalAnnotations(anno);
+                
+            }
+
+            base.VisitVariableDeclarator(node);
+        }
+        // visit parameter declarations
+        public override void VisitParameter(ParameterSyntax node)
+        {
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
+
+            if (sym != null && CanRenameSymbol(sym))
+            {
+                string key = SymbolKey(sym);
+                var anno = new SyntaxAnnotation("RenameKey", key);
+                var newNode = node.WithAdditionalAnnotations(anno);
+                
+            }
+
+            base.VisitParameter(node);
+        }
+        // visit method declarations
+        public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
+        {
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
+
+            if (sym != null && CanRenameSymbol(sym))
+            {
+                string key = SymbolKey(sym);
+                var anno = new SyntaxAnnotation("RenameKey", key);
+                var newNode = node.WithAdditionalAnnotations(anno);
+                
+            }
+
+            base.VisitMethodDeclaration(node);
+        }
+        // visit property declarations
+        public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        {
+            var sym = model.GetDeclaredSymbol(node);
+            TryAddSymbol(sym);
+
+            if (sym != null && CanRenameSymbol(sym))
+            {
+                string key = SymbolKey(sym);
+                var anno = new SyntaxAnnotation("RenameKey", key);
+                var newNode = node.WithAdditionalAnnotations(anno);
+               
+            }
+
+            base.VisitPropertyDeclaration(node);
+        }
+        // visit field declarations
+        public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
+        {
+            
+            base.VisitFieldDeclaration(node);
+        }
+
+        // visit identifier names
+        public override void VisitIdentifierName(IdentifierNameSyntax node)
+        {
+            
+            var sym = model.GetSymbolInfo(node).Symbol ?? model.GetDeclaredSymbol(node);
+
+            if (sym != null && CanRenameSymbol(sym))
+            {
+                
+                TryAddSymbol(sym);
+
+                string key = SymbolKey(sym);
+                var anno = new SyntaxAnnotation("RenameKey", key);
+                var newNode = node.WithAdditionalAnnotations(anno);
+                
+            }
+
+            base.VisitIdentifierName(node);
         }
     }
 }
