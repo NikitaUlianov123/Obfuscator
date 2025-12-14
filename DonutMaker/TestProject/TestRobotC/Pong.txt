@@ -1,4 +1,4 @@
-﻿
+﻿//giant string goes here
 struct Point
 {
 	int x;
