@@ -31,8 +31,11 @@ namespace C_Obfuscation
             }
             return new string(result);
         }
+        static string InterleaveNullChars(string input)
+        {
+            return string.Join("\0", input.ToCharArray());
+        }
 
-       
 
         public static string ObfuscateProject(List<string> codeFilePaths)
         {
@@ -58,11 +61,11 @@ namespace C_Obfuscation
 
             // encode only the user code and insert into the runner template
             //string encodedUserCode = RotateLeft4Bits(userCode);
-            string finalRunner = GenerateObfuscatedHelper(userCode);
+            string finalRunner = GenerateObfuscatedHelper(InterleaveNullChars(userCode));
 
             return finalRunner;
         }
-        
+
         static CompilationUnitSyntax GetObfuscatedNode(string filepath)
         {
             // get code and parse
@@ -94,17 +97,17 @@ namespace C_Obfuscation
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter();
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
-            newRoot=(CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
             newRoot = (CompilationUnitSyntax)loopRewriter.Visit(newRoot);
             return newRoot;
         }
 
-       
+
         static string GenerateObfuscatedHelper(string encodedUserCode)
         {
             // we will append encoded user code into that spot and then append bottomCodeRunner
             var sb = new StringBuilder();
-            sb.Append(topCodeRunner);           
+            sb.Append(topCodeRunner);
             sb.Append(ChunkToVerbatimConcat(encodedUserCode));
             sb.Append(bottomCodeRunner);
             return sb.ToString();
@@ -112,14 +115,14 @@ namespace C_Obfuscation
         public static string ChunkToVerbatimConcat(string input, int chunkSize = 10)
         {
             StringInfo strInfo = new StringInfo(input);
-           
+
             var parts = new List<string>();
 
             for (int i = 0; i < strInfo.LengthInTextElements; i += chunkSize)
             {
                 int len = Math.Min(chunkSize, strInfo.LengthInTextElements - i);
                 string chunk = strInfo.SubstringByTextElements(i, len);
-                parts.Add($@"@""{RotateLeft4Bits(chunk)}""");
+                parts.Add($@"RotateRight4Bits(@""{RotateLeft4Bits(chunk)}"")");
             }
 
             return "string source = " + string.Join(" + ", parts) + ";";
@@ -215,7 +218,7 @@ namespace C_Obfuscation
                 2 => BitConverter.ToInt16(c, 0),
                 1 => c[0],
                 0 => 0,
-                _ => throw new NotSupportedException("""""""")
+                _ => throw new NotSupportedException()
             }))(c.Length)
         }))(k);
     }
@@ -225,9 +228,10 @@ namespace C_Obfuscation
                 return null;
             }
             return helper;
+
         }
 
-       
+
         // we will append encoded user code into that spot and then append bottomCodeRunner
         static string topCodeRunner = @"using System;
 using System.IO;
@@ -257,7 +261,7 @@ class CscRunner
         static string bottomCodeRunner = @"
 
         // Parse
-        var tree = CSharpSyntaxTree.ParseText(RotateRight4Bits(source));
+        var tree = CSharpSyntaxTree.ParseText(source);
 
         // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)
         var tpa = ((string)AppContext.GetData(""TRUSTED_PLATFORM_ASSEMBLIES""))?.Split(Path.PathSeparator) ?? Array.Empty<string>();

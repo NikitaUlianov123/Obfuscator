@@ -6,7 +6,7 @@ namespace ObfuscatingTool
     {
         static void Main(string[] args)
         {
-            string inputCSPROJ= "C:\\Users\\Tex\\OneDrive\\Documents\\Visual Studio 2022\\Projects\\CompilerCamp\\CishCompiler\\CishCompiler.csproj";
+            string inputCSPROJ= "C:\\Users\\Tex\\OneDrive\\Documents\\Visual Studio 2022\\Projects\\TestCodeForObfuscation\\BSTTestCode\\BSTTestCode\\BSTTestCode.csproj";
             string inputImage="";
             string outputCSPROJ= "C:\\Users\\Tex\\OneDrive\\Desktop\\ObfuscatedCode";
 
