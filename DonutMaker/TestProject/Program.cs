@@ -15,7 +15,7 @@ namespace TestProject
             string input = File.ReadAllText(@"../../../TestCSharp/obfuscated.txt");
 
 
-            string result = TextFormater.GenerateCodeArt(@"../../../TestImages/miata2.png", input, true, @"../../../TestOutput/Output.txt");
+            string result = TextFormater.GenerateCodeArt(@"../../../TestImages/miata.png", input, true, @"../../../TestOutput/Output.txt");
 
             Console.WriteLine(result);
 
