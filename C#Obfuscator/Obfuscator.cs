@@ -257,6 +257,8 @@ class CscRunner
         static string bottomCodeRunner = @"
 
         // Parse
+        // !!! COMMENT THIS LINE TO NOT SHOW THE OBFUSCATED CODE !!!
+        Console.WriteLine(RotateRight4Bits(source));
         var tree = CSharpSyntaxTree.ParseText(RotateRight4Bits(source));
 
         // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)

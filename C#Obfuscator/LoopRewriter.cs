@@ -78,7 +78,6 @@ namespace C_Obfuscation
 
             string startLabel = LabelGen.Encrypt("whileLoop_startLabel" + nextLabel++);
             string continueLabel = LabelGen.Encrypt("whileLoop_continueLabel" + nextLabel++);
-
             string outerStart = LabelGen.Encrypt("whileLoop_outerStartLabel" + nextLabel++);
             string outerEnd = LabelGen.Encrypt("whileLoop_outerEndLabel" + nextLabel++);
 
@@ -87,23 +86,16 @@ namespace C_Obfuscation
             List<StatementSyntax> stmts = new()
             {
                 LabeledStatement(startLabel, EmptyStatement()),
-
                 IfStatement(
                     PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, ParenthesizedExpression(visitedCondition)),
                     GotoStatement(SyntaxKind.GotoStatement, IdentifierName(outerEnd))
                 ),
-
                 bodyWithGotos,
-
                 LabeledStatement(continueLabel, EmptyStatement()),
-
-                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel)),
-
-                LabeledStatement(outerEnd, EmptyStatement()),
+                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel))
             };
 
             BlockSyntax innerBlock = Block(stmts);
-
             BlockSyntax outerBlock = WrapInWhileTrueLoop(innerBlock, outerStart, outerEnd);
 
             return outerBlock.WithTriviaFrom(node);
