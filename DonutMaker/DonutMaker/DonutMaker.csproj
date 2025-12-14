@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="CSharpier.Core" Version="1.2.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+    <PackageReference Include="Wcwidth" Version="4.0.1" />
   </ItemGroup>
 
 </Project>

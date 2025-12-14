@@ -2,10 +2,12 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing; // for Resize()
 using CSharpier;//for code formatting when deobfuscating
+using Wcwidth;
 
 using System.Text;
 using System.Text.RegularExpressions;
 using CSharpier.Core.CSharp;
+using System.Globalization;
 
 namespace DonutMaker
 {
@@ -42,7 +44,7 @@ namespace DonutMaker
         {
             string[] split = SplitPreprocessor(code);
             string preprocessor = split[0];
-            string mainCode = MakeOneLine(SplitLongLiterals(RemoveComments(split[1])));
+            string mainCode = MakeOneLine(/*SplitLongLiterals*/(RemoveComments(split[1])));
 
             string result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
 
@@ -98,13 +100,23 @@ namespace DonutMaker
             //helper to pad to cellWidth
             string PadCell(string s, byte brightness)
             {
-                if (s.Length == cellWidth)
+                int length = UnicodeCalculator.GetWidth(s);
+                if (length == -1)//for very *special* unicode chars, the width calculation may fail
+                {
+                    //so we print it out and measure the cursor position instead
+                    Console.Write(s);
+                    length = Console.GetCursorPosition().Left;
+                    Console.WriteLine();
+                }
+
+
+                if (length == cellWidth)
                 {
                     return s;
                 }
                 else
                 {
-                    return s + new string(GetFillerChar(brightness), cellWidth - s.Length);
+                    return s + new string(GetFillerChar(brightness), cellWidth - length);
                 }
             }
 
@@ -133,6 +145,10 @@ namespace DonutMaker
                     if (insertCode)
                     {
                         chosen = PadCell("*/" + tokens[currToken++] + "/*", (byte)(255 - brightness[x, y]));
+                        if (chosen.Length != cellWidth)
+                        {
+                            ;
+                        }
                         currSpotInCell = 0;
                     }
                     else
@@ -149,7 +165,6 @@ namespace DonutMaker
                 sb.AppendLine();
 
             }
-
             return sb.ToString();
         }
 
