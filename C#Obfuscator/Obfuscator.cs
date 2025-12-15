@@ -31,9 +31,11 @@ namespace C_Obfuscation
             }
             return new string(result);
         }
-        static string InterleaveNullChars(string input)
+        static string InsertSeparators(string input, char separator = '|')
         {
-            return string.Join("\0", input.ToCharArray());
+            if (string.IsNullOrEmpty(input))
+                return input;
+            return string.Join(separator, input.ToCharArray());
         }
 
 
@@ -61,7 +63,7 @@ namespace C_Obfuscation
 
             // encode only the user code and insert into the runner template
             //string encodedUserCode = RotateLeft4Bits(userCode);
-            string finalRunner = GenerateObfuscatedHelper(InterleaveNullChars(userCode));
+            string finalRunner = GenerateObfuscatedHelper(userCode);
 
             return finalRunner;
         }
@@ -112,19 +114,19 @@ namespace C_Obfuscation
             sb.Append(bottomCodeRunner);
             return sb.ToString();
         }
-        public static string ChunkToVerbatimConcat(string input, int chunkSize = 10)
+        public static string ChunkToVerbatimConcat(string input, int chunkSize = 10, char separator = '|')
         {
-            StringInfo strInfo = new StringInfo(input);
-
+            string separated = InsertSeparators(input, separator);
+            string rotated = RotateLeft4Bits(separated);
+            StringInfo strInfo = new StringInfo(rotated);
             var parts = new List<string>();
-
             for (int i = 0; i < strInfo.LengthInTextElements; i += chunkSize)
             {
                 int len = Math.Min(chunkSize, strInfo.LengthInTextElements - i);
                 string chunk = strInfo.SubstringByTextElements(i, len);
-                parts.Add($@"RotateRight4Bits(@""{RotateLeft4Bits(chunk)}"")");
+                string escaped = chunk.Replace("\"", "\"\"");
+                parts.Add($@"RotateRight4Bits(@""{escaped}"")");
             }
-
             return "string source = " + string.Join(" + ", parts) + ";";
         }
 
@@ -254,6 +256,18 @@ class CscRunner
         }
         return new string(result);
     }
+    static string RemoveInsertedSeparators(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        var sb = new StringBuilder((input.Length + 1) / 2);
+
+        for (int i = 0; i < input.Length; i += 2)
+            sb.Append(input[i]);
+
+        return sb.ToString();
+    }
     static int Main(string[] args)
     {
         // Source to compile (same program you used previously)
@@ -261,7 +275,7 @@ class CscRunner
         static string bottomCodeRunner = @"
 
         // Parse
-        var tree = CSharpSyntaxTree.ParseText(source);
+        var tree = CSharpSyntaxTree.ParseText(RemoveInsertedSeparators(source));
 
         // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)
         var tpa = ((string)AppContext.GetData(""TRUSTED_PLATFORM_ASSEMBLIES""))?.Split(Path.PathSeparator) ?? Array.Empty<string>();
