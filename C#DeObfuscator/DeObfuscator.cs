@@ -20,6 +20,7 @@ namespace C_DeObfuscator
             CompilationUnitSyntax root = syntaxTree.GetCompilationUnitRoot();
 
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(root);
+            newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
             return newRoot.NormalizeWhitespace().ToFullString();
         }
     }
