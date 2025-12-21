@@ -415,10 +415,6 @@ namespace Obfuscator
                             break;
                         }
                     }
-                    if (tokens[current].GetTokenType() == TokenType.OP_PLUS)
-                    {
-                        ;
-                    }
                     var temp = StringToTokenType.ContainsKey(grammar.grammarPairs[starting][i].text[d]);
                     //var temps = StringToTokenType[grammar.grammarPairs[starting][i].text[d]] == tokens[current].GetTokenType();
                     if (grammar.grammarPairs[starting][i].text[d] == "\"none\"")

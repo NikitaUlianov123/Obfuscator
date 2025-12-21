@@ -31,7 +31,9 @@ namespace Obfuscator
 
         public override string IRGen(VaribleStack stack)
         {
-            throw new NotImplementedException();
+            string ret = Condition.IRGen(stack);
+
+            return ;
         }
     }
 }
