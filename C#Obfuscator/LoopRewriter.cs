@@ -13,6 +13,12 @@ namespace C_Obfuscation
     internal class LoopRewriter : CSharpSyntaxRewriter
     {
         private int nextLabel = 0;
+        private SemanticModel model;
+
+        public LoopRewriter(SemanticModel model)
+        {
+            this.model = model;
+        }
 
         public override SyntaxNode? VisitForStatement(ForStatementSyntax node)
         {
@@ -143,22 +149,21 @@ namespace C_Obfuscation
         {
             if (IsInsideFinally(node)) return base.VisitForEachStatement(node);
 
+            var forEachInfo = model.GetForEachStatementInfo(node);
+            var elementType = forEachInfo.ElementType;
+            TypeSyntax actualType = ParseTypeName(elementType.ToDisplayString());
+
             ExpressionSyntax visitedExpr = (ExpressionSyntax)Visit(node.Expression);
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
-
+            
             string startLabel = LabelGen.Encrypt("foreach_startLabel" + nextLabel++);
             string continueLabel = LabelGen.Encrypt("foreach_continueLabel" + nextLabel++);
             string endLabel = LabelGen.Encrypt("foreach_endLabel" + nextLabel++);
 
-            StatementSyntax bodyWithGotos =
-                (StatementSyntax)new BreakAndContinueRewriter(continueLabel, endLabel).Visit(visitedBody);
-
+            StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, endLabel).Visit(visitedBody);
             string enumeratorId = LabelGen.Encrypt("enumeratorIdLabel" + nextLabel++);
             string loopVarName = node.Identifier.Text;
-
             List<StatementSyntax> stmts = new();
-
-
             stmts.Add(LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName("var"))
                     .WithVariables(SingletonSeparatedList(
@@ -170,9 +175,7 @@ namespace C_Obfuscation
                                     visitedExpr,
                                     IdentifierName("GetEnumerator"))))))))
             );
-
             stmts.Add(LabeledStatement(startLabel, EmptyStatement()));
-
             stmts.Add(IfStatement(
                 PrefixUnaryExpression(SyntaxKind.LogicalNotExpression,
                     InvocationExpression(
@@ -183,24 +186,24 @@ namespace C_Obfuscation
                 GotoStatement(SyntaxKind.GotoStatement, IdentifierName(endLabel)))
             );
 
+            // Cast Current to the actual foreach variable type
+            ExpressionSyntax currentValue = CastExpression(
+                actualType,
+                MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    IdentifierName(enumeratorId),
+                    IdentifierName("Current")));
+
             stmts.Add(LocalDeclarationStatement(
-                VariableDeclaration(node.Type)
+                VariableDeclaration(IdentifierName("var"))
                     .WithVariables(SingletonSeparatedList(
                         VariableDeclarator(node.Identifier)
-                        .WithInitializer(EqualsValueClause(
-                            MemberAccessExpression(
-                                SyntaxKind.SimpleMemberAccessExpression,
-                                IdentifierName(enumeratorId),
-                                IdentifierName("Current"))))))));
+                        .WithInitializer(EqualsValueClause(currentValue))))));
 
             stmts.Add(bodyWithGotos);
-
             stmts.Add(LabeledStatement(continueLabel, EmptyStatement()));
-
             stmts.Add(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel)));
-
             stmts.Add(LabeledStatement(endLabel, EmptyStatement()));
-
             return Block(stmts).WithTriviaFrom(node);
         }
 
