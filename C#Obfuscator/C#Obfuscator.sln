@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObfuscatingTool", "..\Obfus
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C#DeObfuscator", "..\C#DeObfuscator\C#DeObfuscator.csproj", "{65C1BBA0-88B0-4B8C-80EF-A9D34DF37CC9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeObfuscationTool", "..\DeObfuscationTool\DeObfuscationTool.csproj", "{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{65C1BBA0-88B0-4B8C-80EF-A9D34DF37CC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65C1BBA0-88B0-4B8C-80EF-A9D34DF37CC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65C1BBA0-88B0-4B8C-80EF-A9D34DF37CC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
