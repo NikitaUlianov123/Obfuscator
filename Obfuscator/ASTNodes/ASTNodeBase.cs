@@ -31,10 +31,10 @@ namespace Obfuscator
             }
             return -1;
         }
-        public void addVarible(string name, )
-        {
+        //public void addVarible(string name, )
+        //{
 
-        }
+        //}
     }
     public class VaribleNode
     {

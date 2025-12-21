@@ -59,7 +59,7 @@ namespace Obfuscator
         public override string IRGen(VaribleStack stack)
         {
             string Command = TokenToInstruction[TypeNode.RootToken.GetTokenType()];
-            stack.addVarible(,)
+            //stack.addVarible(,)
             return Init.IRGen(stack) + Command + " \n";
 
 

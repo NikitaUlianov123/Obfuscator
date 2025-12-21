@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.10.35013.160
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11304.174 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Obfuscator", "Obfuscator\Obfuscator.csproj", "{46217744-0071-46D2-9FCC-D1F9FAB0F963}"
 EndProject
@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefineReplacerTester", "Def
 	ProjectSection(ProjectDependencies) = postProject
 		{46217744-0071-46D2-9FCC-D1F9FAB0F963} = {46217744-0071-46D2-9FCC-D1F9FAB0F963}
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AssemblerTester", "AssemblerTester\AssemblerTester.csproj", "{047AA9D2-D8DC-453C-967D-CE45B9627D99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +26,10 @@ Global
 		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DDDF9D21-5D23-40BA-9617-D9D799F9280D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{047AA9D2-D8DC-453C-967D-CE45B9627D99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{047AA9D2-D8DC-453C-967D-CE45B9627D99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{047AA9D2-D8DC-453C-967D-CE45B9627D99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{047AA9D2-D8DC-453C-967D-CE45B9627D99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
