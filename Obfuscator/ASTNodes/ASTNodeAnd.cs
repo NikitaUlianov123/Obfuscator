@@ -27,5 +27,13 @@ namespace Obfuscator
         {
             return $"{Left.CodeGen()}{RootToken.text}{Right.CodeGen()}";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            string Total = "";
+            Total += Left.IRGen(stack);
+            Total += Right.IRGen(stack);
+            Total += "AND \n";
+            return Total;
+        }
     }
 }

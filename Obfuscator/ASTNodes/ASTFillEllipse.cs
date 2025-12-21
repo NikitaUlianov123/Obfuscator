@@ -36,5 +36,9 @@ namespace Obfuscator
             }
             return $"{RootToken.text}({ArgsString}) ;";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return "FILL_ELLIPSE \n";
+        }
     }
 }

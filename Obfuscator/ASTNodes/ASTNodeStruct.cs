@@ -26,5 +26,9 @@ namespace Obfuscator
         {
             return $"struct {Name.CodeGen()}" + "{" + Body.CodeGen() + "}"; 
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

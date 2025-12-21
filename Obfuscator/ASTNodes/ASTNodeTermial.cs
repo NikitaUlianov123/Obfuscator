@@ -30,5 +30,14 @@ namespace Obfuscator
             }
             return output;
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            string IRCode = "";
+            for (int i = 0; i < terms.Count; i++)
+            {
+                IRCode += terms[i].IRGen(stack);
+            }
+            return IRCode;
+        }
     }
 }

@@ -19,6 +19,11 @@ namespace Obfuscator
         {
             return "void";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return "";
+        }
+
     }
 
     

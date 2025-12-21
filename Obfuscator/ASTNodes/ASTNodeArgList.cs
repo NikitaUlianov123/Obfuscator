@@ -28,7 +28,10 @@ namespace Obfuscator
                 Output += "," + Items[i].CodeGen();
             }
             return Output;
-
+        }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
         }
     }
 }

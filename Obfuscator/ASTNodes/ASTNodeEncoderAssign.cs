@@ -25,5 +25,9 @@ namespace Obfuscator
         {
             return $"nMotorEncoder[{Port.CodeGen()}] = {Value.CodeGen()}";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

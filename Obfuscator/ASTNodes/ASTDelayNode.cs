@@ -25,5 +25,11 @@ namespace Obfuscator
         {
             return $"delay ( {Value.CodeGen()} ) ;";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            string IRCode = "";
+            IRCode += Value.IRGen(stack);
+            return IRCode + "DELAY \n";
+        }
     }
 }

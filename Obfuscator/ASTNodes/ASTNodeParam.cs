@@ -26,5 +26,9 @@ namespace Obfuscator
         {
             return $"{TypeNode.CodeGen()} {NameNode.CodeGen()}";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

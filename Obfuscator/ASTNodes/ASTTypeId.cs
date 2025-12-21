@@ -22,6 +22,11 @@ namespace Obfuscator
         public override string CodeGen()
         {
             throw new NotImplementedException();
+
+        }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
         }
     }
 }

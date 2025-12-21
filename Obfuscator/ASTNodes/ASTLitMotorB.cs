@@ -19,6 +19,10 @@ namespace Obfuscator
         {
             return RootToken.text;
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return "PUSH_LOCAL 1 \n";
+        }
     }
 
 }

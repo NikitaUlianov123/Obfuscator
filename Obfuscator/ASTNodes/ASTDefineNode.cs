@@ -27,5 +27,9 @@ namespace Obfuscator
         {
             return $"#define {Replace.CodeGen()} {Value.CodeGen()}";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return "";
+        }
     }
 }

@@ -26,5 +26,9 @@ namespace Obfuscator
             Callee.RenamingVariblePass(currentStack);
             Arguments.RenamingVariblePass(currentStack);
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

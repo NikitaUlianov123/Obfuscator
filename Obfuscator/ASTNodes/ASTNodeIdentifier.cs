@@ -25,5 +25,9 @@ namespace Obfuscator
         {
             return RootToken.text;
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

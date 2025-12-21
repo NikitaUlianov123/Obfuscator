@@ -23,5 +23,9 @@ namespace Obfuscator
         {
             return RootToken.text + " main()" + "{" + Body.CodeGen() + "}";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return Body.IRGen(stack);
+        }
     }
 }

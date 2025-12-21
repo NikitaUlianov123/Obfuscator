@@ -12,6 +12,14 @@ namespace Obfuscator
         public ASTNodeBase NameNode { get; }
         public ASTNodeBase? Init { get; }
 
+        public Dictionary<TokenType, string> TokenToInstruction = new()
+        {
+            [TokenType.KW_INT] = "POP_LOCAL_INT ",
+            [TokenType.KW_STRING] = "POP_LOCAL_STRING ",
+            [TokenType.KW_BOOL] = "POP_LOCAL_BOOL ",
+
+        };
+
         public ASTNodeVarDec(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // Expected forms from grammar:
@@ -47,6 +55,14 @@ namespace Obfuscator
             {
                 return $"{TypeNode.CodeGen()} {NameNode.CodeGen()};";
             }
+        }
+        public override string IRGen(VaribleStack stack)
+        {
+            string Command = TokenToInstruction[TypeNode.RootToken.GetTokenType()];
+            stack.addVarible(,)
+            return Init.IRGen(stack) + Command + " \n";
+
+
         }
     }
 }

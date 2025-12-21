@@ -28,6 +28,10 @@ namespace Obfuscator
         {
             return $"while({Condition.CodeGen()}) \n{{ {Body.CodeGen()} }}\n";
         }
-        
+
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

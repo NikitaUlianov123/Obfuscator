@@ -20,5 +20,13 @@ namespace Obfuscator
         {
             return;
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            if (RootToken.text == "true")
+            {
+                return "PUSH_CONST_BOOL TRUE";
+            }
+            return "PUSH_CONST_BOOL FALSE";
+        }
     }
 }

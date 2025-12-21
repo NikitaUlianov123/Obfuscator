@@ -21,5 +21,9 @@ namespace Obfuscator
         {
             NodeToPlusPlus.RenamingVariblePass(currentStack);
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

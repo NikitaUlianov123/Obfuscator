@@ -33,5 +33,9 @@ namespace Obfuscator
         {
             return $"for ({Init.CodeGen()} {Cond.CodeGen()}; {Iter.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -32,5 +32,9 @@ namespace Obfuscator
         {
             return $"{RootToken.text}({string.Join(", ", Args.ConvertAll(arg => arg.CodeGen()))})";
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return "PUSH_LOCAL 0 \n";
+        }
     }
 }

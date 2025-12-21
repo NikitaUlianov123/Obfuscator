@@ -13,8 +13,6 @@ namespace Obfuscator
         public bool HasBreak { get; }
         public ASTNodeCaseItem(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
-            // case:    [0]='case^',[1]=expr,[2]=':',[3]=Body,[4]=BreakOpt
-            // default: [0]='default^',[1]=':',[2]=Body,[3]=BreakOpt
             RootToken = children[0].RootToken;
             var tt = RootToken.GetTokenType();
             if (tt == TokenType.KW_CASE)
@@ -37,6 +35,10 @@ namespace Obfuscator
             throw new NotImplementedException();
         }
         public override string CodeGen()
+        {
+            throw new NotImplementedException();
+        }
+        public override string IRGen(VaribleStack stack)
         {
             throw new NotImplementedException();
         }

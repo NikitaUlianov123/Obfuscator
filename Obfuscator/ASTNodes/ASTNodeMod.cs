@@ -24,5 +24,11 @@ namespace Obfuscator
             Left.RenamingVariblePass(currentStack);
             Right.RenamingVariblePass(currentStack);
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            string LeftIR = Left.IRGen(stack);
+            string RightIR = Right.IRGen(stack);
+            return LeftIR + RightIR + "MOD \n";
+        }
     }
 }

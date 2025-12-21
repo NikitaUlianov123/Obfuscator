@@ -25,5 +25,9 @@ namespace Obfuscator
             Target.RenamingVariblePass(currentStack);
             Member.RenamingVariblePass(currentStack);
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -19,5 +19,9 @@ namespace Obfuscator
         {
             throw new NotImplementedException();
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            return "";
+        }
     }
 }

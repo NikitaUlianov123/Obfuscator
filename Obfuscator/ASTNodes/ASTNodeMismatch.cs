@@ -23,5 +23,9 @@ namespace Obfuscator.ASTNodes
         {
             throw new NotImplementedException();
         }
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

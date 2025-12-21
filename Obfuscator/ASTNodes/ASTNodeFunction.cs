@@ -29,7 +29,10 @@ namespace Obfuscator
         {
             Body.RenamingVariblePass(currentStack);
         }
-
+        public override string IRGen(VaribleStack stack)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }
