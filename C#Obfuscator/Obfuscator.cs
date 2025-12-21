@@ -129,7 +129,7 @@ namespace C_Obfuscation
             collector.Visit(root);
 
             // rewriter runs only on the annotated root and uses only the renameMap
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(renameMap);
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model,renameMap);
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter();
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);

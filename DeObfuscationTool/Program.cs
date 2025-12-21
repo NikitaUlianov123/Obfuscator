@@ -6,9 +6,12 @@ namespace DeObfuscationTool
     {
         static void Main(string[] args)
         {
-            string code= File.ReadAllText("C:\\Users\\Tex\\OneDrive\\Desktop\\ObfuscatedCode\\Program.cs");
+            string sourceCode= File.ReadAllText("C:\\Users\\Tex\\OneDrive\\Desktop\\ObfuscatedCode\\Program.cs");
             ;
-            string deobfuscatedCode = C_DeObfuscator.DeObfuscator.GetObfuscatedCodeFromString(code);
+
+            string obfucatedCode = C_DeObfuscator.DeObfuscator.GetObfuscatedCodeFromString(sourceCode);
+            string deobfuscatedCode= C_DeObfuscator.DeObfuscator.GetDeObfuscatedCode(obfucatedCode);
+            Console.WriteLine(deobfuscatedCode);
         }
     }
 }
