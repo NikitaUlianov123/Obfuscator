@@ -77,6 +77,12 @@ public class ForLoopDeobfuscator : CSharpSyntaxRewriter
             return false;
         }
 
+        string outerStart = outerStartLabel.Identifier.Text;
+        if (!ContainsForLoopPattern(outerStart, "outerStartLabel"))
+        {
+            return false;
+        }
+
         if (statements[1] is not IfStatementSyntax outerIf)
         {
             return false;
@@ -229,6 +235,13 @@ public class ForLoopDeobfuscator : CSharpSyntaxRewriter
         };
 
         return true;
+    }
+
+    private bool ContainsForLoopPattern(string labelName, string expectedPart)
+    {
+        // The label should contain both "whileLoop" and the expected part
+        // (e.g., "startLabel", "continueLabel", "outerStartLabel", "outerEndLabel")
+        return labelName.Contains("forLoop") && labelName.Contains(expectedPart);
     }
 
     private class ForLoopComponents
