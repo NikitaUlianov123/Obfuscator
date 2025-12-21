@@ -129,21 +129,22 @@ namespace C_Obfuscation
             collector.Visit(root);
 
             // rewriter runs only on the annotated root and uses only the renameMap
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model,renameMap);
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter(model);
             
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)loopRewriter.Visit(root);
 
-            model = UpdateSemanticModel(tree, newRoot);
             newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
 
-            model = UpdateSemanticModel(tree, newRoot);
-            newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            model = UpdateSemanticModel(newRoot.SyntaxTree, newRoot);
+            rewriter = new ObfuscatingRewriter(model, renameMap);
+
+            newRoot = (CompilationUnitSyntax)rewriter.Visit(newRoot);
             return newRoot;
         }
 
-        private static SemanticModel UpdateSemanticModel(SyntaxTree originalTree, SyntaxNode newRoot)
+        private static SemanticModel UpdateSemanticModel(SyntaxTree tree, SyntaxNode newRoot)
         {
             
             var refs = new List<MetadataReference>
@@ -153,9 +154,9 @@ namespace C_Obfuscation
 
             CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp")
                 .AddReferences(refs)
-                .AddSyntaxTrees(originalTree);
+                .AddSyntaxTrees(tree);
                 
-            return compilation.GetSemanticModel(originalTree);
+            return compilation.GetSemanticModel(tree);
         }
 
         static string GenerateObfuscatedHelper(string encodedUserCode)

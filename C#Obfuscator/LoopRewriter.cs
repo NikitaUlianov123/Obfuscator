@@ -204,7 +204,9 @@ namespace C_Obfuscation
             stmts.Add(LabeledStatement(continueLabel, EmptyStatement()));
             stmts.Add(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel)));
             stmts.Add(LabeledStatement(endLabel, EmptyStatement()));
-            return Block(stmts).WithTriviaFrom(node);
+            
+            var block = Block(stmts).WithTriviaFrom(node);
+            return block;
         }
 
 
