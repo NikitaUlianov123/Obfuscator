@@ -308,6 +308,7 @@ namespace DonutMaker
 
         private static string[] SplitPreprocessor(string code)
         {
+            //todo: handle giant string at top of program
             if (string.IsNullOrWhiteSpace(code))
                 return [string.Empty, string.Empty];
 
