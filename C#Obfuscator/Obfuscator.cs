@@ -17,7 +17,41 @@ namespace C_Obfuscation
         // holds the last unencoded obfuscated code for debugging
         public static string ObfuscatedCode = "";
         // generates a new obfuscated name
-        public static string NewName() => "a" + (nameCounter++).ToString("X");
+        public static string NewName(string oldname)
+        {
+            char[] result = new char[oldname.Length];
+
+            for (int i = 0; i < oldname.Length; i++)
+            {
+                char c = oldname[i];
+
+                // If digit
+                if (char.IsDigit(c))
+                {
+                    int digit = c - '0';
+                    int newDigit = (digit + 5) % 9;
+                    result[i] = (char)('0' + newDigit);
+                }
+                // If lowercase letter
+                else if (c >= 'a' && c <= 'z')
+                {
+                    result[i] = (char)('a' + (c - 'a' + 13) % 26);
+                }
+                // If uppercase letter
+                else if (c >= 'A' && c <= 'Z')
+                {
+                    result[i] = (char)('A' + (c - 'A' + 13) % 26);
+                }
+                // Anything else
+                else
+                {
+                    result[i] = c;
+                }
+            }
+
+            return new string(result);
+        }
+        
 
         // rotates bits left by 4
         static string RotateLeft4Bits(string input)
@@ -95,7 +129,7 @@ namespace C_Obfuscation
             collector.Visit(root);
 
             // rewriter runs only on the annotated root and uses only the renameMap
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(renameMap);
+            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model,renameMap);
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter(model);
             
