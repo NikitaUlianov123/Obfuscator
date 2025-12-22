@@ -7,8 +7,6 @@ namespace C_DeObfuscator
 {
     public class DeObfuscator
     {
-
-
         public static string GetObfuscatedCodeFromString(string originalCode)
         {
             string code = CodeRetriever.GetCodeFromString(originalCode);
@@ -35,12 +33,13 @@ namespace C_DeObfuscator
             collector.Visit(root);
 
             // rewriter runs only on the annotated root and uses only the renameMap
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
+            //ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
 
 
-            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            CompilationUnitSyntax newRoot = /*(CompilationUnitSyntax)rewriter.Visit*/(root);
             newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new DoWhileLoopDeobfuscator().Visit(newRoot);
 
             return newRoot.NormalizeWhitespace().ToFullString();
         }
