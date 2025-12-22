@@ -43,5 +43,9 @@ namespace C_DeObfuscator
 
             return newRoot.NormalizeWhitespace().ToFullString();
         }
+        public static string GetDeObfuscatedLiterals(string Code)
+        {
+            return HardCodeRemoval.Remove(Code);
+        }
     }
 }
