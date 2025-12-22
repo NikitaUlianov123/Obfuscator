@@ -30,10 +30,10 @@ namespace C_Obfuscation
             SeparatedSyntaxList<ExpressionSyntax> visitedIncrementors = VisitExpressionList(node.Incrementors);
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
-            string startLabel = LabelGen.Encrypt("forloop_startLabel" + nextLabel);
-            string continueLabel = LabelGen.Encrypt("forloop_continueLabel" + nextLabel);
-            string outerStart = LabelGen.Encrypt("forloop_outerStartLabel" + nextLabel);
-            string outerEnd = LabelGen.Encrypt("forloop_outerEndLabel" + nextLabel);
+            string startLabel = LabelGen.Encrypt("forLoop_startLabel" + nextLabel);
+            string continueLabel = LabelGen.Encrypt("forLoop_continueLabel" + nextLabel);
+            string outerStart = LabelGen.Encrypt("forLoop_outerStartLabel" + nextLabel);
+            string outerEnd = LabelGen.Encrypt("forLoop_outerEndLabel" + nextLabel);
 
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, outerEnd).Visit(visitedBody);
 
@@ -82,10 +82,10 @@ namespace C_Obfuscation
             ExpressionSyntax visitedCondition = (ExpressionSyntax)(Visit(node.Condition) ?? LiteralExpression(SyntaxKind.TrueLiteralExpression));
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
-            string startLabel = LabelGen.Encrypt("whileLoop_startLabel" + nextLabel++);
-            string continueLabel = LabelGen.Encrypt("whileLoop_continueLabel" + nextLabel++);
-            string outerStart = LabelGen.Encrypt("whileLoop_outerStartLabel" + nextLabel++);
-            string outerEnd = LabelGen.Encrypt("whileLoop_outerEndLabel" + nextLabel++);
+            string startLabel = LabelGen.Encrypt("whileLoop_startLabel" + nextLabel);
+            string continueLabel = LabelGen.Encrypt("whileLoop_continueLabel" + nextLabel);
+            string outerStart = LabelGen.Encrypt("whileLoop_outerStartLabel" + nextLabel);
+            string outerEnd = LabelGen.Encrypt("whileLoop_outerEndLabel" + nextLabel);
 
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, outerEnd).Visit(visitedBody);
 
@@ -104,6 +104,7 @@ namespace C_Obfuscation
             BlockSyntax innerBlock = Block(stmts);
             BlockSyntax outerBlock = WrapInWhileTrueLoop(innerBlock, outerStart, outerEnd);
 
+            nextLabel++;
             return outerBlock.WithTriviaFrom(node);
         }
 
@@ -114,34 +115,27 @@ namespace C_Obfuscation
             ExpressionSyntax visitedCondition = (ExpressionSyntax)(Visit(node.Condition) ?? LiteralExpression(SyntaxKind.TrueLiteralExpression));
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
-            string startLabel = LabelGen.Encrypt("dowhileloop_startLabel" + nextLabel++);
-            string continueLabel = LabelGen.Encrypt("dowhileloop_continueLabel" + nextLabel++);
-
-            string outerStart = LabelGen.Encrypt("outerStartLabel" + nextLabel++);
-            string outerEnd = LabelGen.Encrypt("outerEndLabel" + nextLabel++);
+            string startLabel = LabelGen.Encrypt("dowhileloop_startLabel" + nextLabel);
+            string continueLabel = LabelGen.Encrypt("dowhileloop_continueLabel" + nextLabel);
+            string outerStart = LabelGen.Encrypt("dowhile_outerStartLabel" + nextLabel);
+            string outerEnd = LabelGen.Encrypt("dowhile_outerEndLabel" + nextLabel);
 
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, outerEnd).Visit(visitedBody);
 
             List<StatementSyntax> stmts = new()
             {
                 LabeledStatement(startLabel, EmptyStatement()),
-
                 bodyWithGotos,
-
                 LabeledStatement(continueLabel, EmptyStatement()),
-
                 IfStatement(
                     visitedCondition,
                     GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel))
-                ),
-
-                LabeledStatement(outerEnd, EmptyStatement()),
+                )
             };
 
             BlockSyntax innerBlock = Block(stmts);
-
             BlockSyntax outerBlock = WrapInWhileTrueLoop(innerBlock, outerStart, outerEnd);
-
+            nextLabel++;
             return outerBlock.WithTriviaFrom(node);
         }
 
@@ -149,8 +143,8 @@ namespace C_Obfuscation
         {
             if (IsInsideFinally(node)) return base.VisitForEachStatement(node);
 
-            var forEachInfo = model.GetForEachStatementInfo(node);
-            var elementType = forEachInfo.ElementType;
+            ForEachStatementInfo forEachInfo = model.GetForEachStatementInfo(node);
+            ITypeSymbol elementType = forEachInfo.ElementType;
             TypeSyntax actualType = ParseTypeName(elementType.ToDisplayString());
 
             ExpressionSyntax visitedExpr = (ExpressionSyntax)Visit(node.Expression);
@@ -163,6 +157,7 @@ namespace C_Obfuscation
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, endLabel).Visit(visitedBody);
             string enumeratorId = LabelGen.Encrypt("enumeratorIdLabel" + nextLabel++);
             string loopVarName = node.Identifier.Text;
+
             List<StatementSyntax> stmts = new();
             stmts.Add(LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName("var"))
@@ -186,7 +181,6 @@ namespace C_Obfuscation
                 GotoStatement(SyntaxKind.GotoStatement, IdentifierName(endLabel)))
             );
 
-            // Cast Current to the actual foreach variable type
             ExpressionSyntax currentValue = CastExpression(
                 actualType,
                 MemberAccessExpression(
