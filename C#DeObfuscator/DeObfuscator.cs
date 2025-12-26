@@ -42,6 +42,7 @@ namespace CSharp_DeObfuscator
             newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new DoWhileLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new ForEachLoopDeobfuscator().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new DemorganDeobfuscator().Visit(newRoot);
 
             return newRoot.NormalizeWhitespace().ToFullString();
         }
