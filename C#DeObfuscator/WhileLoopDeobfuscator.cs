@@ -8,10 +8,10 @@ namespace C_DeObfuscator
     {
         private Stack<LoopContext> loopContextStack = new Stack<LoopContext>();
 
-        public override SyntaxNode VisitBlock(BlockSyntax node)
+        public override SyntaxNode? VisitBlock(BlockSyntax node)
         {
-            WhileLoopComponents components;
-            if (IsObfuscatedWhileLoop(node, out components))
+            WhileLoopComponents? components;
+            if (TryGetWhileLoopComponents(node, out components) && components != null)
             {
                 loopContextStack.Push(new LoopContext
                 (
@@ -19,13 +19,10 @@ namespace C_DeObfuscator
                     BreakLabel: components.BreakLabel
                 ));
 
-                // Visit the body to handle nested loops and replace goto statements
-                StatementSyntax processedBody = (StatementSyntax)Visit(components.Body);
+                StatementSyntax processedBody = (StatementSyntax)Visit(components.Body)!;
 
-                // Pop this loop's context
                 loopContextStack.Pop();
 
-                // Build the while statement
                 WhileStatementSyntax whileStatement = SyntaxFactory.WhileStatement(
                     condition: components.Condition,
                     statement: processedBody
@@ -34,11 +31,10 @@ namespace C_DeObfuscator
                 return whileStatement.WithTriviaFrom(node);
             }
 
-            // If not an obfuscated loop, visit children normally
             return base.VisitBlock(node);
         }
 
-        public override SyntaxNode VisitGotoStatement(GotoStatementSyntax node)
+        public override SyntaxNode? VisitGotoStatement(GotoStatementSyntax node)
         {
             if (node.Kind() == SyntaxKind.GotoStatement && node.Expression is IdentifierNameSyntax identifier)
             {
@@ -48,13 +44,11 @@ namespace C_DeObfuscator
                 {
                     LoopContext currentContext = loopContextStack.Peek();
 
-                    // Check if this goto is a continue
                     if (currentContext.ContinueLabel != null && labelName == currentContext.ContinueLabel)
                     {
                         return SyntaxFactory.ContinueStatement().WithTriviaFrom(node);
                     }
 
-                    // Check if this goto is a break
                     if (currentContext.BreakLabel != null && labelName == currentContext.BreakLabel)
                     {
                         return SyntaxFactory.BreakStatement().WithTriviaFrom(node);
@@ -65,93 +59,81 @@ namespace C_DeObfuscator
             return base.VisitGotoStatement(node);
         }
 
-        private bool IsObfuscatedWhileLoop(BlockSyntax block, out WhileLoopComponents components)
+        private bool TryGetWhileLoopComponents(BlockSyntax block, out WhileLoopComponents? components)
         {
             components = null;
-            var statements = block.Statements;
+            SyntaxList<StatementSyntax> statements = block.Statements;
 
             if (statements.Count < 5)
+            {
                 return false;
+            }
 
             if (!(statements[0] is LabeledStatementSyntax firstLabel))
+            {
                 return false;
+            }
 
             string firstLabelText = firstLabel.Identifier.Text;
             if (!firstLabelText.Contains("whileLoop") || !firstLabelText.Contains("outerStartLabel"))
+            {
                 return false;
+            }
 
-            if (!(statements[2] is BlockSyntax innerBlock))
-                return false;
+            BlockSyntax? innerBlock = statements[2] as BlockSyntax;
+            LabeledStatementSyntax? outerEndLabel = statements[statements.Count - 1] as LabeledStatementSyntax;
 
-            if (!(statements[statements.Count - 1] is LabeledStatementSyntax outerEndLabel))
+            if (innerBlock == null || outerEndLabel == null)
+            {
                 return false;
+            }
 
             string breakLabel = outerEndLabel.Identifier.Text;
 
-            return ParseInnerBlock(innerBlock, breakLabel, out components);
+            components = ParseInnerBlock(innerBlock, breakLabel);
+            return true;
         }
 
-        private bool ParseInnerBlock(BlockSyntax innerBlock, string breakLabel, out WhileLoopComponents components)
+        private WhileLoopComponents ParseInnerBlock(BlockSyntax innerBlock, string breakLabel)
         {
-            components = null;
-            var stmts = innerBlock.Statements;
+            SyntaxList<StatementSyntax> statements = innerBlock.Statements;
 
-            if (stmts.Count < 5)
-                return false;
-
+            // While loop inner block structure:
             // 0: startLabel
             // 1: if (!condition) goto breakLabel
             // 2: body
             // 3: continueLabel
             // 4: goto startLabel
 
-            // Extract start label
-            if (!(stmts[0] is LabeledStatementSyntax startLabel))
-                return false;
+            LabeledStatementSyntax startLabel = (LabeledStatementSyntax)statements[0];
 
-            string startLabelName = startLabel.Identifier.Text;
-
-            // Extract condition from the if statement
-            if (!(stmts[1] is IfStatementSyntax conditionIf))
-                return false;
-
-            if (!(conditionIf.Condition is PrefixUnaryExpressionSyntax notExpr) ||
-                notExpr.Kind() != SyntaxKind.LogicalNotExpression)
-                return false;
-
+            IfStatementSyntax conditionIf = (IfStatementSyntax)statements[1];
+            PrefixUnaryExpressionSyntax notExpr = (PrefixUnaryExpressionSyntax)conditionIf.Condition;
             ExpressionSyntax condition = notExpr.Operand;
 
-            // Remove parentheses if present
             if (condition is ParenthesizedExpressionSyntax parenCond)
+            {
                 condition = parenCond.Expression;
+            }
 
-            // Extract body (statement at index 2)
-            StatementSyntax body = stmts[2];
+            StatementSyntax body = statements[2];
 
-            // Extract continue label
-            if (!(stmts[3] is LabeledStatementSyntax continueLabel))
-                return false;
-
+            LabeledStatementSyntax continueLabel = (LabeledStatementSyntax)statements[3];
             string continueLabelName = continueLabel.Identifier.Text;
 
-            // Build components
-            components = new WhileLoopComponents
-            {
-                Condition = condition,
-                Body = body,
-                ContinueLabel = continueLabelName,
-                BreakLabel = breakLabel
-            };
-
-            return true;
+            return new WhileLoopComponents(
+                Condition: condition,
+                Body: body,
+                ContinueLabel: continueLabelName,
+                BreakLabel: breakLabel
+            );
         }
 
-        private class WhileLoopComponents
-        {
-            public ExpressionSyntax Condition { get; set; }
-            public StatementSyntax Body { get; set; }
-            public string ContinueLabel { get; set; }
-            public string BreakLabel { get; set; }
-        }
+        private sealed record WhileLoopComponents(
+            ExpressionSyntax Condition,
+            StatementSyntax Body,
+            string ContinueLabel,
+            string BreakLabel
+        );
     }
 }
