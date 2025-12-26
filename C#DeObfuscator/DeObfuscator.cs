@@ -40,6 +40,7 @@ namespace C_DeObfuscator
             newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new DoWhileLoopDeobfuscator().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new ForEachLoopDeobfuscator().Visit(newRoot);
 
             return newRoot.NormalizeWhitespace().ToFullString();
         }

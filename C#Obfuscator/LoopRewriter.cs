@@ -143,66 +143,86 @@ namespace C_Obfuscation
         {
             if (IsInsideFinally(node)) return base.VisitForEachStatement(node);
 
-            ForEachStatementInfo forEachInfo = model.GetForEachStatementInfo(node);
-            ITypeSymbol elementType = forEachInfo.ElementType;
-            TypeSyntax actualType = ParseTypeName(elementType.ToDisplayString());
-
             ExpressionSyntax visitedExpr = (ExpressionSyntax)Visit(node.Expression);
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
-            
-            string startLabel = LabelGen.Encrypt("foreach_startLabel" + nextLabel++);
-            string continueLabel = LabelGen.Encrypt("foreach_continueLabel" + nextLabel++);
-            string endLabel = LabelGen.Encrypt("foreach_endLabel" + nextLabel++);
 
-            StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, endLabel).Visit(visitedBody);
-            string enumeratorId = LabelGen.Encrypt("enumeratorIdLabel" + nextLabel++);
-            string loopVarName = node.Identifier.Text;
+            // Generate unique variable names
+            string listVarName = LabelGen.Encrypt("foreachList" + nextLabel);
+            string indexVarName = LabelGen.Encrypt("foreachIndex" + nextLabel);
 
-            List<StatementSyntax> stmts = new();
-            stmts.Add(LocalDeclarationStatement(
+            nextLabel++;
+
+            // Create: var list = collection.ToList();
+            var listDeclaration = LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName("var"))
                     .WithVariables(SingletonSeparatedList(
-                        VariableDeclarator(Identifier(enumeratorId))
+                        VariableDeclarator(Identifier(listVarName))
                         .WithInitializer(EqualsValueClause(
                             InvocationExpression(
                                 MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     visitedExpr,
-                                    IdentifierName("GetEnumerator"))))))))
-            );
-            stmts.Add(LabeledStatement(startLabel, EmptyStatement()));
-            stmts.Add(IfStatement(
-                PrefixUnaryExpression(SyntaxKind.LogicalNotExpression,
-                    InvocationExpression(
-                        MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            IdentifierName(enumeratorId),
-                            IdentifierName("MoveNext")))),
-                GotoStatement(SyntaxKind.GotoStatement, IdentifierName(endLabel)))
+                                    IdentifierName("ToList")))))))
             );
 
-            ExpressionSyntax currentValue = CastExpression(
-                actualType,
-                MemberAccessExpression(
-                    SyntaxKind.SimpleMemberAccessExpression,
-                    IdentifierName(enumeratorId),
-                    IdentifierName("Current")));
-
-            stmts.Add(LocalDeclarationStatement(
+            // Create: var item = list[i];
+            // Use var instead of trying to get the type from semantic model
+            var itemDeclaration = LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName("var"))
                     .WithVariables(SingletonSeparatedList(
                         VariableDeclarator(node.Identifier)
-                        .WithInitializer(EqualsValueClause(currentValue))))));
+                        .WithInitializer(EqualsValueClause(
+                            ElementAccessExpression(
+                                IdentifierName(listVarName),
+                                BracketedArgumentList(
+                                    SingletonSeparatedList(
+                                        Argument(IdentifierName(indexVarName)))))))))
+            );
 
-            stmts.Add(bodyWithGotos);
-            stmts.Add(LabeledStatement(continueLabel, EmptyStatement()));
-            stmts.Add(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel)));
-            stmts.Add(LabeledStatement(endLabel, EmptyStatement()));
-            
-            var block = Block(stmts).WithTriviaFrom(node);
-            return block;
+            // Wrap body with item declaration
+            StatementSyntax newBody;
+            if (visitedBody is BlockSyntax blockBody)
+            {
+                newBody = blockBody.WithStatements(
+                    blockBody.Statements.Insert(0, itemDeclaration));
+            }
+            else
+            {
+                newBody = Block(itemDeclaration, visitedBody);
+            }
+
+            // Create the for loop: for (int i = 0; i < list.Count; i++)
+            var forLoop = ForStatement(newBody)
+                .WithDeclaration(
+                    VariableDeclaration(
+                        PredefinedType(Token(SyntaxKind.IntKeyword)))
+                    .WithVariables(SingletonSeparatedList(
+                        VariableDeclarator(Identifier(indexVarName))
+                        .WithInitializer(EqualsValueClause(
+                            LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(0)))))))
+                .WithCondition(
+                    BinaryExpression(
+                        SyntaxKind.LessThanExpression,
+                        IdentifierName(indexVarName),
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName(listVarName),
+                            IdentifierName("Count"))))
+                .WithIncrementors(
+                    SingletonSeparatedList<ExpressionSyntax>(
+                        PostfixUnaryExpression(
+                            SyntaxKind.PostIncrementExpression,
+                            IdentifierName(indexVarName))));
+
+            // Wrap in a block with the list declaration
+            var result = Block(
+                listDeclaration,
+                forLoop
+            ).WithTriviaFrom(node);
+
+            // Visit the result to apply for loop obfuscation
+            return Visit(result);
         }
-
 
         private BlockSyntax WrapInWhileTrueLoop(BlockSyntax block, string outerLoopStartLabel, string outerLoopEndLabel)
         {
@@ -226,6 +246,7 @@ namespace C_Obfuscation
         {
             return node.Ancestors().OfType<FinallyClauseSyntax>().Any();
         }
+
         private SeparatedSyntaxList<ExpressionSyntax> VisitExpressionList(SeparatedSyntaxList<ExpressionSyntax> list)
         {
             var builder = new SeparatedSyntaxList<ExpressionSyntax>();
@@ -235,6 +256,5 @@ namespace C_Obfuscation
             }
             return builder;
         }
-
     }
 }

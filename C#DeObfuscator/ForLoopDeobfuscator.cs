@@ -64,7 +64,7 @@ namespace C_DeObfuscator
             return base.VisitGotoStatement(node);
         }
 
-        private bool IsObfuscatedForLoop(BlockSyntax block, out ForLoopComponents components)
+        private bool IsObfuscatedForLoop(BlockSyntax block, out ForLoopComponents? components)
         {
             components = null;
             var statements = block.Statements;
@@ -91,7 +91,7 @@ namespace C_DeObfuscator
             return ParseInnerBlock(innerBlock, breakLabel, out components);
         }
 
-        private bool ParseInnerBlock(BlockSyntax innerBlock, string breakLabel, out ForLoopComponents components)
+        private bool ParseInnerBlock(BlockSyntax innerBlock, string breakLabel, out ForLoopComponents? components)
         {
             components = null;
             var stmts = innerBlock.Statements;
