@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator.LoopDeobfuscators
 {
     public class ForLoopDeobfuscator : CSharpSyntaxRewriter
     {
@@ -79,7 +79,7 @@ namespace C_DeObfuscator
                 return false;
             }
 
-            string firstLabelText = firstLabel.Identifier.Text;
+            string firstLabelText = LabelDecoder.Decrypt(firstLabel.Identifier.Text);
             if (!firstLabelText.Contains("forLoop") || !firstLabelText.Contains("outerStartLabel"))
             {
                 return false;

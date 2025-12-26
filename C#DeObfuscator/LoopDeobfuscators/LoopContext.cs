@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator.LoopDeobfuscators
 {
     public sealed record LoopContext(string ContinueLabel, string BreakLabel);
 }

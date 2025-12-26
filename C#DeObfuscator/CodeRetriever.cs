@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator
 {
     internal class CodeRetriever
     {

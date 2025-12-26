@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator.LoopDeobfuscators
 {
     public class ForEachLoopDeobfuscator : CSharpSyntaxRewriter
     {
@@ -65,8 +65,10 @@ namespace C_DeObfuscator
                 return false;
             }
 
-            string listVarName = listVar.Identifier.Text;
-            if (!listVarName.Contains("foreach"))
+            string encodedListVarName = listVar.Identifier.Text;
+
+            string decodedListVarName = LabelDecoder.Decrypt(encodedListVarName);
+            if (!decodedListVarName.Contains("foreach"))
             {
                 return false;
             }
@@ -78,11 +80,11 @@ namespace C_DeObfuscator
                 return false;
             }
 
-            components = ParseForLoop(forLoop, listVarName, collection);
+            components = ParseForLoop(forLoop, encodedListVarName, collection);
             return components != null;
         }
 
-        private ForEachLoopComponents? ParseForLoop(ForStatementSyntax forLoop, string listVarName, ExpressionSyntax collection)
+        private ForEachLoopComponents? ParseForLoop(ForStatementSyntax forLoop, string encodedListVarName, ExpressionSyntax collection)
         {
             if (forLoop.Declaration == null || forLoop.Declaration.Variables.Count == 0)
             {
@@ -90,9 +92,9 @@ namespace C_DeObfuscator
             }
 
             VariableDeclaratorSyntax indexVar = forLoop.Declaration.Variables[0];
-            string indexVarName = indexVar.Identifier.Text;
 
-            if (!indexVarName.Contains("foreach"))
+            string decodedIndexVarName = LabelDecoder.Decrypt(indexVar.Identifier.Text);
+            if (!decodedIndexVarName.Contains("foreach"))
             {
                 return null;
             }
@@ -128,7 +130,7 @@ namespace C_DeObfuscator
                 return null;
             }
 
-            if (accessedList.Identifier.Text != listVarName)
+            if (accessedList.Identifier.Text != encodedListVarName)
             {
                 return null;
             }

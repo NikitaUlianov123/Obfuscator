@@ -1,9 +1,10 @@
-﻿using C_Obfuscation;
+﻿using CSharp_DeObfuscator.LoopDeobfuscators;
+using C_Obfuscation;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator
 {
     public class DeObfuscator
     {

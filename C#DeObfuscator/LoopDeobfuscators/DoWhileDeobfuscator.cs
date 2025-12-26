@@ -1,20 +1,20 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator.LoopDeobfuscators
 {
-    public class WhileLoopDeobfuscator : CSharpSyntaxRewriter
+    public class DoWhileLoopDeobfuscator : CSharpSyntaxRewriter
     {
         private Stack<LoopContext> loopContextStack = new Stack<LoopContext>();
 
         public override SyntaxNode? VisitBlock(BlockSyntax node)
         {
-            WhileLoopComponents? components;
-            if (TryGetWhileLoopComponents(node, out components) && components != null)
+            DoWhileLoopComponents? components;
+            if (TryGetDoWhileLoopComponents(node, out components) && components != null)
             {
-                loopContextStack.Push(new LoopContext
-                (
+                loopContextStack.Push(new LoopContext(
                     ContinueLabel: components.ContinueLabel,
                     BreakLabel: components.BreakLabel
                 ));
@@ -23,12 +23,12 @@ namespace C_DeObfuscator
 
                 loopContextStack.Pop();
 
-                WhileStatementSyntax whileStatement = SyntaxFactory.WhileStatement(
-                    condition: components.Condition,
-                    statement: processedBody
+                DoStatementSyntax doWhileStatement = SyntaxFactory.DoStatement(
+                    statement: processedBody,
+                    condition: components.Condition
                 );
 
-                return whileStatement.WithTriviaFrom(node);
+                return doWhileStatement.WithTriviaFrom(node);
             }
 
             return base.VisitBlock(node);
@@ -59,7 +59,7 @@ namespace C_DeObfuscator
             return base.VisitGotoStatement(node);
         }
 
-        private bool TryGetWhileLoopComponents(BlockSyntax block, out WhileLoopComponents? components)
+        private bool TryGetDoWhileLoopComponents(BlockSyntax block, out DoWhileLoopComponents? components)
         {
             components = null;
             SyntaxList<StatementSyntax> statements = block.Statements;
@@ -74,8 +74,8 @@ namespace C_DeObfuscator
                 return false;
             }
 
-            string firstLabelText = firstLabel.Identifier.Text;
-            if (!firstLabelText.Contains("whileLoop") || !firstLabelText.Contains("outerStartLabel"))
+            string firstLabelText = LabelDecoder.Decrypt(firstLabel.Identifier.Text);
+            if (!firstLabelText.Contains("dowhile") || !firstLabelText.Contains("outerStartLabel"))
             {
                 return false;
             }
@@ -94,34 +94,22 @@ namespace C_DeObfuscator
             return true;
         }
 
-        private WhileLoopComponents ParseInnerBlock(BlockSyntax innerBlock, string breakLabel)
+        private DoWhileLoopComponents ParseInnerBlock(BlockSyntax innerBlock, string breakLabel)
         {
             SyntaxList<StatementSyntax> statements = innerBlock.Statements;
 
-            // While loop inner block structure:
-            // 0: startLabel
-            // 1: if (!condition) goto breakLabel
-            // 2: body
-            // 3: continueLabel
-            // 4: goto startLabel
-
             LabeledStatementSyntax startLabel = (LabeledStatementSyntax)statements[0];
+            string startLabelName = startLabel.Identifier.Text;
 
-            IfStatementSyntax conditionIf = (IfStatementSyntax)statements[1];
-            PrefixUnaryExpressionSyntax notExpr = (PrefixUnaryExpressionSyntax)conditionIf.Condition;
-            ExpressionSyntax condition = notExpr.Operand;
+            StatementSyntax body = statements[1];
 
-            if (condition is ParenthesizedExpressionSyntax parenCond)
-            {
-                condition = parenCond.Expression;
-            }
-
-            StatementSyntax body = statements[2];
-
-            LabeledStatementSyntax continueLabel = (LabeledStatementSyntax)statements[3];
+            LabeledStatementSyntax continueLabel = (LabeledStatementSyntax)statements[2];
             string continueLabelName = continueLabel.Identifier.Text;
 
-            return new WhileLoopComponents(
+            IfStatementSyntax conditionIf = (IfStatementSyntax)statements[3];
+            ExpressionSyntax condition = conditionIf.Condition;
+
+            return new DoWhileLoopComponents(
                 Condition: condition,
                 Body: body,
                 ContinueLabel: continueLabelName,
@@ -129,7 +117,7 @@ namespace C_DeObfuscator
             );
         }
 
-        private sealed record WhileLoopComponents(
+        private sealed record DoWhileLoopComponents(
             ExpressionSyntax Condition,
             StatementSyntax Body,
             string ContinueLabel,
