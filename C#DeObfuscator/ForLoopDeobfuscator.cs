@@ -10,18 +10,18 @@ namespace C_DeObfuscator
     {
         private Stack<LoopContext> loopContextStack = new Stack<LoopContext>();
 
-        public override SyntaxNode VisitBlock(BlockSyntax node)
+        public override SyntaxNode? VisitBlock(BlockSyntax node)
         {
-            ForLoopComponents components;
-            if (IsObfuscatedForLoop(node, out components))
+            ForLoopComponents? components;
+            if (TryGetForLoopComponents(node, out components) && components != null)
             {
                 loopContextStack.Push(new LoopContext
-                {
-                    ContinueLabel = components.ContinueLabel,
-                    BreakLabel = components.BreakLabel
-                });
+                (
+                    ContinueLabel: components.ContinueLabel,
+                    BreakLabel: components.BreakLabel
+                ));
 
-                StatementSyntax processedBody = (StatementSyntax)Visit(components.Body);
+                StatementSyntax processedBody = (StatementSyntax)Visit(components.Body)!;
 
                 loopContextStack.Pop();
 
@@ -39,7 +39,7 @@ namespace C_DeObfuscator
             return base.VisitBlock(node);
         }
 
-        public override SyntaxNode VisitGotoStatement(GotoStatementSyntax node)
+        public override SyntaxNode? VisitGotoStatement(GotoStatementSyntax node)
         {
             if (node.Kind() == SyntaxKind.GotoStatement && node.Expression is IdentifierNameSyntax identifier)
             {
@@ -64,151 +64,144 @@ namespace C_DeObfuscator
             return base.VisitGotoStatement(node);
         }
 
-        private bool IsObfuscatedForLoop(BlockSyntax block, out ForLoopComponents? components)
+        private bool TryGetForLoopComponents(BlockSyntax block, out ForLoopComponents? components)
         {
             components = null;
-            var statements = block.Statements;
+            SyntaxList<StatementSyntax> statements = block.Statements;
 
-            // Quick check: Does the first label contain "forloop" and "outerStartLabel"?
             if (statements.Count < 5)
+            {
                 return false;
+            }
 
             if (!(statements[0] is LabeledStatementSyntax firstLabel))
+            {
                 return false;
+            }
 
             string firstLabelText = firstLabel.Identifier.Text;
             if (!firstLabelText.Contains("forLoop") || !firstLabelText.Contains("outerStartLabel"))
+            {
                 return false;
+            }
 
-            if (!(statements[2] is BlockSyntax innerBlock))
-                return false;
+            BlockSyntax? innerBlock = statements[2] as BlockSyntax;
+            LabeledStatementSyntax? outerEndLabel = statements[statements.Count - 1] as LabeledStatementSyntax;
 
-            if (!(statements[statements.Count - 1] is LabeledStatementSyntax outerEndLabel))
+            if (innerBlock == null || outerEndLabel == null)
+            {
                 return false;
+            }
 
             string breakLabel = outerEndLabel.Identifier.Text;
 
-            return ParseInnerBlock(innerBlock, breakLabel, out components);
+            components = ParseInnerBlock(innerBlock, breakLabel);
+            return true;
         }
 
-        private bool ParseInnerBlock(BlockSyntax innerBlock, string breakLabel, out ForLoopComponents? components)
+        private ForLoopComponents ParseInnerBlock(BlockSyntax innerBlock, string breakLabel)
         {
-            components = null;
-            var stmts = innerBlock.Statements;
+            SyntaxList<StatementSyntax> statements = innerBlock.Statements;
             int index = 0;
 
-            // Extract optional variable declaration
-            VariableDeclarationSyntax declaration = null;
-            if (index < stmts.Count && stmts[index] is LocalDeclarationStatementSyntax declStmt)
+            // Extract variable declaration
+            VariableDeclarationSyntax? declaration = null;
+            if (index < statements.Count && statements[index] is LocalDeclarationStatementSyntax declStmt)
             {
                 declaration = declStmt.Declaration;
                 index++;
             }
 
-            // Extract optional initializers
+            // Extract initializers
             List<ExpressionSyntax> initializers = new List<ExpressionSyntax>();
-            while (index < stmts.Count && stmts[index] is ExpressionStatementSyntax exprStmt)
+            while (index < statements.Count && statements[index] is ExpressionStatementSyntax exprStmt)
             {
                 initializers.Add(exprStmt.Expression);
                 index++;
             }
 
-            // We should now be at the startLabel
-            if (index >= stmts.Count || !(stmts[index] is LabeledStatementSyntax startLabel))
-                return false;
-
-            string startLabelName = startLabel.Identifier.Text;
+            // Extract start label
+            LabeledStatementSyntax startLabel = (LabeledStatementSyntax)statements[index];
             index++;
 
-            // Extract condition from if statement
-            if (index >= stmts.Count || !(stmts[index] is IfStatementSyntax conditionIf))
-                return false;
-
-            if (!(conditionIf.Condition is PrefixUnaryExpressionSyntax notExpr) ||
-                notExpr.Kind() != SyntaxKind.LogicalNotExpression)
-                return false;
-
+            // Extract condition
+            IfStatementSyntax conditionIf = (IfStatementSyntax)statements[index];
+            PrefixUnaryExpressionSyntax notExpr = (PrefixUnaryExpressionSyntax)conditionIf.Condition;
             ExpressionSyntax condition = notExpr.Operand;
+
             if (condition is ParenthesizedExpressionSyntax parenCond)
+            {
                 condition = parenCond.Expression;
+            }
 
             index++;
 
-            // Collect body statements until we hit the continue label
+            // Collect body statements until continue label
             List<StatementSyntax> bodyStatements = new List<StatementSyntax>();
-            string continueLabel = null;
+            string? continueLabel = null;
 
-            while (index < stmts.Count)
+            while (index < statements.Count)
             {
-                if (stmts[index] is LabeledStatementSyntax label)
+                if (statements[index] is LabeledStatementSyntax label)
                 {
                     continueLabel = label.Identifier.Text;
                     index++;
                     break;
                 }
-                bodyStatements.Add(stmts[index]);
+                bodyStatements.Add(statements[index]);
                 index++;
             }
 
-            if (continueLabel == null)
-                return false;
-
             // Extract incrementors
             List<ExpressionSyntax> incrementors = new List<ExpressionSyntax>();
-            while (index < stmts.Count && stmts[index] is ExpressionStatementSyntax incrStmt)
+            while (index < statements.Count && statements[index] is ExpressionStatementSyntax incrStmt)
             {
                 incrementors.Add(incrStmt.Expression);
                 index++;
             }
 
-            // Build the body
-            StatementSyntax body;
+            // Build the body statement
+            StatementSyntax body = BuildBodyStatement(bodyStatements);
+
+            return new ForLoopComponents(
+                Declaration: declaration,
+                Initializers: SyntaxFactory.SeparatedList(initializers),
+                Condition: condition,
+                Incrementors: SyntaxFactory.SeparatedList(incrementors),
+                Body: body,
+                ContinueLabel: continueLabel ?? string.Empty,
+                BreakLabel: breakLabel
+            );
+        }
+
+        private StatementSyntax BuildBodyStatement(List<StatementSyntax> bodyStatements)
+        {
             if (bodyStatements.Count == 0)
             {
-                body = SyntaxFactory.Block();
+                return SyntaxFactory.Block();
             }
             else if (bodyStatements.Count == 1 && bodyStatements[0] is BlockSyntax singleBlock)
             {
-                body = singleBlock;
+                return singleBlock;
             }
             else if (bodyStatements.Count == 1)
             {
-                body = bodyStatements[0];
+                return bodyStatements[0];
             }
             else
             {
-                body = SyntaxFactory.Block(bodyStatements);
+                return SyntaxFactory.Block(bodyStatements);
             }
-
-            components = new ForLoopComponents
-            {
-                Declaration = declaration,
-                Initializers = SyntaxFactory.SeparatedList(initializers),
-                Condition = condition,
-                Incrementors = SyntaxFactory.SeparatedList(incrementors),
-                Body = body,
-                ContinueLabel = continueLabel,
-                BreakLabel = breakLabel
-            };
-
-            return true;
         }
 
-        private class ForLoopComponents
-        {
-            public VariableDeclarationSyntax Declaration { get; set; }
-            public SeparatedSyntaxList<ExpressionSyntax> Initializers { get; set; }
-            public ExpressionSyntax Condition { get; set; }
-            public SeparatedSyntaxList<ExpressionSyntax> Incrementors { get; set; }
-            public StatementSyntax Body { get; set; }
-            public string ContinueLabel { get; set; }
-            public string BreakLabel { get; set; }
-        }
-
-        private class LoopContext
-        {
-            public string ContinueLabel { get; set; }
-            public string BreakLabel { get; set; }
-        }
+        private sealed record ForLoopComponents(
+            VariableDeclarationSyntax? Declaration,
+            SeparatedSyntaxList<ExpressionSyntax> Initializers,
+            ExpressionSyntax Condition,
+            SeparatedSyntaxList<ExpressionSyntax> Incrementors,
+            StatementSyntax Body,
+            string ContinueLabel,
+            string BreakLabel
+        );
     }
 }
