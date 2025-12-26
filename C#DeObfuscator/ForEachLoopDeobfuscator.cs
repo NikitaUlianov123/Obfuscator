@@ -16,10 +16,10 @@ namespace C_DeObfuscator
             if (IsObfuscatedForEachLoop(node, out components) && components != null)
             {
                 loopContextStack.Push(new LoopContext
-                {
-                    ContinueLabel = components.ContinueLabel,
-                    BreakLabel = components.BreakLabel
-                });
+                (
+                    ContinueLabel: components.ContinueLabel,
+                    BreakLabel: components.BreakLabel
+                ));
 
                 StatementSyntax processedBody = (StatementSyntax)Visit(components.Body);
 
@@ -212,12 +212,6 @@ namespace C_DeObfuscator
             public SyntaxToken LoopVariableIdentifier { get; set; }
             public ExpressionSyntax Collection { get; set; }
             public StatementSyntax Body { get; set; }
-            public string ContinueLabel { get; set; }
-            public string BreakLabel { get; set; }
-        }
-
-        private class LoopContext
-        {
             public string ContinueLabel { get; set; }
             public string BreakLabel { get; set; }
         }
