@@ -129,18 +129,11 @@ namespace C_Obfuscation
             collector.Visit(root);
 
             // rewriter runs only on the annotated root and uses only the renameMap
-            ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
-            DemorganRewriter demorganRewriter = new DemorganRewriter();
-            LoopRewriter loopRewriter = new LoopRewriter(model);
-            
-            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)loopRewriter.Visit(root);
-
-            newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
-
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)new ObfuscatingRewriter(model, renameMap).Visit(root);
+            newRoot = (CompilationUnitSyntax)new DemorganRewriter().Visit(newRoot);
             model = UpdateSemanticModel(newRoot.SyntaxTree, newRoot);
-            rewriter = new ObfuscatingRewriter(model, renameMap);
+            newRoot = (CompilationUnitSyntax)new LoopRewriter(model).Visit(newRoot);
 
-            newRoot = (CompilationUnitSyntax)rewriter.Visit(newRoot);
             return newRoot;
         }
 
