@@ -11,7 +11,9 @@ namespace DeObfuscationTool
 
             string obfucatedCode = C_DeObfuscator.DeObfuscator.GetObfuscatedCodeFromString(sourceCode);
             string deobfuscatedCode= C_DeObfuscator.DeObfuscator.GetDeObfuscatedCode(obfucatedCode);
-            Console.WriteLine(deobfuscatedCode);
+            //Console.WriteLine(deobfuscatedCode);
+            string deobfuscatedLiterals = C_DeObfuscator.DeObfuscator.GetDeObfuscatedLiterals(deobfuscatedCode);
+            Console.WriteLine(deobfuscatedLiterals);
         }
     }
 }

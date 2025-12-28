@@ -17,9 +17,13 @@ namespace C_Obfuscation
             this.map = map;
         }
 
-        // generate a unique key for a symbol
-        private static string SymbolKey(ISymbol sym) =>
-            sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        // generate a unique key for a symbol (use OriginalDefinition to get a stable key)
+        private static string SymbolKey(ISymbol sym)
+        {
+            if (sym == null) return string.Empty;
+            var canonical = sym.OriginalDefinition ?? sym;
+            return canonical.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
 
         // attempt to add a symbol to the rename map
         private void TryAddSymbol(ISymbol sym)

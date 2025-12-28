@@ -34,29 +34,40 @@ namespace C_Obfuscation
             EncodedStringsUsed = false;
         }
 
-        // produce the same key format used by the collector
-        private static string SymbolKey(ISymbol sym) =>
-            sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        // produce the same key format used by the collector (use OriginalDefinition)
+        private static string SymbolKey(ISymbol sym)
+        {
+            if (sym == null) return string.Empty;
+            var canonical = sym.OriginalDefinition ?? sym;
+            return canonical.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
 
         // try to get map key for a syntax node by resolving its symbol
         // Defensive: ensure node belongs to model.SyntaxTree and handle exceptions
         private string? TryGetRenameKey(SyntaxNode? node)
         {
             if (node == null) return null;
-
-            // Guard: only query the model for nodes that belong to the same syntax tree
             if (node.SyntaxTree != _model.SyntaxTree) return null;
 
             try
             {
-                ISymbol? sym = _model.GetSymbolInfo(node).Symbol ?? _model.GetDeclaredSymbol(node);
+                var info = _model.GetSymbolInfo(node);
+                ISymbol? sym = info.Symbol;
+                if (sym == null && info.CandidateSymbols.Length > 0)
+                {
+                    sym = info.CandidateSymbols.FirstOrDefault();
+                }
+
+                if (sym == null)
+                {
+                    sym = _model.GetDeclaredSymbol(node);
+                }
+
                 if (sym == null) return null;
                 return SymbolKey(sym);
             }
             catch (ArgumentException)
             {
-                // SemanticModel will throw this if node isn't in the model's tree or other issues;
-                // treat as no key available.
                 return null;
             }
         }
@@ -81,7 +92,8 @@ namespace C_Obfuscation
             if (node.SyntaxTree != _model.SyntaxTree) return null;
             try
             {
-                return _model.GetSymbolInfo(node).Symbol;
+                var info = _model.GetSymbolInfo(node);
+                return info.Symbol ?? info.CandidateSymbols.FirstOrDefault();
             }
             catch (ArgumentException)
             {
@@ -181,25 +193,20 @@ namespace C_Obfuscation
             if (token.IsKind(SyntaxKind.IdentifierToken))
             {
                 var parent = token.Parent;
-                // Guard: only call the SemanticModel for nodes from the same syntax tree
                 if (parent != null && parent.SyntaxTree == _model.SyntaxTree)
                 {
                     try
                     {
-                        ISymbol? sym = TryGetSymbolInfo(parent) ?? TryGetDeclaredSymbol(parent);
-                        if (sym != null)
+                        // Use unified rename-key lookup (includes candidate symbols and OriginalDefinition)
+                        var key = TryGetRenameKey(parent);
+                        if (key != null && _map.TryGetValue(key, out var newName))
                         {
-                            var key = SymbolKey(sym);
-                            if (_map.TryGetValue(key, out var newName))
-                            {
-                                return SyntaxFactory.Identifier(token.LeadingTrivia, newName, token.TrailingTrivia);
-                            }
+                            return SyntaxFactory.Identifier(token.LeadingTrivia, newName, token.TrailingTrivia);
                         }
                     }
                     catch (ArgumentException)
                     {
-                        // Defensive fallback: the parent isn't valid for this model.
-                        // Fall through to default behaviour.
+                        // fall through
                     }
                 }
             }
