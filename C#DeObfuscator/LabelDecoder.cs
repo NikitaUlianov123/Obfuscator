@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace C_DeObfuscator
+namespace CSharp_DeObfuscator
 {
     internal class LabelDecoder
     {
@@ -12,30 +12,36 @@ namespace C_DeObfuscator
 
         public static string Decrypt(string encoded)
         {
-            //byte[] data = Convert.FromBase64String(encoded);
+            try
+            {
+                // Remove the underscore prefix
+                if (encoded.StartsWith("_"))
+                {
+                    encoded = encoded.Substring(1);
+                }
 
-            //for (int i = 0; i < data.Length; i++)
-            //{
-            //    if ((i & 1) == 0) continue;
+                // Convert hex string back to bytes
+                int length = encoded.Length / 2;
+                byte[] bytes = new byte[length];
 
-            //    byte b = data[i];
-            //    byte high = (byte)(b >> 4);
-            //    byte low = (byte)(b & 0xF);
+                for (int i = 0; i < length; i++)
+                {
+                    bytes[i] = Convert.ToByte(encoded.Substring(i * 2, 2), 16);
+                }
 
-            //    data[i] = (byte)((low << 4) | high);
-            //}
+                // XOR each byte with the key to decrypt
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = (byte)(bytes[i] ^ Key);
+                }
 
-            //for (int i = 0; i < data.Length; i++)
-            //{
-            //    byte b = data[i];
-            //    b ^= (byte)(Key + i * 13);
-            //    int r = i & 7;
-            //    b = (byte)((b >> r) | (b << (8 - r)));
-            //    data[i] = b;
-            //}
-
-            //return Encoding.UTF8.GetString(data);
-            return encoded;
+                return Encoding.UTF8.GetString(bytes);
+            }
+            catch (Exception)
+            {
+                // If decryption fails, return the original encoded string
+                return encoded;
+            }
         }
     }
 }

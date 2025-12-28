@@ -25,7 +25,6 @@ namespace ObfuscatingTool
             //Console.WriteLine(code);
 
             //string deobfuscatedCode = DeObfuscator.GetDeObfuscatedCode(code);
-
         }
     }
 }
