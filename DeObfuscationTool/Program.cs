@@ -1,4 +1,5 @@
 ﻿using CSharp_DeObfuscator;
+using CSharp_DeObfuscator;
 using System.Text;
 namespace DeObfuscationTool
 {
@@ -9,10 +10,10 @@ namespace DeObfuscationTool
             string sourceCode= File.ReadAllText("C:\\Users\\Tex\\OneDrive\\Desktop\\ObfuscatedCode\\Program.cs");
             ;
 
-            string obfucatedCode = C_DeObfuscator.DeObfuscator.GetObfuscatedCodeFromString(sourceCode);
-            string deobfuscatedCode= C_DeObfuscator.DeObfuscator.GetDeObfuscatedCode(obfucatedCode);
+            string obfucatedCode = DeObfuscator.GetObfuscatedCodeFromString(sourceCode);
+            string deobfuscatedCode= DeObfuscator.GetDeObfuscatedCode(obfucatedCode);
             //Console.WriteLine(deobfuscatedCode);
-            string deobfuscatedLiterals = C_DeObfuscator.DeObfuscator.GetDeObfuscatedLiterals(deobfuscatedCode);
+            string deobfuscatedLiterals = DeObfuscator.GetDeObfuscatedLiterals(deobfuscatedCode);
             Console.WriteLine(deobfuscatedLiterals);
         }
     }

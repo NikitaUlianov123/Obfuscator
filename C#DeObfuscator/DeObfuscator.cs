@@ -27,7 +27,7 @@ namespace CSharp_DeObfuscator
                 .AddSyntaxTrees(syntaxTree);
             SemanticModel model = compilation.GetSemanticModel(syntaxTree);
             // make rename map 
-            Dictionary<string, string> renameMap = new Dictionary<string, string>();
+            Dictionary<ISymbol, string> renameMap = new Dictionary<ISymbol, string>();
 
             // collector annotates the original root and fills renameMap
             IdentifierCollector collector = new IdentifierCollector(model, renameMap);

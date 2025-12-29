@@ -14,7 +14,7 @@ namespace C_Obfuscation
         // semantic model to resolve symbols from roslyn syntax nodes
         private readonly SemanticModel _model;
         // map of symbol-key -> new name
-        private readonly Dictionary<string, string> _map;
+        private readonly Dictionary<ISymbol, string> _map;
         public bool EncodedStringsUsed { get; private set; }
 
         static Dictionary<Type, byte> LITERALTOBYTE = new Dictionary<Type, byte>
@@ -27,44 +27,37 @@ namespace C_Obfuscation
             { typeof(byte), 0x01 }
         };
 
-        public ObfuscatingRewriter(SemanticModel model, Dictionary<string, string> map)
+        public ObfuscatingRewriter(SemanticModel model, Dictionary<ISymbol, string> map)
         {
             _model = model ?? throw new ArgumentNullException(nameof(model));
             _map = map ?? throw new ArgumentNullException(nameof(map));
             EncodedStringsUsed = false;
         }
+        private static ISymbol Canonicalize(ISymbol sym) => sym.OriginalDefinition ?? sym;
 
-        // produce the same key format used by the collector (use OriginalDefinition)
-        private static string SymbolKey(ISymbol sym)
-        {
-            if (sym == null) return string.Empty;
-            var canonical = sym.OriginalDefinition ?? sym;
-            return canonical.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        }
+        
 
         // try to get map key for a syntax node by resolving its symbol
         // Defensive: ensure node belongs to model.SyntaxTree and handle exceptions
-        private string? TryGetRenameKey(SyntaxNode? node)
+        private ISymbol? TryGetRenameSymbol(SyntaxNode? node)
         {
-            if (node == null) return null;
+            if (node is null) return null;
             if (node.SyntaxTree != _model.SyntaxTree) return null;
 
             try
             {
                 var info = _model.GetSymbolInfo(node);
                 ISymbol? sym = info.Symbol;
-                if (sym == null && info.CandidateSymbols.Length > 0)
-                {
+
+                if (sym is null && info.CandidateSymbols.Length > 0)
                     sym = info.CandidateSymbols.FirstOrDefault();
-                }
 
-                if (sym == null)
-                {
+                // For some declaration-ish nodes, SymbolInfo can be null; try declared symbol.
+                if (sym is null)
                     sym = _model.GetDeclaredSymbol(node);
-                }
 
-                if (sym == null) return null;
-                return SymbolKey(sym);
+                if (sym is null) return null;
+                return Canonicalize(sym);
             }
             catch (ArgumentException)
             {
@@ -78,7 +71,8 @@ namespace C_Obfuscation
             if (node.SyntaxTree != _model.SyntaxTree) return null;
             try
             {
-                return _model.GetDeclaredSymbol(node);
+                var sym = _model.GetDeclaredSymbol(node);
+                return sym is null ? null : Canonicalize(sym);
             }
             catch (ArgumentException)
             {
@@ -93,7 +87,8 @@ namespace C_Obfuscation
             try
             {
                 var info = _model.GetSymbolInfo(node);
-                return info.Symbol ?? info.CandidateSymbols.FirstOrDefault();
+                var sym = info.Symbol ?? info.CandidateSymbols.FirstOrDefault();
+                return sym is null ? null : Canonicalize(sym);
             }
             catch (ArgumentException)
             {
@@ -103,103 +98,82 @@ namespace C_Obfuscation
 
         public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node)
         {
-            string? key = TryGetRenameKey(node);
-            if (key != null && _map.TryGetValue(key, out var newName))
+            var sym = TryGetRenameSymbol(node);
+            node = (IdentifierNameSyntax)base.VisitIdentifierName(node);
+            if (sym != null && _map.TryGetValue(sym, out var newName))
             {
                 return node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
-            return base.VisitIdentifierName(node);
+            return node;
         }
 
         public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            ISymbol? sym = TryGetDeclaredSymbol(node);
-            if (sym != null)
+            var sym = TryGetDeclaredSymbol(node);
+            node = (VariableDeclaratorSyntax)base.VisitVariableDeclarator(node);
+            if (sym != null && _map.TryGetValue(sym, out var newName))
             {
-                var key = SymbolKey(sym);
-                if (_map.TryGetValue(key, out var newName))
-                {
-                    node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
-                }
+                node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
-            return base.VisitVariableDeclarator(node);
+            return node;
         }
 
         public override SyntaxNode VisitParameter(ParameterSyntax node)
         {
-            ISymbol? sym = TryGetDeclaredSymbol(node);
-            if (sym != null)
+            var sym = TryGetDeclaredSymbol(node);
+            node = (ParameterSyntax)base.VisitParameter(node);
+            if (sym != null && _map.TryGetValue(sym, out var newName))
             {
-                var key = SymbolKey(sym);
-                if (_map.TryGetValue(key, out var newName))
-                {
-                    node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
-                }
+                node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
-            return base.VisitParameter(node);
+            return node;
         }
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            ISymbol? sym = TryGetDeclaredSymbol(node);
-            if (sym != null)
+            var sym = TryGetDeclaredSymbol(node);
+            node = (MethodDeclarationSyntax)base.VisitMethodDeclaration(node);
+            if (sym != null && _map.TryGetValue(sym, out var newName))
             {
-                var key = SymbolKey(sym);
-                if (_map.TryGetValue(key, out var newName))
-                {
-                    node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
-                }
+                node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
-            return base.VisitMethodDeclaration(node);
+            return node;
         }
 
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
-            ISymbol? sym = TryGetDeclaredSymbol(node);
-            if (sym != null)
+            var sym = TryGetDeclaredSymbol(node);
+            node = (PropertyDeclarationSyntax)base.VisitPropertyDeclaration(node);
+            if (sym != null && _map.TryGetValue(sym, out var newName))
             {
-                var key = SymbolKey(sym);
-                if (_map.TryGetValue(key, out var newName))
-                {
-                    node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
-                }
+                node = node.WithIdentifier(SyntaxFactory.Identifier(newName));
             }
-            return base.VisitPropertyDeclaration(node);
+            return node;
         }
 
         public override SyntaxNode VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
-            var vars = new List<VariableDeclaratorSyntax>();
-            foreach (var v in node.Declaration.Variables)
-            {
-                ISymbol? sym = TryGetDeclaredSymbol(v);
-                if (sym != null)
-                {
-                    var key = SymbolKey(sym);
-                    if (_map.TryGetValue(key, out var newName))
-                    {
-                        vars.Add(v.WithIdentifier(SyntaxFactory.Identifier(newName)));
-                        continue;
-                    }
-                }
-                vars.Add(v);
-            }
-            return base.VisitFieldDeclaration(node.WithDeclaration(node.Declaration.WithVariables(SyntaxFactory.SeparatedList(vars))));
+            // Note: FieldDeclaration declares one or more variables, handled by VisitVariableDeclarator.
+            // Keep this override if you had other logic; otherwise base is fine.
+            return base.VisitFieldDeclaration(node);
         }
 
         public override SyntaxToken VisitToken(SyntaxToken token)
         {
-            // if token maps to a symbol we have renamed, replace text
+            // Your original approach renames identifier tokens based on parent node symbol.
+            // Keep that behavior but lookup by ISymbol directly.
             if (token.IsKind(SyntaxKind.IdentifierToken))
             {
                 var parent = token.Parent;
+
                 if (parent != null && parent.SyntaxTree == _model.SyntaxTree)
                 {
                     try
                     {
-                        // Use unified rename-key lookup (includes candidate symbols and OriginalDefinition)
-                        var key = TryGetRenameKey(parent);
-                        if (key != null && _map.TryGetValue(key, out var newName))
+                        // Prefer SymbolInfo for usage sites; fall back to declared symbol where needed.
+                        var sym = TryGetSymbolInfo(parent) ?? TryGetDeclaredSymbol(parent);
+
+                        if (sym != null && _map.TryGetValue(sym, out var newName))
                         {
                             return SyntaxFactory.Identifier(token.LeadingTrivia, newName, token.TrailingTrivia);
                         }
@@ -210,6 +184,7 @@ namespace C_Obfuscation
                     }
                 }
             }
+
             return base.VisitToken(token);
         }
 

@@ -115,48 +115,62 @@ namespace C_Obfuscation
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
             };
 
-            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp")
+            var compilation = CSharpCompilation.Create("ObfTemp")
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddReferences(refs)
                 .AddSyntaxTrees(tree);
 
             SemanticModel model = compilation.GetSemanticModel(tree);
 
             // make rename map 
-            Dictionary<string, string> renameMap = new Dictionary<string, string>();
-
-            // collector annotates the original root and fills renameMap
+            Dictionary<ISymbol, string> renameMap = new(SymbolEqualityComparer.Default);
             IdentifierCollector collector = new IdentifierCollector(model, renameMap);
-            collector.Visit(root);
-
-            // rewriter runs only on the annotated root and uses only the renameMap
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
+            collector.Visit(root);
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
+            model = UpdateSemanticModel(newRoot.SyntaxTree);
+            // collector annotates the original root and fills renameMap
+            // rewriter runs only on the annotated root and uses only the renameMap
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter(model);
             
-            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)loopRewriter.Visit(root);
+            newRoot = (CompilationUnitSyntax)loopRewriter.Visit(newRoot);
 
             newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
-
-            model = UpdateSemanticModel(newRoot.SyntaxTree, newRoot);
-            rewriter = new ObfuscatingRewriter(model, renameMap);
-
-            newRoot = (CompilationUnitSyntax)rewriter.Visit(newRoot);
+           
+            
             return newRoot;
         }
 
-        private static SemanticModel UpdateSemanticModel(SyntaxTree tree, SyntaxNode newRoot)
+        private static SemanticModel UpdateSemanticModel(SyntaxTree tree)
         {
-            
-            var refs = new List<MetadataReference>
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
-            };
+            // Load the same core runtime references the JIT/compiler uses
+            // so symbols bind consistently (Console, LINQ, etc.)
+            var tpa = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
+            var refs = new List<MetadataReference>();
 
-            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp")
+            if (!string.IsNullOrWhiteSpace(tpa))
+            {
+                foreach (var path in tpa.Split(Path.PathSeparator))
+                {
+                    // You can filter if you want, but simplest is to include them all.
+                    // This is what people commonly do in Roslyn scripting-like scenarios.
+                    if (path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                        refs.Add(MetadataReference.CreateFromFile(path));
+                }
+            }
+            else
+            {
+                // Fallback (rare)
+                refs.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+            }
+
+            var compilation = CSharpCompilation.Create("ObfTemp")
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddReferences(refs)
                 .AddSyntaxTrees(tree);
-                
-            return compilation.GetSemanticModel(tree);
+
+            return compilation.GetSemanticModel(tree, ignoreAccessibility: true);
         }
 
         static string GenerateObfuscatedHelper(string encodedUserCode)

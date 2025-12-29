@@ -8,34 +8,26 @@ namespace C_Obfuscation
     public class IdentifierCollector : CSharpSyntaxWalker
     {
         private readonly SemanticModel model;
-        private readonly Dictionary<string, string> map;
+        private readonly Dictionary<ISymbol, string> map;
 
-        public IdentifierCollector(SemanticModel model, Dictionary<string, string> map)
-            : base(SyntaxWalkerDepth.Trivia)
+        public IdentifierCollector(SemanticModel model, Dictionary<ISymbol, string> map) : base(SyntaxWalkerDepth.Trivia)
         {
             this.model = model;
             this.map = map;
         }
 
-        // generate a unique key for a symbol (use OriginalDefinition to get a stable key)
-        private static string SymbolKey(ISymbol sym)
-        {
-            if (sym == null) return string.Empty;
-            var canonical = sym.OriginalDefinition ?? sym;
-            return canonical.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        }
+       
 
         // attempt to add a symbol to the rename map
-        private void TryAddSymbol(ISymbol sym)
+        private void TryAddSymbol(ISymbol? sym)
         {
-            if (sym == null) return;
+            if (sym is null) return;
             if (!CanRenameSymbol(sym)) return;
 
-            string key = SymbolKey(sym);
-            if (!map.ContainsKey(key))
-            {
-                map[key] = Obfuscator.NewName(sym.Name);
-            }
+            var canonical = sym.OriginalDefinition ?? sym;
+
+            if (!map.ContainsKey(canonical))
+                map[canonical] = Obfuscator.NewName(sym.Name);
         }
 
         // determine if a symbol is eligible for renaming
