@@ -1,0 +1,168 @@
+﻿using System;
+
+namespace BstDemo
+{
+    class Program
+    {
+        static void Main()
+        {
+            Console.WriteLine("=== Binary Search Tree Demo ===\n");
+
+            var bst = new BinarySearchTree();
+
+            int[] values = { 8, 3, 10, 1, 6, 14, 4, 7, 13 };
+
+            Console.WriteLine("Inserting values: " + string.Join(",", values));
+            foreach (var v in values)
+                bst.Insert(v);
+
+            Console.WriteLine("\nIn-order traversal (sorted):");
+            bst.PrintInOrder();
+            Console.WriteLine("\n");
+
+            Console.WriteLine("Pre-order traversal:");
+            bst.PrintPreOrder();
+            Console.WriteLine("\n");
+
+            Console.WriteLine("Post-order traversal:");
+            bst.PrintPostOrder();
+            Console.WriteLine("\n");
+
+            Console.WriteLine("Visual structure:");
+            bst.PrintTree();
+            Console.WriteLine("\n");
+
+            Console.WriteLine("Searching for 7: " + (bst.Search(7) ? "Found" : "Not Found"));
+            Console.WriteLine("Searching for 20: " + (bst.Search(20) ? "Found" : "Not Found"));
+
+            Console.WriteLine("\nRemoving node 3 (which has children)");
+            bst.Remove(3);
+
+            Console.WriteLine("In-order after removal:");
+            bst.PrintInOrder();
+            Console.WriteLine("\n");
+
+            Console.WriteLine("Visual structure after removal:");
+            bst.PrintTree();
+            Console.WriteLine("\n");
+        }
+    }
+
+    class BinarySearchTree
+    {
+        class Node
+        {
+            public int Value;
+            public Node Left, Right;
+            public Node(int value) => Value = value;
+        }
+
+        Node root;
+
+        public void Insert(int value)
+        {
+            root = InsertRec(root, value);
+        }
+
+        Node InsertRec(Node node, int value)
+        {
+            if (node == null) return new Node(value);
+
+            if (value < node.Value)
+                node.Left = InsertRec(node.Left, value);
+            else if (value > node.Value)
+                node.Right = InsertRec(node.Right, value);
+
+            return node;
+        }
+
+        public bool Search(int value)
+        {
+            var n = root;
+            while (n != null)
+            {
+                if (value == n.Value) return true;
+                n = value < n.Value ? n.Left : n.Right;
+            }
+            return false;
+        }
+
+        public void Remove(int value)
+        {
+            root = RemoveRec(root, value);
+        }
+
+        Node RemoveRec(Node node, int value)
+        {
+            if (node == null) return null;
+
+            if (value < node.Value)
+                node.Left = RemoveRec(node.Left, value);
+            else if (value > node.Value)
+                node.Right = RemoveRec(node.Right, value);
+            else
+            {
+                // 1-child or leaf case
+                if (node.Left == null) return node.Right;
+                if (node.Right == null) return node.Left;
+
+                // 2-child case ? replace with inorder successor
+                Node successor = node.Right;
+                while (successor.Left != null)
+                    successor = successor.Left;
+
+                node.Value = successor.Value;
+                node.Right = RemoveRec(node.Right, successor.Value);
+            }
+
+            return node;
+        }
+
+        public void PrintInOrder() => PrintInOrderRec(root);
+        void PrintInOrderRec(Node node)
+        {
+            if (node == null) return;
+            PrintInOrderRec(node.Left);
+            Console.Write(node.Value + " ");
+            PrintInOrderRec(node.Right);
+        }
+
+        public void PrintPreOrder() => PrintPreOrderRec(root);
+        void PrintPreOrderRec(Node node)
+        {
+            if (node == null) return;
+            Console.Write(node.Value + " ");
+            PrintPreOrderRec(node.Left);
+            PrintPreOrderRec(node.Right);
+        }
+
+        public void PrintPostOrder() => PrintPostOrderRec(root);
+        void PrintPostOrderRec(Node node)
+        {
+            if (node == null) return;
+            PrintPostOrderRec(node.Left);
+            PrintPostOrderRec(node.Right);
+            Console.Write(node.Value + " ");
+        }
+
+        public void PrintTree()
+        {
+            PrintTreeRec(root, "", true);
+        }
+
+        void PrintTreeRec(Node node, string indent, bool isLast)
+        {
+            if (node == null)
+            {
+                Console.WriteLine(indent + "(null)");
+                return;
+            }
+
+            Console.WriteLine(indent + (isLast ? "?? " : "?? ") + node.Value);
+            indent += isLast ? "   " : "?  ";
+
+            PrintTreeRec(node.Left, indent, false);
+            PrintTreeRec(node.Right, indent, true);
+        }
+    }
+}
