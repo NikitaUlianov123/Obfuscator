@@ -74,46 +74,65 @@ namespace Obfuscator
             { "JNZ",               0x82 },
         };
 
-        public static byte[] Assemble(string irCode)
+        public static (byte[] code, byte[] heap) Assemble(string irCode)
         {
             string[] lines = irCode.Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries);
 
-            List<byte> bytecode = new List<byte>();
+            bool isInFunction = false;
+            List<byte> bytecode = [];
+            List<byte> heap = [];
 
             foreach (string line in lines)
             {
                 string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
                 if (opCodes.TryGetValue(parts[0], out byte opcode))
                 {
-                    bytecode.Add(opcode);
+                    List<byte> current = [];
+                    current.Add(opcode);
                     for (int i = 1; i < 4; i++)
                     {
                         if (i >= parts.Length)
                         {
-                            bytecode.Add(0);
+                            current.Add(0);
                             continue;
                         }
 
                         if (byte.TryParse(parts[i], out byte value))
                         {
-                            bytecode.Add(value);
+                            current.Add(value);
                         }
                         else if (parts[i].StartsWith("\"") && parts[i].EndsWith("\""))
                         {
                             string strValue = parts[i].Trim('"');
                             byte[] strBytes = Encoding.UTF8.GetBytes(strValue);
-                            bytecode.AddRange(BitConverter.GetBytes(strBytes.Length));
-                            bytecode.AddRange(strBytes);
+                            current.AddRange(BitConverter.GetBytes(strBytes.Length));
+                            current.AddRange(strBytes);
                         }
                         else if (bool.TryParse(parts[i], out bool boolValue))
                         {
-                            bytecode.Add((byte)(boolValue ? 1 : 0));
+                            current.Add((byte)(boolValue ? 1 : 0));
                         }
                         else
                         {
                             throw new Exception($"Invalid operand: {parts[i]}");
                         }
                     }
+                    if (isInFunction)
+                    {
+                        heap.AddRange(current);
+                    }
+                    else
+                    {
+                        bytecode.AddRange(current);
+                    }
+                }
+                else if (parts[0][^1] == ':')// function definition
+                {
+                    isInFunction = true;
+                }
+                else if (parts[0][^1] == '*')// main definition
+                {
+                    isInFunction = false;
                 }
                 else
                 {
@@ -121,7 +140,7 @@ namespace Obfuscator
                 }
             }
 
-            return bytecode.ToArray();
+            return (bytecode.ToArray(), heap.ToArray());
         }
     }
 }
