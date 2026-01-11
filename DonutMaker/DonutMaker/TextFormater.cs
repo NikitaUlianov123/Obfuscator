@@ -261,7 +261,14 @@ namespace DonutMaker
                 {
                     if (current.Length > 0)
                     {
-                        tokens.Add(current.ToString());
+                        if (current[0] == '/')
+                        {
+                            tokens.Add(current.ToString() + ' ');
+                        }
+                        else
+                        {
+                            tokens.Add(current.ToString());
+                        }
                         current.Clear();
                     }
 

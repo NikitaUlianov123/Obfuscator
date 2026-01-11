@@ -22,33 +22,61 @@ namespace CSharp_DeObfuscator
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
             };
-            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp")
-                .AddReferences(refs)
-                .AddSyntaxTrees(syntaxTree);
+            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp").AddReferences(refs).AddSyntaxTrees(syntaxTree);
             SemanticModel model = compilation.GetSemanticModel(syntaxTree);
+
+
+            CompilationUnitSyntax newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(root);
+            newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new DoWhileLoopDeobfuscator().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new ForEachLoopDeobfuscator().Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new DemorganDeobfuscator().Visit(newRoot);
+            
+            model = UpdateSemanticModel(newRoot.SyntaxTree);
+
             // make rename map 
             Dictionary<ISymbol, string> renameMap = new Dictionary<ISymbol, string>();
 
             // collector annotates the original root and fills renameMap
             IdentifierCollector collector = new IdentifierCollector(model, renameMap);
-            collector.Visit(root);
-
-            // rewriter runs only on the annotated root and uses only the renameMap
-            //ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
-
-
-            CompilationUnitSyntax newRoot = /*(CompilationUnitSyntax)rewriter.Visit*/(root);
-            newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(newRoot);
-            newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
-            newRoot = (CompilationUnitSyntax)new DoWhileLoopDeobfuscator().Visit(newRoot);
-            newRoot = (CompilationUnitSyntax)new ForEachLoopDeobfuscator().Visit(newRoot);
-            newRoot = (CompilationUnitSyntax)new DemorganDeobfuscator().Visit(newRoot);
+            collector.Visit(newRoot);
+            newRoot = (CompilationUnitSyntax)new ObfuscatingRewriter(model, renameMap).Visit(newRoot);
 
             return newRoot.NormalizeWhitespace().ToFullString();
         }
         public static string GetDeObfuscatedLiterals(string Code)
         {
             return HardCodeRemoval.Remove(Code);
+        }
+
+        private static SemanticModel UpdateSemanticModel(SyntaxTree tree)
+        {
+            // Load the same core runtime references the JIT/compiler uses
+            // so symbols bind consistently (Console, LINQ, etc.)
+            var tpa = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
+            var refs = new List<MetadataReference>();
+
+            if (!string.IsNullOrWhiteSpace(tpa))
+            {
+                foreach (var path in tpa.Split(Path.PathSeparator))
+                {
+                    if (path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                    {
+                        refs.Add(MetadataReference.CreateFromFile(path));
+                    }
+                }
+            }
+            else
+            {
+                refs.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
+            }
+
+            var compilation = CSharpCompilation.Create("ObfTemp")
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddReferences(refs)
+                .AddSyntaxTrees(tree);
+
+            return compilation.GetSemanticModel(tree, ignoreAccessibility: true);
         }
     }
 }
