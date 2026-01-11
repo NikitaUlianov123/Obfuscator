@@ -1,0 +1,78 @@
+﻿//giant string goes here
+struct Point
+{
+	int x;
+	int y;
+};
+
+void initPoint(int x, int y, Point point)
+{
+	point.x = x;
+	point.y = y;
+}
+
+struct Size
+{
+	int width;
+	int height;
+};
+
+void initSize(int width, int height, Size size)
+{
+	size.width = width;
+	size.height = height;
+}
+
+struct Rectangle
+{
+	Point point;
+	Size size;
+	int xSpeed;
+	int ySpeed;
+};
+
+void initRec(int x, int y, int width, int height, int xSpeed, int ySpeed, Rectangle rectangle)
+{
+	initPoint(x,y,rectangle.point);
+	initSize(width,height,rectangle.size);
+	rectangle.xSpeed = xSpeed;
+	rectangle.ySpeed= ySpeed;
+}
+
+void HandleBounds(Rectangle rectangle, Rectangle bounds)
+{
+	if(rectangle.point.x+rectangle.size.width >= bounds.point.x+bounds.size.width || rectangle.point.x < bounds.point.x)
+	{
+		rectangle.xSpeed *= -1;
+	}
+	if(rectangle.point.y+rectangle.size.height >= bounds.point.y+bounds.size.height || rectangle.point.y < bounds.point.y)
+	{
+		rectangle.ySpeed *= -1;
+	}
+	rectangle.point.x += rectangle.xSpeed;
+	rectangle.point.y += rectangle.ySpeed;
+}
+
+void DrawRectangle(Rectangle rectangle)
+{
+	drawRect(rectangle.point.x, rectangle.point.y, rectangle.point.x + rectangle.size.width, rectangle.point.y + rectangle.size.height);
+}
+
+
+
+task main()
+{
+	Rectangle insideRectangle;
+	Rectangle screen;
+	initRec(0,0,20,20,1,1,insideRectangle);
+	initRec(0,0,90,60,0,0,screen);
+	while(true)
+	{
+		eraseDisplay();
+		HandleBounds(insideRectangle,screen);
+		DrawRectangle(insideRectangle);
+		delay(100);
+	}
+
+}
+
