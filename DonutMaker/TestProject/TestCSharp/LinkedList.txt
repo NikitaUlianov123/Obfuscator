@@ -1,0 +1,146 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+public class LinkedList<T> : IEnumerable<T>
+{
+    private class Node
+    {
+        public T Value;
+        public Node? Next;
+
+        public Node(T value)
+        {
+            Value = value;
+        }
+    }
+
+    private Node? head;
+    private Node? tail;
+
+    public int Count { get; private set; }
+
+    public void AddFirst(T value)
+    {
+        var node = new Node(value) { Next = head };
+        head = node;
+        if (tail == null) tail = node;
+        Count++;
+    }
+
+    public void AddLast(T value)
+    {
+        var node = new Node(value);
+        if (tail == null)
+        {
+            head = tail = node;
+        }
+        else
+        {
+            tail.Next = node;
+            tail = node;
+        }
+        Count++;
+    }
+
+    public bool RemoveFirst(out T? value)
+    {
+        if (head == null) { value = default; return false; }
+
+        value = head.Value;
+        head = head.Next;
+        if (head == null) tail = null;
+        Count--;
+        return true;
+    }
+
+    public bool RemoveLast(out T? value)
+    {
+        if (head == null) { value = default; return false; }
+
+        if (head == tail)
+        {
+            value = head.Value;
+            head = tail = null;
+            Count--;
+            return true;
+        }
+
+        var current = head;
+        while (current!.Next != tail)
+            current = current.Next!;
+
+        value = tail!.Value;
+        current.Next = null;
+        tail = current;
+        Count--;
+        return true;
+    }
+
+    public T? Find(Predicate<T> match)
+    {
+        var current = head;
+        while (current != null)
+        {
+            if (match(current.Value))
+                return current.Value;
+            current = current.Next;
+        }
+        return default;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        var current = head;
+        while (current != null)
+        {
+            yield return current.Value;
+            current = current.Next;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var list = new LinkedList<string>();
+        //comment
+        Console.WriteLine("== Adding items ==");
+        list.AddLast("apple");
+        list.AddLast("banana");
+        list.AddLast("cherry");
+        list.AddFirst("FIRST");
+        /*
+        multiline
+        comment*/
+        PrintList(list);
+
+        Console.WriteLine("\n== Removing first ==");
+        list.RemoveFirst(out var removedFirst);
+        Console.WriteLine($"Removed: {removedFirst}");
+        PrintList(list);
+
+        Console.WriteLine("\n== Removing last ==");
+        list.RemoveLast(out var removedLast);
+        Console.WriteLine($"Removed: {removedLast}");
+        PrintList(list);
+
+        Console.WriteLine("\n== Finding item matching 'starts with b' ==");
+        var found = list.Find(s => s!.StartsWith("b", StringComparison.OrdinalIgnoreCase));
+        Console.WriteLine("Found: " + (found ?? "<none>"));
+
+        Console.WriteLine("\n== Final contents ==");
+        PrintList(list);
+    }
+
+    private static void PrintList<T>(LinkedList<T> list)
+    {
+        Console.WriteLine($"List (Count={list.Count}):");
+
+        foreach (var item in list)
+            Console.WriteLine(" - " + item);
+    }
+}
