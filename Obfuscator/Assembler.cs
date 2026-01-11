@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -141,6 +143,55 @@ namespace Obfuscator
             }
 
             return (bytecode.ToArray(), heap.ToArray());
+        }
+
+        public static void PackageFile(string irCode, string outputPath)
+        {
+            using RSA rsa = RSA.Create();
+
+            string publicPem = rsa.ExportSubjectPublicKeyInfoPem();
+            string privatePem = rsa.ExportPkcs8PrivateKeyPem();
+
+            File.WriteAllText("public.pem", publicPem);
+            File.WriteAllText("private.pem", privatePem);
+
+            rsa.ImportFromPem(File.ReadAllText("private.pem"));
+
+            (byte[] code, byte[] heap) assembled = Assemble(irCode);
+
+            string encrypted = Convert.ToBase64String(rsa.Encrypt(
+                Encoding.UTF8.GetBytes(irCode),
+                RSAEncryptionPadding.OaepSHA256
+            ));
+
+            File.WriteAllText(outputPath, encrypted + "\n");
+
+            File.AppendAllText(outputPath, Convert.ToBase64String(assembled.code) + "\n");
+            File.AppendAllText(outputPath, Convert.ToBase64String(assembled.heap));
+            ;
+        }
+
+        public static (byte[] code, byte[] heap, string original) UnpackageFile(string inputPath)
+        {
+            string[] lines = File.ReadAllLines(inputPath);
+            if (lines.Length < 3)
+            {
+                throw new Exception("Invalid package file format.");
+            }
+
+            using RSA rsa = RSA.Create();
+            rsa.ImportFromPem(File.ReadAllText("private.pem"));
+
+            string decrypted = Encoding.UTF8.GetString(rsa.Decrypt(
+                Convert.FromBase64String(lines[0]),
+                RSAEncryptionPadding.OaepSHA256
+            ));
+
+
+            byte[] code = Convert.FromBase64String(lines[1]);
+            byte[] heap = Convert.FromBase64String(lines[2]);
+
+            return (code, heap, decrypted);
         }
     }
 }
