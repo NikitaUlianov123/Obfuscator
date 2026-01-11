@@ -416,3 +416,15 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+/C#Obfuscator/obj/Debug/net8.0/C#Obfuscator.AssemblyInfo.cs
+/C#Obfuscator/obj/Debug/net8.0/C#Obfuscator.AssemblyInfoInputs.cache
+/C#Obfuscator/obj/Debug/net8.0/C#Obfuscator.assets.cache
+/C#Obfuscator/obj/Debug/net8.0/C#Obfuscator.csproj.AssemblyReference.cache
+/C#Obfuscator/obj/C#Obfuscator.csproj.nuget.dgspec.json
+/C#Obfuscator/obj/Debug/net8.0/C#Obfuscator.GeneratedMSBuildEditorConfig.editorconfig
+/C#Obfuscator/obj/C#Obfuscator.csproj.nuget.g.props
+/C#Obfuscator/obj/project.assets.json
+/C#Obfuscator/obj/project.nuget.cache
+/ObfuscatorTester/ObfuscatorTester.csproj
+/ObfuscatorTester/Program.cs
+
