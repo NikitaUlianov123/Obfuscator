@@ -55,7 +55,7 @@ namespace DonutMaker
             return result;
         }
 
-        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 70)
+        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 50)
         {
             // split input code into tokens
             var tokens = TokenizeCode(code);
