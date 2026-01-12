@@ -1,5 +1,4 @@
 ﻿using CSharp_DeObfuscator;
-using CSharp_DeObfuscator;
 using System.Text;
 namespace DeObfuscationTool
 {

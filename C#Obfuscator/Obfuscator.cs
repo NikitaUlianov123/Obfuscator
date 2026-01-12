@@ -67,6 +67,7 @@ namespace C_Obfuscation
         }
         static string InsertSeparators(string input, char separator = '|')
         {
+            //inserts '|' separators
             if (string.IsNullOrEmpty(input))
                 return input;
             return string.Join(separator, input.ToCharArray());
@@ -75,6 +76,7 @@ namespace C_Obfuscation
 
         public static string ObfuscateProject(List<string> codeFilePaths)
         {
+            //obfuscate individual files
             List<CompilationUnitSyntax> obfuscatedUnits = new List<CompilationUnitSyntax>();
             foreach (var path in codeFilePaths)
             {
@@ -88,7 +90,7 @@ namespace C_Obfuscation
             // Ensure the helper class exists in the combined unit (so obfuscated user code can call _O)
             if (!combinedUnit.Members.OfType<ClassDeclarationSyntax>().Any(c => c.Identifier.Text == "_O"))
             {
-                combinedUnit = combinedUnit.AddMembers(HelperFuncs());
+                combinedUnit = combinedUnit.AddMembers(HelperFuncs()!);
             }
 
             // userCode is the obfuscated user program (NOT the runner)
@@ -96,7 +98,7 @@ namespace C_Obfuscation
             ObfuscatedCode = userCode; // keep plain obfuscated code for debugging if needed
 
             // encode only the user code and insert into the runner template
-            //string encodedUserCode = RotateLeft4Bits(userCode);
+          
             string finalRunner = GenerateObfuscatedHelper(userCode);
 
             return finalRunner;
@@ -124,18 +126,20 @@ namespace C_Obfuscation
 
             // make rename map 
             Dictionary<ISymbol, string> renameMap = new(SymbolEqualityComparer.Default);
+
+            // collector annotates the original root and fills renameMap
             IdentifierCollector collector = new IdentifierCollector(model, renameMap);
+            
+            // rewriter runs only on the annotated root and uses only the renameMap
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             collector.Visit(root);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
             model = UpdateSemanticModel(newRoot.SyntaxTree);
-            // collector annotates the original root and fills renameMap
-            // rewriter runs only on the annotated root and uses only the renameMap
+
+            // other rewritter run on updated root and model
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter(model);
-            
             newRoot = (CompilationUnitSyntax)loopRewriter.Visit(newRoot);
-
             newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
            
             
@@ -184,6 +188,7 @@ namespace C_Obfuscation
         }
         public static string ChunkToVerbatimConcat(string input, int chunkSize = 10, char separator = '|')
         {
+            // inserts separators, rotates left 4 bits, splits into chunks, escapes quotes, and creates verbatim string concat
             string separated = InsertSeparators(input, separator);
             string rotated = RotateLeft4Bits(separated);
             StringInfo strInfo = new StringInfo(rotated);
@@ -226,7 +231,7 @@ namespace C_Obfuscation
             // add any missing required usings
             foreach (var u in requiredUsings)
             {
-                if (!usings.Any(e => e.Name.ToString() == u))
+                if (!usings.Any(e => e.Name?.ToString() == u))
                 {
                     usings.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(u)));
                 }
@@ -241,7 +246,7 @@ namespace C_Obfuscation
         }
 
 
-        static MemberDeclarationSyntax HelperFuncs()
+        static MemberDeclarationSyntax? HelperFuncs()
         {
             // insert helper functions
             var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
@@ -298,11 +303,10 @@ namespace C_Obfuscation
                 return null;
             }
             return helper;
-
         }
 
 
-        // we will append encoded user code into that spot and then append bottomCodeRunner
+        // we will append encoded user code into that spot and then append bottomCodeRunner to complete the runner
         static string topCodeRunner = @"using System;
 using System.IO;
 using System.Linq;

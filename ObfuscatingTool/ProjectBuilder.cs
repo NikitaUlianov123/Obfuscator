@@ -10,7 +10,7 @@ namespace ObfuscatingTool
     internal class ProjectBuilder
     {
         public static void BuildProject(string outputDir, string obfuscatedCode)
-        {
+        {            
             string csprojPath = Path.Combine(outputDir, "ObfuscatedProject.csproj");
             CreateProgramCs(outputDir, obfuscatedCode);
             CreateCsproj(csprojPath);
