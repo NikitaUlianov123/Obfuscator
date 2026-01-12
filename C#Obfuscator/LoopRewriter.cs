@@ -13,50 +13,59 @@ namespace C_Obfuscation
     internal class LoopRewriter : CSharpSyntaxRewriter
     {
         private int nextLabel = 0;
-        private SemanticModel model;
 
-        public LoopRewriter(SemanticModel model)
-        {
-            this.model = model;
-        }
+        public LoopRewriter() { }
 
         public override SyntaxNode? VisitForStatement(ForStatementSyntax node)
         {
+            // Skip rewriting if inside a finally block
             if (IsInsideFinally(node)) return base.VisitForStatement(node);
 
+            // Visit components of the for loop
             VariableDeclarationSyntax visitedDecl = (VariableDeclarationSyntax)Visit(node.Declaration)!;
+
+            // Visit initializers, condition, incrementors, and body
             SeparatedSyntaxList<ExpressionSyntax> visitedInitializers = VisitExpressionList(node.Initializers);
             ExpressionSyntax visitedCondition = (ExpressionSyntax)Visit(node.Condition)! ?? LiteralExpression(SyntaxKind.TrueLiteralExpression);
             SeparatedSyntaxList<ExpressionSyntax> visitedIncrementors = VisitExpressionList(node.Incrementors);
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
+            // Generate unique labels for the loop
             string startLabel = LabelEncoder.Encrypt("forLoop_startLabel" + nextLabel);
             string continueLabel = LabelEncoder.Encrypt("forLoop_continueLabel" + nextLabel);
             string outerStart = LabelEncoder.Encrypt("forLoop_outerStartLabel" + nextLabel);
             string outerEnd = LabelEncoder.Encrypt("forLoop_outerEndLabel" + nextLabel);
 
+            // Rewrite the body to replace break/continue with gotos
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, outerEnd).Visit(visitedBody);
 
             List<StatementSyntax> stmts = new();
 
+            // Add declarations and initializers
             if (visitedDecl != null)
             {
                 stmts.Add(LocalDeclarationStatement(visitedDecl));
             }
+
+            // Add initializers
             foreach (var init in visitedInitializers)
             {
                 stmts.Add(ExpressionStatement(init));
             }
 
+            // Start label
             stmts.Add(LabeledStatement(startLabel, EmptyStatement()));
 
+            // Loop condition
             stmts.Add(IfStatement(
                 PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, ParenthesizedExpression(visitedCondition)),
                 GotoStatement(SyntaxKind.GotoStatement, IdentifierName(outerEnd))
             ));
 
+            // Loop body
             stmts.Add(bodyWithGotos);
 
+            // Continue label and incrementors
             stmts.Add(LabeledStatement(continueLabel, EmptyStatement()));
             foreach (ExpressionSyntax incr in visitedIncrementors)
             {
@@ -64,8 +73,8 @@ namespace C_Obfuscation
             }
             stmts.Add(GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel)));
 
+            // Wrap in outer while(true) loop
             BlockSyntax innerBlock = Block(stmts);
-
             BlockSyntax outerBlock = WrapInWhileTrueLoop(innerBlock, outerStart, outerEnd);
 
             nextLabel++;
@@ -74,21 +83,26 @@ namespace C_Obfuscation
 
         public override SyntaxNode? VisitWhileStatement(WhileStatementSyntax node)
         {
+            // Skip rewriting if inside a finally block
             if (IsInsideFinally(node))
             {
                 return base.VisitWhileStatement(node);
             }
 
+            // Visit condition and body
             ExpressionSyntax visitedCondition = (ExpressionSyntax)(Visit(node.Condition) ?? LiteralExpression(SyntaxKind.TrueLiteralExpression));
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
+            // Generate unique labels for the loop
             string startLabel = LabelEncoder.Encrypt("whileLoop_startLabel" + nextLabel);
             string continueLabel = LabelEncoder.Encrypt("whileLoop_continueLabel" + nextLabel);
             string outerStart = LabelEncoder.Encrypt("whileLoop_outerStartLabel" + nextLabel);
             string outerEnd = LabelEncoder.Encrypt("whileLoop_outerEndLabel" + nextLabel);
 
+            // Rewrite the body to replace break/continue with gotos
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, outerEnd).Visit(visitedBody);
 
+            // Construct the loop statements
             List<StatementSyntax> stmts = new()
             {
                 LabeledStatement(startLabel, EmptyStatement()),
@@ -101,6 +115,7 @@ namespace C_Obfuscation
                 GotoStatement(SyntaxKind.GotoStatement, IdentifierName(startLabel))
             };
 
+            // Wrap in outer while(true) loop
             BlockSyntax innerBlock = Block(stmts);
             BlockSyntax outerBlock = WrapInWhileTrueLoop(innerBlock, outerStart, outerEnd);
 
@@ -110,18 +125,23 @@ namespace C_Obfuscation
 
         public override SyntaxNode? VisitDoStatement(DoStatementSyntax node)
         {
+            // Skip rewriting if inside a finally block
             if (IsInsideFinally(node)) return base.VisitDoStatement(node);
 
+            // Visit condition and body
             ExpressionSyntax visitedCondition = (ExpressionSyntax)(Visit(node.Condition) ?? LiteralExpression(SyntaxKind.TrueLiteralExpression));
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
+            // Generate unique labels for the loop
             string startLabel = LabelEncoder.Encrypt("dowhileloop_startLabel" + nextLabel);
             string continueLabel = LabelEncoder.Encrypt("dowhileloop_continueLabel" + nextLabel);
             string outerStart = LabelEncoder.Encrypt("dowhile_outerStartLabel" + nextLabel);
             string outerEnd = LabelEncoder.Encrypt("dowhile_outerEndLabel" + nextLabel);
 
+            // Rewrite the body to replace break/continue with gotos
             StatementSyntax bodyWithGotos = (StatementSyntax)new BreakAndContinueRewriter(continueLabel, outerEnd).Visit(visitedBody);
 
+            // Construct the loop statements
             List<StatementSyntax> stmts = new()
             {
                 LabeledStatement(startLabel, EmptyStatement()),
@@ -133,16 +153,21 @@ namespace C_Obfuscation
                 )
             };
 
+            // Wrap in outer while(true) loop
             BlockSyntax innerBlock = Block(stmts);
             BlockSyntax outerBlock = WrapInWhileTrueLoop(innerBlock, outerStart, outerEnd);
             nextLabel++;
             return outerBlock.WithTriviaFrom(node);
         }
 
+
+        // Rewrites foreach loops into for loops and then applies for loop obfuscation
         public override SyntaxNode? VisitForEachStatement(ForEachStatementSyntax node)
         {
+            // Skip rewriting if inside a finally block
             if (IsInsideFinally(node)) return base.VisitForEachStatement(node);
 
+            // Visit collection expression and body
             ExpressionSyntax visitedExpr = (ExpressionSyntax)Visit(node.Expression);
             StatementSyntax visitedBody = (StatementSyntax)Visit(node.Statement);
 
@@ -166,7 +191,6 @@ namespace C_Obfuscation
             );
 
             // Create: var item = list[i];
-            // Use var instead of trying to get the type from semantic model
             var itemDeclaration = LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName("var"))
                     .WithVariables(SingletonSeparatedList(
@@ -224,8 +248,10 @@ namespace C_Obfuscation
             return Visit(result);
         }
 
+        // Wraps a block in an infinite while(true) loop with start and end labels
         private BlockSyntax WrapInWhileTrueLoop(BlockSyntax block, string outerLoopStartLabel, string outerLoopEndLabel)
         {
+            // Construct the outer while(true) loop
             List<StatementSyntax> outer = new()
             {
                 LabeledStatement(outerLoopStartLabel, EmptyStatement()),
@@ -247,6 +273,7 @@ namespace C_Obfuscation
             return node.Ancestors().OfType<FinallyClauseSyntax>().Any();
         }
 
+        // Visits a list of expressions and applies the visitor to each
         private SeparatedSyntaxList<ExpressionSyntax> VisitExpressionList(SeparatedSyntaxList<ExpressionSyntax> list)
         {
             var builder = new SeparatedSyntaxList<ExpressionSyntax>();

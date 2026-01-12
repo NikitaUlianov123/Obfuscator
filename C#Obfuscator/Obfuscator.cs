@@ -138,7 +138,7 @@ namespace C_Obfuscation
 
             // other rewritter run on updated root and model
             DemorganRewriter demorganRewriter = new DemorganRewriter();
-            LoopRewriter loopRewriter = new LoopRewriter(model);
+            LoopRewriter loopRewriter = new LoopRewriter();
             newRoot = (CompilationUnitSyntax)loopRewriter.Visit(newRoot);
             newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
            

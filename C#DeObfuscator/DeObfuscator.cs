@@ -13,11 +13,15 @@ namespace CSharp_DeObfuscator
             string code = CodeRetriever.GetCodeFromString(originalCode);
             return code;
         }
+
+        // Deobfuscate the provided C# code
         public static string GetDeObfuscatedCode(string code)
         {
+            // Parse the code into a syntax tree
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(code);
             CompilationUnitSyntax root = syntaxTree.GetCompilationUnitRoot();
 
+            // Create a compilation to obtain the semantic model
             var refs = new List<MetadataReference>
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
@@ -25,13 +29,14 @@ namespace CSharp_DeObfuscator
             CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp").AddReferences(refs).AddSyntaxTrees(syntaxTree);
             SemanticModel model = compilation.GetSemanticModel(syntaxTree);
 
-
+            // Apply deobfuscation techniques (loop deobfuscation order matters)
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)new ForLoopDeobfuscator().Visit(root);
             newRoot = (CompilationUnitSyntax)new WhileLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new DoWhileLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new ForEachLoopDeobfuscator().Visit(newRoot);
             newRoot = (CompilationUnitSyntax)new DemorganDeobfuscator().Visit(newRoot);
-            
+
+            // update semantic model after syntax changes
             model = UpdateSemanticModel(newRoot.SyntaxTree);
 
             // make rename map 
@@ -52,7 +57,6 @@ namespace CSharp_DeObfuscator
         private static SemanticModel UpdateSemanticModel(SyntaxTree tree)
         {
             // Load the same core runtime references the JIT/compiler uses
-            // so symbols bind consistently (Console, LINQ, etc.)
             var tpa = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
             var refs = new List<MetadataReference>();
 
@@ -71,7 +75,7 @@ namespace CSharp_DeObfuscator
                 refs.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
             }
 
-            var compilation = CSharpCompilation.Create("ObfTemp")
+            CSharpCompilation compilation = CSharpCompilation.Create("ObfTemp")
                 .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
                 .AddReferences(refs)
                 .AddSyntaxTrees(tree);

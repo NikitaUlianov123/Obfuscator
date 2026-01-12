@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace C_Obfuscation
 {
+    // Rewriter to replace break and continue statements with goto statements
     internal class BreakAndContinueRewriter : CSharpSyntaxRewriter
     {
         public readonly string ContinueLabel;
@@ -19,6 +20,7 @@ namespace C_Obfuscation
             EndLabel = endLabel;
         }
 
+        // Replaces break statements with goto to the end label
         public override SyntaxNode VisitBreakStatement(BreakStatementSyntax node)
         {
             GotoStatementSyntax gotoEnd = SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(EndLabel))
@@ -27,6 +29,7 @@ namespace C_Obfuscation
             return gotoEnd;
         }
 
+        // Replaces continue statements with goto to the continue label
         public override SyntaxNode? VisitContinueStatement(ContinueStatementSyntax node)
         {
             GotoStatementSyntax gotoContinue = SyntaxFactory.GotoStatement(SyntaxKind.GotoStatement, SyntaxFactory.IdentifierName(ContinueLabel))

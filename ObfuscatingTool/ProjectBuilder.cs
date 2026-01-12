@@ -9,6 +9,7 @@ namespace ObfuscatingTool
 {
     internal class ProjectBuilder
     {
+        // Builds a new C# project with the obfuscated code
         public static void BuildProject(string outputDir, string obfuscatedCode)
         {            
             string csprojPath = Path.Combine(outputDir, "ObfuscatedProject.csproj");
@@ -16,6 +17,7 @@ namespace ObfuscatingTool
             CreateCsproj(csprojPath);
         }
 
+        // Creates a basic .csproj file for the obfuscated project
         private static void CreateCsproj(string path)
         {
             XDocument csproj = new XDocument(
@@ -36,6 +38,7 @@ namespace ObfuscatingTool
             csproj.Save(path);
         }
 
+        // Creates the Program.cs file with the obfuscated code
         private static void CreateProgramCs(string outputDir, string obfuscatedCode)
         {
             string programCsPath = Path.Combine(outputDir, "Program.cs");
