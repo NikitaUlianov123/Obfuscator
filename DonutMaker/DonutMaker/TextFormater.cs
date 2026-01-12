@@ -40,13 +40,21 @@ namespace DonutMaker
         private static char GetFillerChar(byte b) => fillerChars.First(f => b < f.threshold).snippet;
 
 
-        public static string GenerateCodeArt(string imagePath, string code, bool writeToFile = false, string outputPath = "")
+        public static string GenerateCodeArt(string imagePath, string code, bool writeToFile = false, string outputPath = "", int cellsWide = 0)
         {
             string[] split = SplitPreprocessor(code);
             string preprocessor = split[0];
             string mainCode = MakeOneLine(/*SplitLongLiterals*/(RemoveComments(split[1])));
 
-            string result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
+            string result = string.Empty;
+            if (cellsWide == 0)
+            {
+                result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
+            }
+            else
+            { 
+                result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode, cellsWide);
+            }
 
             if (writeToFile)
             {
@@ -141,9 +149,14 @@ namespace DonutMaker
                     //if we can fit one token every 10 cells, it will have a 1/10 chance to place in a cell, until it hits 10 then it's
                     //a guaranteed placement
                     bool insertCode = currToken < tokens.Count && (Random.Shared.Next(placeEveryCells) == 0 || currSpotInCell++ >= placeEveryCells);
-
+                    
                     if (insertCode)
                     {
+                        if (tokens[currToken][^1] == '/')
+                        {
+                            tokens[currToken] += ' ';
+                        }
+
                         chosen = PadCell("*/" + tokens[currToken++] + "/*", (byte)(255 - brightness[x, y]));
                         if (chosen.Length != cellWidth)
                         {
@@ -261,7 +274,14 @@ namespace DonutMaker
                 {
                     if (current.Length > 0)
                     {
-                        tokens.Add(current.ToString());
+                        //if (current[0] == '/')
+                        //{
+                        //    tokens.Add(current.ToString() + ' ');
+                        //}
+                        //else
+                        //{
+                            tokens.Add(current.ToString());
+                        //}
                         current.Clear();
                     }
 

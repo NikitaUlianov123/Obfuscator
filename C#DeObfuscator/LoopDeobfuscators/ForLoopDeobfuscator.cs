@@ -8,22 +8,36 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
 {
     public class ForLoopDeobfuscator : CSharpSyntaxRewriter
     {
+
+
+        //Stack to keep track of nested loops
         private Stack<LoopContext> loopContextStack = new Stack<LoopContext>();
 
+        //Visits blocks to identify and revert obfuscated for loops
         public override SyntaxNode? VisitBlock(BlockSyntax node)
         {
+            // Try to extract for loop components from the block
             ForLoopComponents? components;
             if (TryGetForLoopComponents(node, out components) && components != null)
             {
+
+                //Push current loop context onto the stack
+
                 loopContextStack.Push(new LoopContext
                 (
                     ContinueLabel: components.ContinueLabel,
                     BreakLabel: components.BreakLabel
                 ));
 
+
+                // Process the body of the loop for possible nested loops
+
                 StatementSyntax processedBody = (StatementSyntax)Visit(components.Body)!;
 
                 loopContextStack.Pop();
+
+
+                // Reconstruct the for statement
 
                 ForStatementSyntax forStatement = SyntaxFactory.ForStatement(
                     declaration: components.Declaration,
@@ -38,6 +52,9 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
 
             return base.VisitBlock(node);
         }
+
+
+        // Visits goto statements to replace them with break/continue where applicable
 
         public override SyntaxNode? VisitGotoStatement(GotoStatementSyntax node)
         {
@@ -63,6 +80,9 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
 
             return base.VisitGotoStatement(node);
         }
+
+
+        // Checks the block for the structure of an obfuscated for loop and then extracts its components
 
         private bool TryGetForLoopComponents(BlockSyntax block, out ForLoopComponents? components)
         {
@@ -98,6 +118,9 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
             components = ParseInnerBlock(innerBlock, breakLabel);
             return true;
         }
+
+
+        // Parses the inner block(the actual for loop, not including the while-true loop wrapper) to extract for loop components
 
         private ForLoopComponents ParseInnerBlock(BlockSyntax innerBlock, string breakLabel)
         {
@@ -173,6 +196,9 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
                 BreakLabel: breakLabel
             );
         }
+
+
+        // Constructs the body statement for the for loop
 
         private StatementSyntax BuildBodyStatement(List<StatementSyntax> bodyStatements)
         {

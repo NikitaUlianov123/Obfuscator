@@ -67,6 +67,9 @@ namespace C_Obfuscation
         }
         static string InsertSeparators(string input, char separator = '|')
         {
+
+            //inserts '|' separators
+
             if (string.IsNullOrEmpty(input))
                 return input;
             return string.Join(separator, input.ToCharArray());
@@ -75,6 +78,9 @@ namespace C_Obfuscation
 
         public static string ObfuscateProject(List<string> codeFilePaths)
         {
+
+            //obfuscate individual files
+
             List<CompilationUnitSyntax> obfuscatedUnits = new List<CompilationUnitSyntax>();
             foreach (var path in codeFilePaths)
             {
@@ -88,7 +94,7 @@ namespace C_Obfuscation
             // Ensure the helper class exists in the combined unit (so obfuscated user code can call _O)
             if (!combinedUnit.Members.OfType<ClassDeclarationSyntax>().Any(c => c.Identifier.Text == "_O"))
             {
-                combinedUnit = combinedUnit.AddMembers(HelperFuncs());
+                combinedUnit = combinedUnit.AddMembers(HelperFuncs()!);
             }
 
             // userCode is the obfuscated user program (NOT the runner)
@@ -96,7 +102,7 @@ namespace C_Obfuscation
             ObfuscatedCode = userCode; // keep plain obfuscated code for debugging if needed
 
             // encode only the user code and insert into the runner template
-            //string encodedUserCode = RotateLeft4Bits(userCode);
+          
             string finalRunner = GenerateObfuscatedHelper(userCode);
 
             return finalRunner;
@@ -124,18 +130,20 @@ namespace C_Obfuscation
 
             // make rename map 
             Dictionary<ISymbol, string> renameMap = new(SymbolEqualityComparer.Default);
+
+            // collector annotates the original root and fills renameMap
             IdentifierCollector collector = new IdentifierCollector(model, renameMap);
+            
+            // rewriter runs only on the annotated root and uses only the renameMap
             ObfuscatingRewriter rewriter = new ObfuscatingRewriter(model, renameMap);
             collector.Visit(root);
             CompilationUnitSyntax newRoot = (CompilationUnitSyntax)rewriter.Visit(root);
             model = UpdateSemanticModel(newRoot.SyntaxTree);
-            // collector annotates the original root and fills renameMap
-            // rewriter runs only on the annotated root and uses only the renameMap
+
+            // other rewritter run on updated root and model
             DemorganRewriter demorganRewriter = new DemorganRewriter();
             LoopRewriter loopRewriter = new LoopRewriter(model);
-            
             newRoot = (CompilationUnitSyntax)loopRewriter.Visit(newRoot);
-
             newRoot = (CompilationUnitSyntax)demorganRewriter.Visit(newRoot);
            
             
@@ -182,8 +190,9 @@ namespace C_Obfuscation
             sb.Append(bottomCodeRunner);
             return sb.ToString();
         }
-        public static string ChunkToVerbatimConcat(string input, int chunkSize = 10, char separator = '|')
+        public static string ChunkToVerbatimConcat(string input, int chunkSize = 15, char separator = '|')
         {
+            // inserts separators, rotates left 4 bits, splits into chunks, escapes quotes, and creates verbatim string concat
             string separated = InsertSeparators(input, separator);
             string rotated = RotateLeft4Bits(separated);
             StringInfo strInfo = new StringInfo(rotated);
@@ -193,7 +202,7 @@ namespace C_Obfuscation
                 int len = Math.Min(chunkSize, strInfo.LengthInTextElements - i);
                 string chunk = strInfo.SubstringByTextElements(i, len);
                 string escaped = chunk.Replace("\"", "\"\"");
-                parts.Add($@"RotateRight4Bits(@""{escaped}"")");
+                parts.Add($@"R(@""{escaped}"")");
             }
             return "string source = " + string.Join(" + ", parts) + ";";
         }
@@ -226,7 +235,7 @@ namespace C_Obfuscation
             // add any missing required usings
             foreach (var u in requiredUsings)
             {
-                if (!usings.Any(e => e.Name.ToString() == u))
+                if (!usings.Any(e => e.Name?.ToString() == u))
                 {
                     usings.Add(SyntaxFactory.UsingDirective(SyntaxFactory.IdentifierName(u)));
                 }
@@ -241,7 +250,7 @@ namespace C_Obfuscation
         }
 
 
-        static MemberDeclarationSyntax HelperFuncs()
+        static MemberDeclarationSyntax? HelperFuncs()
         {
             // insert helper functions
             var helper = SyntaxFactory.ParseMemberDeclaration(@"static class _O
@@ -298,11 +307,10 @@ namespace C_Obfuscation
                 return null;
             }
             return helper;
-
         }
 
 
-        // we will append encoded user code into that spot and then append bottomCodeRunner
+        // we will append encoded user code into that spot and then append bottomCodeRunner to complete the runner
         static string topCodeRunner = @"using System;
 using System.IO;
 using System.Linq;
@@ -313,28 +321,37 @@ using Microsoft.CodeAnalysis.CSharp;
 
 class CscRunner
 {
-    static string RotateRight4Bits(string input)
+    static string R(string x)
     {
-        char[] result = new char[input.Length];
-        for (int i = 0; i < input.Length; i++)
+        if (x == null) return null;
+
+        var a = new char[x.Length];
+        int p = 0;
+
+        while (p < x.Length)
         {
-            byte b = (byte)input[i];
-            byte rotated = (byte)(((b >> 4) | (b << 4)) & 0xFF);
-            result[i] = (char)rotated;
+            int v = x[p];
+            v = ((v & 0x0F) << 4) | ((v & 0xF0) >> 4);
+            a[p++] = (char)(v & 255);
         }
-        return new string(result);
+
+        return string.Concat(a);
     }
-    static string RemoveInsertedSeparators(string input)
+    static string S(string z)
     {
-        if (string.IsNullOrEmpty(input))
-            return input;
+        if (!(z?.Length > 0)) return z;
 
-        var sb = new StringBuilder((input.Length + 1) / 2);
+        char[] r = new char[(z.Length + 1) >> 1];
+        int i = 0, j = 0;
 
-        for (int i = 0; i < input.Length; i += 2)
-            sb.Append(input[i]);
+        for (;;)
+        {
+            if (i >= z.Length) break;
+            r[j++] = z[i];
+            i += 2;
+        }
 
-        return sb.ToString();
+        return new string(r, 0, j);
     }
     static int Main(string[] args)
     {
@@ -343,7 +360,7 @@ class CscRunner
         static string bottomCodeRunner = @"
 
         // Parse
-        var tree = CSharpSyntaxTree.ParseText(RemoveInsertedSeparators(source));
+        var tree = CSharpSyntaxTree.ParseText(S(source));
 
         // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)
         var tpa = ((string)AppContext.GetData(""TRUSTED_PLATFORM_ASSEMBLIES""))?.Split(Path.PathSeparator) ?? Array.Empty<string>();

@@ -8,12 +8,18 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
 {
     public class ForEachLoopDeobfuscator : CSharpSyntaxRewriter
     {
+
+        // Visits blocks to identify and revert obfuscated foreach loops
         public override SyntaxNode? VisitBlock(BlockSyntax node)
         {
+            // Try to extract foreach loop components from the block
             ForEachLoopComponents? components;
             if (TryGetForEachLoopComponents(node, out components) && components != null)
             {
+                // Process the body of the loop for possible nested loops
                 StatementSyntax processedBody = (StatementSyntax)Visit(components.Body)!;
+
+                // Reconstruct the foreach statement
 
                 ForEachStatementSyntax forEachStatement = SyntaxFactory.ForEachStatement(
                     type: components.LoopVariableType,
@@ -27,6 +33,7 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
 
             return base.VisitBlock(node);
         }
+
 
         private bool TryGetForEachLoopComponents(BlockSyntax block, out ForEachLoopComponents? components)
         {
@@ -83,6 +90,7 @@ namespace CSharp_DeObfuscator.LoopDeobfuscators
             components = ParseForLoop(forLoop, encodedListVarName, collection);
             return components != null;
         }
+
 
         private ForEachLoopComponents? ParseForLoop(ForStatementSyntax forLoop, string encodedListVarName, ExpressionSyntax collection)
         {

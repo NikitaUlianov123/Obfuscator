@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "C#DeObfuscator", "..\C#DeOb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeObfuscationTool", "..\DeObfuscationTool\DeObfuscationTool.csproj", "{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}"
 EndProject
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DonutMaker", "..\DonutMaker\DonutMaker\DonutMaker.csproj", "{33109A5D-6473-88D3-799D-46174D5A2C4D}"
+EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,12 @@ Global
 		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DD7B6F4-0B3E-46B3-B840-B309238D9BBB}.Release|Any CPU.Build.0 = Release|Any CPU
+
+		{33109A5D-6473-88D3-799D-46174D5A2C4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33109A5D-6473-88D3-799D-46174D5A2C4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33109A5D-6473-88D3-799D-46174D5A2C4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33109A5D-6473-88D3-799D-46174D5A2C4D}.Release|Any CPU.Build.0 = Release|Any CPU
+
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

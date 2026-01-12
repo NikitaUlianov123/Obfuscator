@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\C#DeObfuscator\C#DeObfuscator.csproj" />
     <ProjectReference Include="..\C#Obfuscator\C#Obfuscator.csproj" />
+    <ProjectReference Include="..\DonutMaker\DonutMaker\DonutMaker.csproj" />
   </ItemGroup>
 
 </Project>
