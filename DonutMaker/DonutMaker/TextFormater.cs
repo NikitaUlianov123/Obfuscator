@@ -141,9 +141,14 @@ namespace DonutMaker
                     //if we can fit one token every 10 cells, it will have a 1/10 chance to place in a cell, until it hits 10 then it's
                     //a guaranteed placement
                     bool insertCode = currToken < tokens.Count && (Random.Shared.Next(placeEveryCells) == 0 || currSpotInCell++ >= placeEveryCells);
-
+                    
                     if (insertCode)
                     {
+                        if (tokens[currToken][^1] == '/')
+                        {
+                            tokens[currToken] += ' ';
+                        }
+
                         chosen = PadCell("*/" + tokens[currToken++] + "/*", (byte)(255 - brightness[x, y]));
                         if (chosen.Length != cellWidth)
                         {
@@ -261,14 +266,14 @@ namespace DonutMaker
                 {
                     if (current.Length > 0)
                     {
-                        if (current[0] == '/')
-                        {
-                            tokens.Add(current.ToString() + ' ');
-                        }
-                        else
-                        {
+                        //if (current[0] == '/')
+                        //{
+                        //    tokens.Add(current.ToString() + ' ');
+                        //}
+                        //else
+                        //{
                             tokens.Add(current.ToString());
-                        }
+                        //}
                         current.Clear();
                     }
 
