@@ -40,13 +40,21 @@ namespace DonutMaker
         private static char GetFillerChar(byte b) => fillerChars.First(f => b < f.threshold).snippet;
 
 
-        public static string GenerateCodeArt(string imagePath, string code, bool writeToFile = false, string outputPath = "")
+        public static string GenerateCodeArt(string imagePath, string code, bool writeToFile = false, string outputPath = "", int cellsWide = 0)
         {
             string[] split = SplitPreprocessor(code);
             string preprocessor = split[0];
             string mainCode = MakeOneLine(/*SplitLongLiterals*/(RemoveComments(split[1])));
 
-            string result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
+            string result = string.Empty;
+            if (cellsWide == 0)
+            {
+                result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode);
+            }
+            else
+            { 
+                result = preprocessor + "\n" + GenerateCodeArt2(imagePath, mainCode, cellsWide);
+            }
 
             if (writeToFile)
             {
@@ -55,7 +63,7 @@ namespace DonutMaker
             return result;
         }
 
-        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 75)
+        private static string GenerateCodeArt2(string imagePath, string code, int cellsWide = 70)
         {
             // split input code into tokens
             var tokens = TokenizeCode(code);
