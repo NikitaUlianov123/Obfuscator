@@ -198,7 +198,7 @@ namespace C_Obfuscation
                 int len = Math.Min(chunkSize, strInfo.LengthInTextElements - i);
                 string chunk = strInfo.SubstringByTextElements(i, len);
                 string escaped = chunk.Replace("\"", "\"\"");
-                parts.Add($@"RotateRight4Bits(@""{escaped}"")");
+                parts.Add($@"R(@""{escaped}"")");
             }
             return "string source = " + string.Join(" + ", parts) + ";";
         }
@@ -317,28 +317,37 @@ using Microsoft.CodeAnalysis.CSharp;
 
 class CscRunner
 {
-    static string RotateRight4Bits(string input)
+    static string R(string x)
     {
-        char[] result = new char[input.Length];
-        for (int i = 0; i < input.Length; i++)
+        if (x == null) return null;
+
+        var a = new char[x.Length];
+        int p = 0;
+
+        while (p < x.Length)
         {
-            byte b = (byte)input[i];
-            byte rotated = (byte)(((b >> 4) | (b << 4)) & 0xFF);
-            result[i] = (char)rotated;
+            int v = x[p];
+            v = ((v & 0x0F) << 4) | ((v & 0xF0) >> 4);
+            a[p++] = (char)(v & 255);
         }
-        return new string(result);
+
+        return string.Concat(a);
     }
-    static string RemoveInsertedSeparators(string input)
+    static string S(string z)
     {
-        if (string.IsNullOrEmpty(input))
-            return input;
+        if (!(z?.Length > 0)) return z;
 
-        var sb = new StringBuilder((input.Length + 1) / 2);
+        char[] r = new char[(z.Length + 1) >> 1];
+        int i = 0, j = 0;
 
-        for (int i = 0; i < input.Length; i += 2)
-            sb.Append(input[i]);
+        for (;;)
+        {
+            if (i >= z.Length) break;
+            r[j++] = z[i];
+            i += 2;
+        }
 
-        return sb.ToString();
+        return new string(r, 0, j);
     }
     static int Main(string[] args)
     {
@@ -347,7 +356,7 @@ class CscRunner
         static string bottomCodeRunner = @"
 
         // Parse
-        var tree = CSharpSyntaxTree.ParseText(RemoveInsertedSeparators(source));
+        var tree = CSharpSyntaxTree.ParseText(S(source));
 
         // Create metadata references from the runtime's TPA list (robust for .NET Core / .NET 5+)
         var tpa = ((string)AppContext.GetData(""TRUSTED_PLATFORM_ASSEMBLIES""))?.Split(Path.PathSeparator) ?? Array.Empty<string>();
