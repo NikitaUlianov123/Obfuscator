@@ -3,6 +3,7 @@ using System.Text;
 
 namespace C_Obfuscation
 {
+    // Simple label encoder that XORs the input string and converts it to a hex representation to make labels harder to read
     internal static class LabelEncoder
     {
         private const byte Key = 0x5A;
