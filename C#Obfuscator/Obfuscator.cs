@@ -67,7 +67,9 @@ namespace C_Obfuscation
         }
         static string InsertSeparators(string input, char separator = '|')
         {
+
             //inserts '|' separators
+
             if (string.IsNullOrEmpty(input))
                 return input;
             return string.Join(separator, input.ToCharArray());
@@ -76,7 +78,9 @@ namespace C_Obfuscation
 
         public static string ObfuscateProject(List<string> codeFilePaths)
         {
+
             //obfuscate individual files
+
             List<CompilationUnitSyntax> obfuscatedUnits = new List<CompilationUnitSyntax>();
             foreach (var path in codeFilePaths)
             {
