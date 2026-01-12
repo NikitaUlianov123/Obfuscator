@@ -13,9 +13,6 @@ namespace ObfuscatingTool
             string imagedCode = TextFormater.GenerateCodeArt(@"c:\\Users\\test\\Documents\\Github\\Obfuscator\\DonutMaker\\TestProject\\TestImages\\cat.png", code, true, @"../../../output.cs");
             Console.WriteLine(imagedCode);
 
-
-
-
             //Console.WriteLine("Obfuscation Tool Started");
             //Console.WriteLine("Enter csproj file path:");
             //string inputCSPROJ = Console.ReadLine()!;
