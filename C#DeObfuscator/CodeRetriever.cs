@@ -49,7 +49,7 @@ namespace CSharp_DeObfuscator
                 return string.Empty;
 
             var regex = new Regex(
-                @"RotateRight4Bits\s*\(\s*@?""((?:[^""]|"""")*)""\s*\)",
+                @"R\s*\(\s*@?""((?:[^""]|"""")*)""\s*\)",
                 RegexOptions.Singleline
             );
 
@@ -74,13 +74,22 @@ namespace CSharp_DeObfuscator
             if (string.IsNullOrEmpty(fullCode))
                 return null;
 
-            var match = Regex.Match(
-                fullCode,
-                @"^\s*string\s+source\s*=\s*.*?;",
-                RegexOptions.Singleline | RegexOptions.Multiline
-            );
+            var pattern = @"
+(?sx)
+\bstring\s+source\s*=\s*
+(?<rhs>
+    (?:
+        @"" (?:[^""]|"""")* ""
+      | "" (?:\\.|[^""\\])* ""
+      | '(?:\\.|[^'\\])+'
+      | (?!;) .
+    )*
+)
+\s*;
+";
 
-            return match.Success ? match.Value : null;
+            var m = Regex.Match(fullCode, pattern, RegexOptions.IgnorePatternWhitespace);
+            return m.Success ? m.Groups["rhs"].Value : null;
         }
     }
 }
