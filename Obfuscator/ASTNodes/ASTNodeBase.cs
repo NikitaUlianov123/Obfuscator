@@ -11,37 +11,54 @@ namespace Obfuscator
 {
     public class VaribleStack
     {
+        public Dictionary<TokenType, string> TypeToCommand = new Dictionary<TokenType, string>();
         List<VaribleNode> varibleNodes;
+
         public VaribleStack()
         { 
             varibleNodes = new List<VaribleNode>();
+            addScope();
         }
         public void addScope()
         {
+
             varibleNodes.Add(new VaribleNode());
         }
-        public int findVaribles(string name)
+        public Varible findVaribles(string name)
         {
             for(int i = 0; i < varibleNodes.Count; i++)
             {
-                if(varibleNodes[i].variblesToNumber.ContainsKey(name))
+                if(varibleNodes[i].variblesToInfo.ContainsKey(name))
                 {
-                    return varibleNodes[i].variblesToNumber[name];
+                    return varibleNodes[i].variblesToInfo[name];
                 }
             }
-            return -1;
+            return new Varible(-1, TokenType.ERROR);
         }
-        //public void addVarible(string name, )
-        //{
-
-        //}
+        public void addVarible(string name, TokenType token)
+        {
+            varibleNodes[varibleNodes.Count-1].variblesToInfo.Add(name , (new Varible(varibleNodes[varibleNodes.Count-1].currentIndex, token)));
+            varibleNodes[varibleNodes.Count - 1].currentIndex++;
+        }
+    }
+    public class Varible
+    { 
+        public int variblesToNumber;
+        public TokenType varibleType;
+        public Varible(int variblesToNumber, TokenType varibleType)
+        {
+            this.variblesToNumber = variblesToNumber;
+            this.varibleType = varibleType;
+        }
     }
     public class VaribleNode
     {
-        public Dictionary<string, int> variblesToNumber;
+        public Dictionary<string, Varible> variblesToInfo;
+        public int currentIndex;
         public VaribleNode()
         {
-            variblesToNumber = new Dictionary<string, int>();
+            variblesToInfo = new Dictionary<string, Varible>();
+            currentIndex = 0;
         }
 
     }

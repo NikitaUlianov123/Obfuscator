@@ -16,8 +16,7 @@ namespace Obfuscator
         {
             [TokenType.KW_INT] = "POP_LOCAL_INT ",
             [TokenType.KW_STRING] = "POP_LOCAL_STRING ",
-            [TokenType.KW_BOOL] = "POP_LOCAL_BOOL ",
-
+            [TokenType.KW_BOOL] = "POP_LOCAL_BOOL "
         };
 
         public ASTNodeVarDec(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
@@ -59,8 +58,9 @@ namespace Obfuscator
         public override string IRGen(VaribleStack stack)
         {
             string Command = TokenToInstruction[TypeNode.RootToken.GetTokenType()];
-            //stack.addVarible(,)
-            return Init.IRGen(stack) + Command + " \n";
+            stack.addVarible(NameNode.RootToken.text, TypeNode.RootToken.GetTokenType());
+
+            return Init.IRGen(stack) + Command + stack.findVaribles(NameNode.RootToken.text).variblesToNumber + " \n";
 
 
         }

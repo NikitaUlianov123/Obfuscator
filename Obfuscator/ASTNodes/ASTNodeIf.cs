@@ -10,17 +10,23 @@ namespace Obfuscator
     {
         public ASTNodeBase Condition { get; }
         public ASTNodeBase ThenBody { get; }
+        public ASTNodeBase Body { get; }
 
         public ASTNodeIf(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // children: 'if^', '(', CE, ')', '{', Body, '}'
             RootToken = children[0].RootToken;
-            Condition = children[2];
+            Condition = children[1];
+            Body = children[2];
             //ThenBody = children[5];
         }
         public override string CodeGen()
         {
-            return $"if ({Condition.CodeGen()}) {{\n{ThenBody.CodeGen()}\n}}";
+            if(ThenBody == null)
+            {
+                return $"if ({Condition.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
+            }
+            return $"if ({Condition.CodeGen()}) ";
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
@@ -29,7 +35,11 @@ namespace Obfuscator
         }
         public override string IRGen(VaribleStack stack)
         {
-            throw new NotImplementedException();
+            string ret = Condition.IRGen(stack);
+            ret += "JNZ END\n";
+            ret += Body.IRGen(stack);
+            ret += "*END \n";
+            return ret;
         }
     }
 }
