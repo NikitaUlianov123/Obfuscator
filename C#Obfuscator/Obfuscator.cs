@@ -186,7 +186,7 @@ namespace C_Obfuscation
             sb.Append(bottomCodeRunner);
             return sb.ToString();
         }
-        public static string ChunkToVerbatimConcat(string input, int chunkSize = 10, char separator = '|')
+        public static string ChunkToVerbatimConcat(string input, int chunkSize = 15, char separator = '|')
         {
             // inserts separators, rotates left 4 bits, splits into chunks, escapes quotes, and creates verbatim string concat
             string separated = InsertSeparators(input, separator);

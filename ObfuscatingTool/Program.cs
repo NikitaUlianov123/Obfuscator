@@ -22,7 +22,7 @@ namespace ObfuscatingTool
             //Generate image code
             string imagedCode = TextFormater.GenerateCodeArt(inputImage, code, true, "C:\\Users\\Tex\\OneDrive\\Desktop\\SillyNikitaThingy.txt");
             //Generate output
-            ProjectBuilder.BuildProject(outputCSPROJ, code);
+            ProjectBuilder.BuildProject(outputCSPROJ, imagedCode);
 
         }
     }
