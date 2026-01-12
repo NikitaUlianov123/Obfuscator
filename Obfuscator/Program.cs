@@ -7,6 +7,10 @@ namespace Obfuscator
     {
         static void Main(string[] args)
         {
+            
+            ;
+
+
             string[] filePath = Directory.GetCurrentDirectory().Split("\\");
 
             string relativePath = string.Join('\\', filePath, 0, filePath.Length - 3);
