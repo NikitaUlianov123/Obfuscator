@@ -50,6 +50,7 @@ namespace CSharp_DeObfuscator
 
             var regex = new Regex(
                 @"R\s*\(\s*@?""((?:[^""]|"""")*)""\s*\)",
+
                 RegexOptions.Singleline
             );
 
@@ -90,6 +91,7 @@ namespace CSharp_DeObfuscator
 
             var m = Regex.Match(fullCode, pattern, RegexOptions.IgnorePatternWhitespace);
             return m.Success ? m.Groups["rhs"].Value : null;
+
         }
     }
 }
