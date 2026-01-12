@@ -33,7 +33,7 @@ namespace AssemblerTester
             var result = Assembler.Assemble(test);
 
 
-            CollectionAssert.AreEqual(expected, result);
+            CollectionAssert.AreEqual(expected, result.code);
         }
 
         [TestMethod]
@@ -72,7 +72,7 @@ namespace AssemblerTester
             var result = Assembler.Assemble(test);
 
 
-            CollectionAssert.AreEqual(expected, result);
+            CollectionAssert.AreEqual(expected, result.code);
         }
 
         [TestMethod]
@@ -123,7 +123,92 @@ namespace AssemblerTester
             var result = Assembler.Assemble(test);
 
 
-            CollectionAssert.AreEqual(expected, result);
+            CollectionAssert.AreEqual(expected, result.code);
+        }
+
+        [TestMethod]
+        public void FunctionTest()
+        {
+            string test = 
+                "motorSet: \r\n" +
+                "PUSH_CONST_CHAR 1 \r\n" +
+                "MOTOR_SET \r\n" +
+                "PUSH_CONST_CHAR 2 \r\n" +
+                "MOTOR_SET \r\n" +
+                "RET \r\n" +
+                "Entry_Point* \r\n" +
+                "PUSH_CONST_INT 100\r\n" +
+                "PUSH_CONST_INT 100\r\n" +
+                "POP_LOCAL_INT 0 \r\n" +
+                "POP_LOCAL_INT 1 \r\n" +
+                "CALL 0 \r\n";
+
+            byte[] expectedHeap =
+            [
+                0x01, 0x01, 0x00, 0x00, // PUSH_CONST_CHAR 1
+                0x50, 0x00, 0x00, 0x00, // MOTOR_SET
+                0x01, 0x02, 0x00, 0x00, // PUSH_CONST_CHAR 2
+                0x50, 0x00, 0x00, 0x00, // MOTOR_SET
+                0x71, 0x00, 0x00, 0x00, // RET
+            ];
+
+            byte[] expected =
+            [
+                0x00, 0x64, 0x00, 0x00, // PUSH_CONST_INT 100
+                0x00, 0x64, 0x00, 0x00, // PUSH_CONST_INT 100
+                0x04, 0x00, 0x00, 0x00, // POP_LOCAL_INT 0
+                0x04, 0x01, 0x00, 0x00, // POP_LOCAL_INT 1
+                0x70, 0x00, 0x00, 0x00, // CALL 0
+            ];
+
+            var result = Assembler.Assemble(test);
+
+
+            CollectionAssert.AreEqual(expected, result.code);
+            CollectionAssert.AreEqual(expectedHeap, result.heap);
+        }
+
+        [TestMethod]
+        public void PackageTest()
+        {
+            string test =
+                "motorSet: \r\n" +
+                "PUSH_CONST_CHAR 1 \r\n" +
+                "MOTOR_SET \r\n" +
+                "PUSH_CONST_CHAR 2 \r\n" +
+                "MOTOR_SET \r\n" +
+                "RET \r\n" +
+                "Entry_Point* \r\n" +
+                "PUSH_CONST_INT 100\r\n" +
+                "PUSH_CONST_INT 100\r\n" +
+                "POP_LOCAL_INT 0 \r\n" +
+                "POP_LOCAL_INT 1 \r\n" +
+                "CALL 0 \r\n";
+
+            byte[] expectedHeap =
+            [
+                0x01, 0x01, 0x00, 0x00, // PUSH_CONST_CHAR 1
+                0x50, 0x00, 0x00, 0x00, // MOTOR_SET
+                0x01, 0x02, 0x00, 0x00, // PUSH_CONST_CHAR 2
+                0x50, 0x00, 0x00, 0x00, // MOTOR_SET
+                0x71, 0x00, 0x00, 0x00, // RET
+            ];
+
+            byte[] expected =
+            [
+                0x00, 0x64, 0x00, 0x00, // PUSH_CONST_INT 100
+                0x00, 0x64, 0x00, 0x00, // PUSH_CONST_INT 100
+                0x04, 0x00, 0x00, 0x00, // POP_LOCAL_INT 0
+                0x04, 0x01, 0x00, 0x00, // POP_LOCAL_INT 1
+                0x70, 0x00, 0x00, 0x00, // CALL 0
+            ];
+
+            Assembler.PackageFile(test, "./output.c");
+            var result = Assembler.UnpackageFile("./output.c");
+
+            CollectionAssert.AreEqual(expected, result.code);
+            CollectionAssert.AreEqual(expectedHeap, result.heap);
+            Assert.AreEqual(test, result.original);
         }
     }
 }
