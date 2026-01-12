@@ -103,6 +103,12 @@ namespace Obfuscator
                         {
                             current.Add(value);
                         }
+                        else if (short.TryParse(parts[i], out short shorty))
+                        {
+                            current.Add((byte)(shorty >> 8));
+                            current.Add((byte)(shorty));
+                            i++;
+                        }
                         else if (parts[i].StartsWith("\"") && parts[i].EndsWith("\""))
                         {
                             string strValue = parts[i].Trim('"');
