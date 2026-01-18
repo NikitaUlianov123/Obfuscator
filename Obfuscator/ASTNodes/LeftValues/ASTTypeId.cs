@@ -36,15 +36,25 @@ namespace Obfuscator
             throw new NotImplementedException();
 
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
             Varible varible = stack.findVaribles(RootToken.text);
-            return TokenToInstructionPush[varible.varibleInfo.infoType] + varible.varibleNumber;   
+            if(varible.variblesToNumber != -1)
+            {
+                IRCodeHandler.PushVarible(varible);
+            }
+            else
+            {
+                IRCodeHandler.PushConstChar(stack.enumValues[RootToken.text]);
+            }
         }
-        public override string IRGenLeftValue(VaribleStack stack)
+        public override void IRGenLeftValue(VaribleStack stack, IRCode IRCodeHandler)
         {
             Varible varible = stack.findVaribles(RootToken.text);
-            return TokenToInstructionPop[varible.varibleInfo.infoType] + varible.varibleNumber;
+            if (varible.variblesToNumber != -1)
+            {
+                IRCodeHandler.PopVarible(varible);
+            }
         }
     }
 }

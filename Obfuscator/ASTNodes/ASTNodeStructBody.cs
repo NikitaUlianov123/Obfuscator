@@ -11,6 +11,7 @@ namespace Obfuscator
         public ASTNodeStructBody(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             Members = children;
+            RootToken = new STRUCTBODYToken("STRUCTBODY",0);
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
@@ -28,9 +29,9 @@ namespace Obfuscator
             
             return ArgsString;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            return "";
+            return;
         }
     }
 }

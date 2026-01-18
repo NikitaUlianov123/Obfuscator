@@ -32,17 +32,28 @@ namespace Obfuscator
             Condition.RenamingVariblePass(currentStack);
             
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string ret = "";
-            string conditon = Condition.IRGen(stack);
+            Condition.IRGen(stack, IRCodeHandler);
 
-            stack.byteCounter += 5;
-            string BodyIR = Body.IRGen(stack);
-            ret = ret + $"{conditon}JNZ {stack.byteCounter} \n{BodyIR}";
-            ret += ElseIfChain.IRGen(stack);
-            ret += ElseOpt.IRGen(stack);
-            return ret;
+            string endIf = IRCodeHandler.GetNewLabel();
+            IRCodeHandler.AddJNZ(endIf);
+            stack.addScope();
+
+            Body.IRGen(stack, IRCodeHandler);
+            string endElse = IRCodeHandler.GetNewLabel();
+            IRCodeHandler.AddJMP(endElse);
+
+            stack.popScope();
+
+            IRCodeHandler.AddLabelDef(endIf);
+            if(ElseIfChain.RootToken.GetTokenType() != TokenType.NONE)
+            {
+                ASTNodeElseIf elseIfNode = (ASTNodeElseIf)ElseIfChain;
+                elseIfNode.IRGen(stack, IRCodeHandler, endElse);
+            }
+            ElseOpt.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddLabelDef(endElse);
         }
     }
 }

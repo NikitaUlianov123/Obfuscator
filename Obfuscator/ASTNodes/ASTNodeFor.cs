@@ -33,9 +33,25 @@ namespace Obfuscator
         {
             return $"for ({Init.CodeGen()} {Cond.CodeGen()}; {Iter.CodeGen()}) {{\n{Body.CodeGen()}\n}}";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            string endLabel = IRCodeHandler.GetNewLabel();
+            string startLabel = IRCodeHandler.GetNewLabel();
+            stack.addScope();
+            stack.addLoopScope(startLabel,endLabel);
+            Init.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddLabelDef(startLabel);
+            Cond.IRGen(stack,IRCodeHandler);
+
+            IRCodeHandler.AddJNZ(endLabel);
+            Body.IRGen(stack, IRCodeHandler);
+            Iter.IRGen(stack, IRCodeHandler);
+
+            IRCodeHandler.AddJMP(startLabel);
+
+            IRCodeHandler.AddLabelDef(endLabel);
+            stack.popLoopScope();
+            stack.popScope();
         }
     }
 }

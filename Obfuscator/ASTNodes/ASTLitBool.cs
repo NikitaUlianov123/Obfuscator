@@ -20,13 +20,13 @@ namespace Obfuscator
         {
             return;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
             if (RootToken.text == "true")
             {
-                return "PUSH_CONST_BOOL TRUE";
+                IRCodeHandler.PushConstChar(1);
             }
-            return "PUSH_CONST_BOOL FALSE";
+            IRCodeHandler.PushConstChar(0);
         }
     }
 }

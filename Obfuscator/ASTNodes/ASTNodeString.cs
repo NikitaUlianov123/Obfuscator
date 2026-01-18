@@ -21,9 +21,9 @@ namespace Obfuscator
         {
             return;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            return "PUSH_CONST_STRING " + RootToken.text + "\n ";
+            IRCodeHandler.PushString(RootToken.text);
         }
     }
 }

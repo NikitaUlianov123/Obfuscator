@@ -28,9 +28,11 @@ namespace Obfuscator
         {
             return $"{Target.CodeGen()} = {Value.CodeGen()};";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            Value.IRGen(stack, IRCodeHandler);
+            ASTNodeLeftValueBase aSTNodeLeftValueBase = (ASTNodeLeftValueBase)Target;
+            aSTNodeLeftValueBase.IRGenLeftValue(stack, IRCodeHandler);
         }
 
     }

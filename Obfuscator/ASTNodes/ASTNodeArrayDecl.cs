@@ -14,14 +14,10 @@ namespace Obfuscator
 
         public ASTNodeArrayDecl(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
-            // Expected forms from grammar:
-            //   T id ;
-            //   T id =^ E'' ;
-            // children typically: [Type, Id] or [Type, Id, '=^', Expr]
             TypeNode = children[0];
             NameNode = children[1];
             Size = children[2];
-            RootToken = TypeNode.RootToken;
+            RootToken = new RBRACKETToken("]",1);
 
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
@@ -31,31 +27,33 @@ namespace Obfuscator
 
         public override string CodeGen()
         {
-           throw new NotImplementedException();
+            return "";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string ret = "";
             int length = int.Parse(Size.RootToken.text);
             int size = 0;
             if(TypeNode.RootToken.GetTokenType() == TokenType.ID)
             {
                 if (stack.structs.ContainsKey(TypeNode.RootToken.text))
                 {
-                    size = 4 * length;
+                    size = stack.structs[TypeNode.RootToken.text].memorySize * length;
                     stack.addArrayVarible(NameNode.RootToken.text, stack.structs[TypeNode.RootToken.text], length, size );
+                }
+                else
+                {
+                    size = length;
+                    stack.addPrimativeVarible(NameNode.RootToken.text, InfoType.Char);
                 }
             }
             else
             {
-                size = stack.sizeType[TypeNode.RootToken.GetTokenType()] * length;
-                stack.addArrayVarible(NameNode.RootToken.text, new PrimitiveInfo(TypeNode.RootToken.GetTokenType()), length, size);
+                size = stack.TokenToSize[TypeNode.RootToken.GetTokenType()] * length;
+                stack.addArrayVarible(NameNode.RootToken.text, new PrimativeInfo(stack.TokenToInfo[TypeNode.RootToken.GetTokenType()]), length, size);
             }
             Varible currentArray = stack.findVaribles(NameNode.RootToken.text);
-            ret += "ALLOC_ARRAY " + size + "\n";
-            ret += "POP_LOCAL_INT " + currentArray.varibleNumber + "\n";
-            stack.byteCounter += 10;
-            return ret;
+            IRCodeHandler.AllocArray((ArrayInfo)currentArray.varibleInfo);
+            IRCodeHandler.PopLocalInt(currentArray.variblesToNumber);
         }
     }
 }

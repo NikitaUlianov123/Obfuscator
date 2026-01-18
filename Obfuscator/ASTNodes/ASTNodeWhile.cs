@@ -29,11 +29,24 @@ namespace Obfuscator
             return $"while({Condition.CodeGen()}) \n{{ {Body.CodeGen()} }}\n";
         }
 
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string ret = Condition.IRGen(stack);
+            string endLabel = IRCodeHandler.GetNewLabel();
+            string startLabel = IRCodeHandler.GetNewLabel();
 
-            return ;
+            stack.addScope();
+            stack.addLoopScope(startLabel, endLabel);
+
+            IRCodeHandler.AddLabelDef(startLabel);
+            Condition.IRGen(stack, IRCodeHandler);
+
+            IRCodeHandler.AddJNZ(endLabel);
+            Body.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddJMP(startLabel);
+            IRCodeHandler.AddLabelDef(endLabel);
+
+            stack.popLoopScope();
+            stack.popScope();
         }
     }
 }

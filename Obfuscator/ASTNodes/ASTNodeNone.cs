@@ -14,15 +14,15 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            return $"{RootToken.text}";
+            return "";
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             return;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            return;
         }
     }
 }

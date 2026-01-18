@@ -11,7 +11,6 @@ namespace Obfuscator
         public ASTNodeBase EnumBody { get; }
         public ASTNodeEnum(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
-            // children: 'for^','(', header, ')','{', body, '}'
             RootToken = children[0].RootToken;
             Name = children[1];
             EnumBody = children[2];
@@ -25,9 +24,9 @@ namespace Obfuscator
         {
             return "";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            return "";
+            return;
         }
     }
 }

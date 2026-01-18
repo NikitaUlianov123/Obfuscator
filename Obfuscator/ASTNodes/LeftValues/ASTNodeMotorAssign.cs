@@ -25,12 +25,11 @@ namespace Obfuscator
         {
             return $"motor[{Port.CodeGen()}] = {Value.CodeGen()} ;";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string value = Value.IRGen(stack);
-            string motor = Port.IRGen(stack);
-            stack.byteCounter++;
-            return value + motor + "MOTOR_SET \n";
+            Value.IRGen(stack, IRCodeHandler);
+            Port.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddCommand("MOTOR_SET");
         }
     }
 }

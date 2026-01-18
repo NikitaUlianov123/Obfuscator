@@ -5,28 +5,28 @@ using Obfuscator.Tokens;
 namespace Obfuscator
 {
 
-    public sealed class ASTNodeOr : ASTNodeBase
+    public sealed class ASTNodeOrTail : ASTNodeBase
     {
         public ASTNodeBase Left { get; }
-        public ASTNodeBase Right { get; }
-        public ASTNodeOr(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
+        public ASTNodeBase OrTail { get; }
+        public ASTNodeOrTail(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             Left = children[0];
             RootToken = children[1].RootToken; // || or && caret op per grammar
-            Right = children[2];
+            OrTail = children[2];
         }
         public override string CodeGen()
         {
-            return $"{Left.CodeGen()} {RootToken.text} {Right.CodeGen()}";
+            return $"{Left.CodeGen()} {RootToken.text} {OrTail.CodeGen()}";
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             Left.RenamingVariblePass(currentStack);
-            Right.RenamingVariblePass(currentStack);
+            OrTail.RenamingVariblePass(currentStack);
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            IRGenMath(stack, IRCodeHandler, Left, OrTail, "OR");
         }
     }
 

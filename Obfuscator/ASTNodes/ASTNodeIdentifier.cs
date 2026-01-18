@@ -8,12 +8,6 @@ namespace Obfuscator
     public sealed class ASTNodeIdentifier : ASTNodeBase
     {
 
-        public Dictionary<TokenType, string> TokenToInstruction = new()
-        {
-            [TokenType.KW_INT] = "PUSH_LOCAL_INT ",
-            [TokenType.KW_STRING] = "PUSH_LOCAL_STRING ",
-            [TokenType.KW_BOOL] = "PUSH_LOCAL_BOOL "
-        };
         public ASTNodeIdentifier(int begin, int end, AbstactToken token) : base(begin, end)
         {
             RootToken = token;
@@ -31,13 +25,9 @@ namespace Obfuscator
         {
             return RootToken.text;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            if(stack.findVaribles(RootToken.text).variblesToNumber != -1)
-            {
-                return TokenToInstruction[stack.findVaribles(RootToken.text).varibleType] + stack.findVaribles(RootToken.text).variblesToNumber + " \n";
-            }
-            return "";
+            IRCodeHandler.PushVarible(stack.findVaribles(RootToken.text));
         }
     }
 }

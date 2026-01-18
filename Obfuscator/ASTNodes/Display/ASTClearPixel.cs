@@ -38,9 +38,9 @@ namespace Obfuscator
             }
             return $"{RootToken.text}({ArgsString}) ;";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRHander)
         {
-            return IRGenArgs(stack, Args, "clearPix");
+            IRGenArgs(stack, IRHander, Args, "clearPix");
         }
     }
 }

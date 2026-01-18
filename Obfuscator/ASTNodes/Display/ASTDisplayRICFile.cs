@@ -8,20 +8,13 @@ namespace Obfuscator
     public sealed class ASTDisplayRICFile : ASTNodeBase
     {
         /// <summary>Arguments list (everything after the root function token)</summary>
-        public IReadOnlyList<ASTNodeBase> Args { get; }
+        public List<ASTNodeBase> Args { get; }
 
         public ASTDisplayRICFile(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // Expected shape from reducer: [ nameTokenNode, arg1, arg2, ... ]
             RootToken = children[0].RootToken;
-            if (children.Count > 1)
-            {
-                Args = children.GetRange(1, children.Count - 1);
-            }
-            else
-            {
-                Args = System.Array.Empty<ASTNodeBase>();
-            }
+            Args = children.Slice(1, children.Count);
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
@@ -36,9 +29,9 @@ namespace Obfuscator
             }
             return $"{RootToken.text}({ArgsString}) ;";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHander)
         {
-            return "";
+            IRGenArgs(stack, IRCodeHander, Args, "displayRICFile");
         }
     }
 }

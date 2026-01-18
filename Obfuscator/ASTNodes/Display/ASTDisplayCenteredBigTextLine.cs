@@ -35,9 +35,9 @@ namespace Obfuscator
             }
             return $"{RootToken.text}({ArgsString}) ;";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHander)
         {
-            return IRGenArgs(stack, Args, "displayCenteredBigTextLine");
+            IRGenArgs(stack, IRCodeHander, Args, "displayCenteredBigTextLine");
         }
     }
 }

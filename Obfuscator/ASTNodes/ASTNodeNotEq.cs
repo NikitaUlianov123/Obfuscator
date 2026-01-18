@@ -25,9 +25,9 @@ namespace Obfuscator
         {
             return $"{Left.CodeGen()} != {Right.CodeGen()}";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            return IRGenMath(stack, Left, Right, "NEQ");
+            IRGenMath(stack, IRCodeHandler, Left, Right, "NEQ");
         }
     }
 }

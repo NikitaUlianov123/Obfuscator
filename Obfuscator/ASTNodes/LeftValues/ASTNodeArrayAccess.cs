@@ -41,30 +41,30 @@ namespace Obfuscator
         }
         public override string CodeGen()
         {
-            throw new NotImplementedException();
+            return "";
 
         }
-        public override string IRGen(VaribleStack stack)
+        public void GetMemoryLocation(VaribleStack stack, IRCode IRCodeHandler, ArrayInfo arrayInfo, Varible varible)
         {
-            string ret = "";
-            int index = int.Parse(Index.RootToken.text);
-            Varible varible = stack.findVaribles(Array.RootToken.text);
-            ArrayInfo arrayInfo = (ArrayInfo)varible.varibleInfo;
-            int address = varible.varibleNumber + arrayInfo.info.getSize()*index;
-            ret += TypeToLoad[arrayInfo.infoType] + address;
-            stack.byteCounter+=5;
-            return ret;
+            IRCodeHandler.PushVarible(varible);
+            Index.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.PushConstInt(arrayInfo.varibleInfo.getSize());
+            IRCodeHandler.AddCommand("MUL");
+            IRCodeHandler.AddCommand("ADD");
         }
-        public override string IRGenLeftValue(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string ret = "";
-            int index = int.Parse(Index.RootToken.text);
             Varible varible = stack.findVaribles(Array.RootToken.text);
             ArrayInfo arrayInfo = (ArrayInfo)varible.varibleInfo;
-            int address = varible.varibleNumber + arrayInfo.info.getSize() * index;
-            ret += TypeToLoad[arrayInfo.infoType] + address + "\n";
-            stack.byteCounter += 5;
-            return ret;
+            GetMemoryLocation(stack, IRCodeHandler, arrayInfo, varible);
+            IRCodeHandler.LoadMemory(arrayInfo.varibleInfo.infoType);
+        }
+        public override void IRGenLeftValue(VaribleStack stack, IRCode IRCodeHandler)
+        {
+            Varible varible = stack.findVaribles(Array.RootToken.text);
+            ArrayInfo arrayInfo = (ArrayInfo)varible.varibleInfo;
+            GetMemoryLocation(stack, IRCodeHandler, arrayInfo, varible);
+            IRCodeHandler.StoreMemory(arrayInfo.varibleInfo.infoType);
         }
     }
 }

@@ -12,9 +12,9 @@ namespace Obfuscator
         public ASTNodeEncoderAssign(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // children: 'nMotorEncoder','[', port, ']', '=^', expr
-            Port = children[2];
-            RootToken = children[4].RootToken;
-            Value = children[5];
+            Port = children[1];
+            RootToken = children[2].RootToken;
+            Value = children[3];
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
@@ -25,9 +25,11 @@ namespace Obfuscator
         {
             return $"nMotorEncoder[{Port.CodeGen()}] = {Value.CodeGen()}";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            Port.IRGen(stack, IRCodeHandler);
+            Value.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddCommand("ENCODER_SET");
         }
     }
 }

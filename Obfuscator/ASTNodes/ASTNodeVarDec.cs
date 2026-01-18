@@ -12,12 +12,6 @@ namespace Obfuscator
         public ASTNodeBase NameNode { get; }
         public ASTNodeBase? Init { get; }
 
-        public Dictionary<TokenType, string> TokenToInstruction = new()
-        {
-            [TokenType.KW_INT] = "POP_LOCAL_INT ",
-            [TokenType.KW_STRING] = "POP_LOCAL_STRING ",
-            [TokenType.KW_BOOL] = "POP_LOCAL_BOOL "
-        };
 
         public ASTNodeVarDec(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
@@ -55,14 +49,26 @@ namespace Obfuscator
                 return $"{TypeNode.CodeGen()} {NameNode.CodeGen()};";
             }
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string Command = TokenToInstruction[TypeNode.RootToken.GetTokenType()];
-            stack.addVarible(NameNode.RootToken.text, TypeNode.RootToken.GetTokenType());
-
-            return Init.IRGen(stack) + Command + stack.findVaribles(NameNode.RootToken.text).variblesToNumber + " \n";
-
-
+            if(TypeNode.RootToken.GetTokenType() == TokenType.ID)
+            {
+                if(stack.structs.ContainsKey(TypeNode.RootToken.text))
+                {
+                    stack.addStructVarible(NameNode.RootToken.text, TypeNode.RootToken.text);
+                    IRCodeHandler.AllocStruct(stack.structs[TypeNode.RootToken.text]);
+                }
+            }
+            else
+            {
+                stack.addPrimativeVarible(NameNode.RootToken.text, stack.TokenToInfo[TypeNode.RootToken.GetTokenType()]);
+            }
+            if(Init != null)
+            {
+                Init.IRGen(stack, IRCodeHandler);
+                
+            }
+            IRCodeHandler.PopVarible(stack.findVaribles(NameNode.RootToken.text));
         }
     }
 }

@@ -31,12 +31,14 @@ namespace Obfuscator
     public class GrammarParser
     {
         public Dictionary<string, List<GrammerDef>> grammarPairs;
+        public HashSet<string> canBeNone;
         public GrammarParser(string filePath)
         {
             string[] lines = File.ReadAllLines(filePath);
             string currentReader = "";
             bool isReading = false;
             grammarPairs = new Dictionary<string, List<GrammerDef>>();
+            canBeNone = new HashSet<string>();
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i] == "}")
@@ -63,6 +65,10 @@ namespace Obfuscator
                             list.RemoveAt(d);
                         }
                     }
+                    if(list.Contains("\"none\""))
+                    {
+                        canBeNone.Add(currentReader);
+                    }
                     grammarPairs[currentReader].Add(new GrammerDef(list));
                 }
                 if (lines[i] == "{")
@@ -71,7 +77,7 @@ namespace Obfuscator
 
                 }
 
-
+                
             }
             ;
 

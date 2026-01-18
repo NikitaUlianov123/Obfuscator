@@ -9,31 +9,28 @@ namespace Obfuscator
     public sealed class ASTNodeAnd : ASTNodeBase
     {
         public ASTNodeBase Left { get; }
-        public ASTNodeBase Right { get; }
+        public ASTNodeBase AndTail { get; }
 
         public ASTNodeAnd(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // children: Left, '&&^', Right
             Left = children[0];
-            RootToken = children[1].RootToken;
-            Right = children[2];
+            AndTail = children[1];
+            RootToken = new NONEToken("None",0);
         }
         public override void RenamingVariblePass(StackInterpter currentStack)
         {
             Left.RenamingVariblePass(currentStack);
-            Right.RenamingVariblePass(currentStack);
+            AndTail.RenamingVariblePass(currentStack);
         }
         public override string CodeGen()
         {
-            return $"{Left.CodeGen()}{RootToken.text}{Right.CodeGen()}";
+            return $"{Left.CodeGen()}{RootToken.text}{AndTail.CodeGen()}";
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string Total = "";
-            Total += Left.IRGen(stack);
-            Total += Right.IRGen(stack);
-            Total += "AND \n";
-            return Total;
+            Left.IRGen(stack, IRCodeHandler);
+            AndTail.IRGen(stack,IRCodeHandler);
         }
     }
 }

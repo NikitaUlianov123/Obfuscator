@@ -33,23 +33,29 @@ VaribleDec
 }
 Dot
 {
-	"id" ".^" "id"
-	"id" ".^" Dot
+	DotSide ".^" Dot
+	DotSide ".^" DotSide
+}
+DotSide
+{
+	ArrayAccess
+	"id"
 }
 E
 {
 	VaribleDec
-	"id" "^=" E' ;
+	ArrayCreation
+	"id" "^=" E'' ;
 	Dot "^=" E' ;
 	"id" "(^" ListOfStatements ")" ;
 	"delay^" "(" E' ")" ;
-	"if^" "(" CE ")" "{" Body "}"
+	IfStmt
 	"while^" "(" CE ")" "{" Body "}"
 	"for^" "(" ForHeader ")" "{" Body "}"
 	"switch^" "(" E' ")" "{" CaseList "}"
 	"motor^" "[" MotorPort "]" "=" E'' ;
 	"nMotorEncoder^" "[" MotorPort "]" "=" E'' ;
-  	"return^" E' ;
+  	"return^" E'' ;
   	"return^" "none" ;
 	"break^" ;
 	"continue^" ;
@@ -91,7 +97,13 @@ E'
 	"number"
 	"charVal"
 	"boolVal"
+	ArrayAccess
+	Colors
+	Buttons
 	"stringVal"
+	"abs^" "(" E'' ")" 
+	"random^" "[" E'' "]" 
+	"nMotorEncoder^" "[" MotorPort "]"
 	"SensorValue^" "[" SensorPort "]" 
 	"nMotorEncoder^" "[" MotorPort "]"	 
 	"id" "(^" ListOfStatements ")" 
@@ -106,29 +118,36 @@ ListOfStatements
 }
 CE
 {
-	E' "&&^" CE'
-	E' "||^" CE'
-	E' "==^" CE'
-	E' ">^" CE'
-	E' "<^" CE'
-	E'
+	And OrTail
+}
+OrTail
+{
+	"||^" And OrTail
+	"none"
+}
+And
+{
+	CE' AndTail
+}
+AndTail
+{
+	"&&^" CE' AndTail
+	"none"
 }
 CE'
 {
-	E' "&&^" CE'
-	E' "||^" CE'
-	E' "==^" CE'
-	E' ">^" CE'
-	E' "<^" CE'
+	E' "==^" E'
+	E' ">^" E'
+	E' "<^" E'
 	E'
 }
 E''
 {
-	E' "+^" E''
-	E' "-^" E''
-	E' "*^" E''
-	E' "/^" E''
-	E'
+	Unary "+^" E''
+	Unary "-^" E''
+	Unary "*^" E''
+	Unary "/^" E''
+	Unary
 }
 ForHeader
 {
@@ -182,6 +201,8 @@ Struct
 }
 StructBody
 {
+	ArrayCreation StructBody
+	ArrayCreation
 	T "id" ; StructBody
 	T "id" ;
 	"none"
@@ -191,6 +212,7 @@ ProgramBody
 	Function ProgramBody
 	Struct ProgramBody
 	Define ProgramBody
+	Enum ProgramBody
 	VaribleDec ProgramBody
 	"none"
 }
@@ -207,4 +229,62 @@ Function
 TaskMain
 {
 	"task^" "main" "(" ")" "{" Body "}"
+}
+IfStmt
+{
+    "if^" "(" CE ")" "{" Body "}" ElseIfTail ElseOpt
+}
+ElseIfTail
+{
+    "elseif^" "(" CE ")" "{" Body "}" ElseIfTail
+    "none"
+}
+ElseOpt
+{
+    "else^" "{" Body "}"
+    "none"
+}
+ArrayAccess
+{
+    "id" "[^" E' "]"
+}
+ArrayCreation
+{
+    T "id" "[" "number" "^]" ;
+}
+Enum
+{
+    "enum^" "id" "{" EnumList "}" 
+}
+EnumList
+{
+    EnumItem "," EnumList
+    EnumItem
+}
+EnumItem
+{
+    "id" "=^" E'
+    "id"
+}
+Unary
+{
+	"-" Unary
+	E'
+}
+Colors
+{
+	"REDCOLOR"
+	"BLUECOLOR"
+	"GREENCOLOR"
+	"YELLOWCOLOR"
+	"BLACKCOLOR"
+	"WHITECOLOR"
+}
+Buttons
+{
+	"kExitButton"
+	"kRightButton"
+	"kLeftButton"
+	"kEnterButton"
+	"nNxtButtonPressed"
 }

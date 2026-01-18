@@ -21,9 +21,11 @@ namespace Obfuscator
         {
             NodeToPlusPlus.RenamingVariblePass(currentStack);
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            NodeToPlusPlus.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.PushConstInt(1);
+            IRCodeHandler.AddCommand("ADD");
         }
     }
 }

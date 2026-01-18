@@ -1,7 +1,34 @@
-int a = 1 + 1;
-int b = 1 + 2; 
-int c = a + b;
-if(a == b)
+enum Operation
 {
-	int d = 0;
+	Add,
+	Sub,
+	Mult,
+	Div
+}
+int getRandom(int min, int max)
+{
+	return random[max-min] + min;
+}
+struct Question
+{
+	int numOne;
+	int numTwo;
+	Operation operation;
+	int decoyAnswers[4];
+	int correctAnswerIndex;
+}
+void initQuestion(Question question)
+{
+	question.numOne = getRandom(0,100);
+	question.numTwo = getRandom(0,100);
+
+}
+task main()
+{
+	Question questions[10];
+	for(int i = 0; i < 10; i++)
+	{
+		initQuestion(questions[i]);
+	}
+
 }

@@ -2,7 +2,6 @@
   { "type": 0,  "pattern": "&&",                 "precedence": 90 },
   { "type": 1,  "pattern": "\\|\\|",             "precedence": 90 },
   { "type": 2,  "pattern": "==",                 "precedence": 40 },
-
   { "type": 3,  "pattern": "\\breturn\\b",       "precedence": 80 },
   { "type": 4,  "pattern": "\\bif\\b",           "precedence": 80 },
   { "type": 5,  "pattern": "\\bwhile\\b",        "precedence": 80 },
@@ -20,31 +19,25 @@
   { "type": 17, "pattern": "\\bdefault\\b",      "precedence": 80 },
   { "type": 18, "pattern": "\\bbreak\\b",        "precedence": 80 },
   { "type": 19, "pattern": "\\bcontinue\\b",     "precedence": 80 },
-
   { "type": 20, "pattern": "\\bmotor\\b",            "precedence": 73 },
   { "type": 21, "pattern": "\\bnMotorEncoder\\b",    "precedence": 75 },
   { "type": 22, "pattern": "\\bSensorValue\\b",      "precedence": 75 },
-
   { "type": 23, "pattern": "\\bmotorA\\b",           "precedence": 74 },
   { "type": 24, "pattern": "\\bmotorB\\b",           "precedence": 74 },
   { "type": 25, "pattern": "\\bmotorC\\b",           "precedence": 74 },
-
   { "type": 26, "pattern": "\\bport1\\b",            "precedence": 74 },
   { "type": 27, "pattern": "\\bport2\\b",            "precedence": 74 },
   { "type": 28, "pattern": "\\bport3\\b",            "precedence": 74 },
   { "type": 29, "pattern": "\\bport4\\b",            "precedence": 74 },
-
   { "type": 30, "pattern": "\\b\\d+(?:\\.\\d+)?\\b", "precedence": 70 },
   { "type": 31, "pattern": "'(?:\\\\.|[^'\\\\])'",    "precedence": 70 },
   { "type": 32, "pattern": "\\\"(?:\\\\.|[^\\\"\\\\])*\\\"", "precedence": 70 },
   { "type": 33, "pattern": "\\b(?:true|false)\\b",    "precedence": 70 },
   { "type": 34, "pattern": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b", "precedence": 100 },
-
   { "type": 35, "pattern": "\\+=",     "precedence": 95 },
   { "type": 36, "pattern": "-=",       "precedence": 95 },
   { "type": 37, "pattern": "\\+\\+",   "precedence": 95 },
   { "type": 38, "pattern": "--",       "precedence": 95 },
-
   { "type": 39, "pattern": "=",        "precedence": 50 },
   { "type": 40, "pattern": "\\+",      "precedence": 100 },
   { "type": 41, "pattern": "-",        "precedence": 100 },
@@ -92,5 +85,22 @@
 { "type": 84, "pattern": "\\binvertLine\\b",                   "precedence": 40 },
 { "type": 85, "pattern": "\\binvertPixel\\b",                  "precedence": 40 },
 { "type": 86, "pattern": "\\bscrollText\\b",                   "precedence": 40 },
-{ "type": 87, "pattern": "\\bsetPixel\\b",                     "precedence": 40 }
+{ "type": 87, "pattern": "\\bsetPixel\\b",                     "precedence": 40 },
+{ "type": 89, "pattern": "\\bGREENCOLOR\\b",  "precedence": 40 },
+{ "type": 90, "pattern": "\\bBLUECOLOR\\b",   "precedence": 40 },
+{ "type": 91, "pattern": "\\bREDCOLOR\\b",    "precedence": 40 },
+{ "type": 92, "pattern": "\\bBLACKCOLOR\\b",  "precedence": 40 },
+{ "type": 93, "pattern": "\\bWHITECOLOR\\b",  "precedence": 40 },
+{ "type": 94, "pattern": "\\bYELLOWCOLOR\\b", "precedence": 40 },
+{ "type": 96, "pattern": "\\belse\\s+if\\b", "precedence": 30 },
+{ "type": 95, "pattern": "\\belse\\b",       "precedence": 40 },
+{ "type": 97, "pattern": "\\benum\\b", "precedence": 40 },
+{ "type": 98, "pattern": "!=", "precedence": 20 },
+{ "type": 99, "pattern": "\\babs\\b", "precedence": 40 },
+{ "type": 100, "pattern": "\\brandom\\b", "precedence": 40 },
+{ "type": 101, "pattern": "\\bkExitButton\\b",  "precedence": 40 },
+{ "type": 102, "pattern": "\\bkRightButton\\b",   "precedence": 40 },
+{ "type": 103, "pattern": "\\bkLeftButton\\b",    "precedence": 40 },
+{ "type": 104, "pattern": "\\bkEnterButton\\b",  "precedence": 40 },
+{ "type": 105, "pattern": "\\bnNxtButtonPressed\\b",  "precedence": 40 }
 ]

@@ -1,0 +1,152 @@
+[33mcommit f5532960fefa4f8daba8657b0c55145fe8d1658d[m[33m ([m[1;32mILGen[m[33m)[m
+Merge: 92cedf0 8ebbcdd
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sun Jan 11 17:53:06 2026 -0800
+
+    Added IR gen to arrays and structs. Need to add random along with enums and for loops.
+
+[33mcommit 92cedf04bd729c93ea2b2350d5064c114cc184c3[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Dec 20 20:11:33 2025 -0800
+
+    Added work for IF statemtns
+
+[33mcommit 8ebbcddf57f6e604ee8843a393ae8c53e14ad123[m
+Author: NikitaUlianov123 <nikita@mectruck.com>
+Date:   Sat Dec 20 20:11:04 2025 -0800
+
+    Made assembler
+
+[33mcommit ddc1efe5a6a917fe974d4755c739cef66ac8c9fb[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Dec 20 18:33:56 2025 -0800
+
+    Started to IL Gen
+
+[33mcommit 0dc6b2ca19a058cb310282457caa9dd03054552c[m[33m ([m[1;31morigin/c-team-CodeGen[m[33m, [m[1;32mc-team-CodeGen[m[33m)[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Nov 22 18:23:49 2025 -0800
+
+    Fixed dot issue
+
+[33mcommit 26315989b017974dae3272e38a0beddab78f1b9b[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Nov 22 17:57:28 2025 -0800
+
+    Fixed issues with math
+
+[33mcommit 38ec3af9982680b2f539308d40ecf403ff8511f3[m
+Merge: e1e2382 53eea9c
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Nov 15 20:15:34 2025 -0800
+
+    Fixed merge conflicts
+
+[33mcommit e1e23829cfb7c4cc3db2c49a901149c74c7407b4[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Nov 15 20:12:37 2025 -0800
+
+    Need to test more code gen
+
+[33mcommit 53eea9c487a5125bf27e31d625d334f77437a0fe[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sat Nov 15 20:11:40 2025 -0800
+
+    Fix minor bug with preprocessor
+
+[33mcommit 2e02448dede85a916469b1886edb6b140eaab23d[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sun Nov 9 19:33:06 2025 -0800
+
+    Finish Code Gen
+
+[33mcommit 30398e16931ea8d845ecea31464d8de6ab1590b6[m
+Merge: 45b8686 a1320f0
+Author: Ryan Daly <52804876+Ryan-Daly1@users.noreply.github.com>
+Date:   Sun Nov 9 18:33:03 2025 -0800
+
+    Merge pull request #18 from NikitaUlianov123/FIrstPassObfuscation
+    
+    Add code gen functions
+
+[33mcommit a1320f06f746613cce3657dfe64912a0b1b18d65[m[33m ([m[1;31morigin/FIrstPassObfuscation[m[33m, [m[1;32mFIrstPassObfuscation[m[33m)[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sun Nov 9 18:31:10 2025 -0800
+
+    Added some code gen funcitons
+
+[33mcommit 45b86862e5ecf671b710ff7a93623e65c6fbf156[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sun Nov 9 18:30:34 2025 -0800
+
+    Fix bug with preprocessor
+
+[33mcommit abb2e038a92d765585be0fb91d7bcb61e98ef255[m
+Merge: 8fbb608 d367e8d
+Author: Ryan Daly <52804876+Ryan-Daly1@users.noreply.github.com>
+Date:   Sun Nov 2 20:07:32 2025 -0800
+
+    Merge pull request #17 from NikitaUlianov123/FIrstPassObfuscation
+    
+    Added varible renaming.
+
+[33mcommit d367e8df919e7ffbaa7baa9627910bd1e98dc361[m
+Merge: a9f13c0 8fbb608
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sun Nov 2 20:06:12 2025 -0800
+
+    Fixed conflicts
+
+[33mcommit a9f13c09a4436b17de31fa46cf8d076c57b14502[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sun Nov 2 19:33:28 2025 -0800
+
+    Added varible renaming.
+
+[33mcommit 8fbb608ca78364323775c747824bb6c728fcc814[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sun Nov 2 19:32:54 2025 -0800
+
+    Implement a few more CodeGen classes.
+
+[33mcommit 0f542be5040896b7a7107348a3b6909822f09bb4[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sun Nov 2 19:30:26 2025 -0800
+
+    Implement some CodeGen
+
+[33mcommit c590b0ce781e73a8910d6011eaae70085a4eb5ff[m[33m ([m[1;31morigin/c-team[m[33m)[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sun Nov 2 18:37:28 2025 -0800
+
+    Implement the rest of DefineReplacer to make it work and added a very basic unit test to ensure functionality.
+
+[33mcommit 778542bfefcb32467c929e4c99fd6f21e6842985[m
+Author: Ryan.Daly <Ryan.Daly@GMRMC1B>
+Date:   Sat Nov 1 20:17:59 2025 -0700
+
+    Implement relative file paths for boiler plate code, in process of implementing an unrolling of defines (currently doesn't work), will also add macros later
+
+[33mcommit 4cd48743a833ffec144d208be8753af5151ec663[m[33m ([m[1;32mc-team[m[33m)[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Nov 1 19:41:02 2025 -0700
+
+    Added the display commands.
+
+[33mcommit 390f689155527d0af8b73f73709d5ead2c5eebad[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sat Nov 1 18:05:45 2025 -0700
+
+    Added support for structs and functions. Also added support for for loops, loops and for #defines. Need to add an intial pass.
+
+[33mcommit 309ca4cf0eb99626ad9f415de2140a26bf0f38d6[m
+Author: Logan Starr <loganstarr88@gmail.com>
+Date:   Sun Oct 19 22:28:04 2025 -0700
+
+    Added Grammar for Robot C, need to later add support for #defines, and for C functions like memcop, and verify. Additionally, need to test if structs and functions work going to AST, and need to add unit tests for the parsing stage.
+
+[33mcommit 2237fa33e0bc4d89019c9b3813e9dea4bdcbfa06[m[33m ([m[1;32mmain[m[33m)[m
+Author: Nikita Ulianov <49293914+NikitaUlianov123@users.noreply.github.com>
+Date:   Sat Oct 18 17:51:21 2025 -0700
+
+    Initial commit

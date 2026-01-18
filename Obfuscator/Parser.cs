@@ -20,6 +20,26 @@ namespace Obfuscator
             }
             return new ASTNodeVarAssign(beginning, end, nodes);
         }
+        private static ASTNodeBase EncoderNode(int beginning, int end, List<ASTNodeBase> nodes)
+        {
+            if(nodes.Count > 2)
+            {
+                return new ASTNodeEncoderAssign(beginning, end, nodes);
+            }
+            return new ASTNodeEncoderRead(beginning, end, nodes);
+        }
+        public static ASTNodeBase CreateUnary(int beginnging, int end, List<ASTNodeBase> nodes)
+        {
+            if(nodes.Count ==1)
+            {
+                return nodes[0];
+            }
+            if (nodes[0].RootToken.GetTokenType() == TokenType.OP_MINUS)
+            {
+                return new ASTNodeNegation(beginnging, end, nodes);
+            }
+            return new ASTNodeNone(beginnging,end, new NONEToken("",0));
+        }
         public GrammarParser grammar;
         public Parser(string grammarFilePath)
         {
@@ -49,6 +69,7 @@ namespace Obfuscator
             ["\"int\""] = TokenType.KW_INT,
             ["\"string\""] = TokenType.KW_STRING,
             ["\"bool\""] = TokenType.KW_BOOL,
+            ["\"enum\""] = TokenType.KW_ENUM,
             ["\"float\""] = TokenType.KW_FLOAT,
             ["\"void\""] = TokenType.KW_VOID,
 
@@ -64,6 +85,8 @@ namespace Obfuscator
 
             // ---------- Control flow ----------
             ["\"if\""] = TokenType.KW_IF,
+            ["\"elseif\""] = TokenType.ELSE_IF,
+            ["\"else\""] = TokenType.ELSE,
             ["\"while\""] = TokenType.KW_WHILE,
             ["\"for\""] = TokenType.KW_FOR,
             ["\"switch\""] = TokenType.KW_SWITCH,
@@ -95,6 +118,23 @@ namespace Obfuscator
             ["\"port2\""] = TokenType.KW_PORT2,
             ["\"port3\""] = TokenType.KW_PORT3,
             ["\"port4\""] = TokenType.KW_PORT4,
+
+            //Buttons
+
+            ["\"kEnterButton\""] = TokenType.kEnterButton,
+            ["\"kExitButton\""] = TokenType.kExitButton,
+            ["\"kLeftButton\""] = TokenType.kLeftButton,
+            ["\"kRightButton\""] = TokenType.kRightButton,
+            ["\"nNxtButtonPressed\""] = TokenType.nNxtButtonPressed,
+
+            // Colors
+
+            ["\"REDCOLOR\""] = TokenType.REDCOLOR,
+            ["\"BLUECOLOR\""] = TokenType.BLUECOLOR,
+            ["\"YELLOWCOLOR\""] = TokenType.YELLOWCOLOR,
+            ["\"GREENCOLOR\""] = TokenType.GREENCOLOR,
+            ["\"WHITECOLOR\""] = TokenType.WHITECOLOR,
+            ["\"BLACKCOLOR\""] = TokenType.BLACKCOLOR,
 
             // ---------- Operators (plain forms only) ----------
             ["\"=\""] = TokenType.OP_ASSIGN,
@@ -156,6 +196,8 @@ namespace Obfuscator
             ["\"invertPixel\""] = TokenType.KW_INVERT_PIXEL,
             ["\"scrollText\""] = TokenType.KW_SCROLL_TEXT,
             ["\"setPixel\""] = TokenType.KW_SET_PIXEL,
+            ["\"random\""] = TokenType.RANDOM,
+            ["\"abs\""] = TokenType.ABS,
         };
 
 
@@ -169,6 +211,7 @@ namespace Obfuscator
         ["\"bool\""] = (b, e, t) => new ASTTypeBool(b, e, t),
         ["\"float\""] = (b, e, t) => new ASTTypeFloat(b, e, t),
         ["\"void\""] = (b, e, t) => new ASTTypeVoid(b, e, t),
+        ["\"enum\""] = (b, e, t) => new ASTNodeTypeEnum(b, e, t),
 
         // ---- IDENTIFIERS (non-type positions) ----
         ["\"id\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
@@ -179,6 +222,22 @@ namespace Obfuscator
         ["\"boolVal\""] = (b, e, t) => new ASTLitBool(b, e, t),
         ["\"stringVal\""] = (b, e, t) => new ASTLitString(b, e, t),
         ["\"none\""] = (b, e, t) => new ASTLitNone(b, e, t),
+
+        // ----- COLORS ------- 
+        ["\"REDCOLOR\""] = (b, e, t) => new ASTNodeRedColor(b, e, t),
+        ["\"BLUECOLOR\""] = (b, e, t) => new ASTNodeBlueColor(b, e, t),
+        ["\"GREENCOLOR\""] = (b, e, t) => new ASTNodeGreenColor(b, e, t),
+        ["\"YELLOWCOLOR\""] = (b, e, t) => new ASTNodeYellowColor(b, e, t),
+        ["\"WHITECOLOR\""] = (b, e, t) => new ASTNodeWhiteColor(b, e, t),
+        ["\"BLACKCOLOR\""] = (b, e, t) => new ASTNodeBlackColor(b, e, t),
+
+        // ------- BUTTONS ---------
+        ["\"kExitButton\""] = (b, e, t) => new ASTNodekExitButton(b, e, t),
+        ["\"kRightButton\""] = (b, e, t) => new ASTNodekRigthButton(b, e, t),
+        ["\"kLeftButton\""] = (b, e, t) => new ASTNodekLeftButton(b, e, t),
+        ["\"kEnterButton\""] = (b, e, t) => new ASTNodekEnterButton(b, e, t),
+        ["\"nNxtButtonPressed\""] = (b, e, t) => new ASTNodenNxtButtonPressed(b, e, t),
+
 
         // ---- ROBOTC PORT LITERALS ----
         ["\"motorA\""] = (b, e, t) => new ASTLitMotorA(b, e, t),
@@ -241,7 +300,11 @@ namespace Obfuscator
         [";"] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\":\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"if\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"else\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"elseif\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"return\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"break\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"continue\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"while\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"for\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"#define\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
@@ -275,7 +338,8 @@ namespace Obfuscator
         ["\"invertPixel\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"scrollText\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
         ["\"setPixel\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
-
+        ["\"random\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"abs\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
 
     };
 
@@ -300,17 +364,23 @@ namespace Obfuscator
                ["\"--\""] = (b, e, ch) => new ASTNodeMinusMinus(b, e, ch),
 
                // Boolean / Comparison (CE, CE')
-               ["\"&&\""] = (b, e, ch) => new ASTNodeAnd(b, e, ch),
-               ["\"||\""] = (b, e, ch) => new ASTNodeOr(b, e, ch),
+               ["And"] = (b, e, ch) => new ASTNodeAnd(b, e, ch),
+               ["\"&&\""] = (b, e, ch) => new ASTNodeAndTail(b, e, ch),
+               ["\"||\""] = (b, e, ch) => new ASTNodeOrTail(b, e, ch),
+
                ["\"==\""] = (b, e, ch) => new ASTNodeEq(b, e, ch),
                ["\">\""] = (b, e, ch) => new ASTNodeGt(b, e, ch),
                ["\"<\""] = (b, e, ch) => new ASTNodeLt(b, e, ch),
+
+               ["CE"] = (b, e, ch) => new ASTNodeCE(b, e, ch),
 
                // Member access
                ["\".\""] = (b, e, ch) => new ASTNodeMemberAccess(b, e, ch),
 
                // Control flow
                ["\"if\""] = (b, e, ch) => new ASTNodeIf(b, e, ch),
+               ["\"else\""] = (b, e, ch) => new ASTNodeElse(b, e, ch),
+               ["\"elseif\""] = (b, e, ch) => new ASTNodeElseIf(b, e, ch),
                ["\"while\""] = (b, e, ch) => new ASTNodeWhile(b, e, ch),
                ["\"for\""] = (b, e, ch) => new ASTNodeFor(b, e, ch),
                ["\"switch\""] = (b, e, ch) => new ASTNodeSwitch(b, e, ch),
@@ -324,20 +394,22 @@ namespace Obfuscator
                // (These are easiest to construct in reduce actions that recognize the exact pattern,
                // but if you already tag the root as 'motor' or 'nMotorEncoder', you can use:)
                ["\"motor\""] = (b, e, ch) => new ASTNodeMotorAssign(b, e, ch),
-               ["\"nMotorEncoder\""] = (b, e, ch) => new ASTNodeEncoderAssign(b, e, ch),
+               ["\"SensorValue\""] = (b, e, ch) => new ASTNodeSensorRead(b, e, ch),
+               ["\"nMotorEncoder\""] = (b, e, ch) => EncoderNode(b, e, ch),
                ["VaribleDec"] = (b, e, ch) => new ASTNodeVarDec(b, e, ch),
                // Functions / Structs / Task
-               // If your reduce action uses the return type token as the root, these will fire:
                ["\"void\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"int\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"string\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"bool\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"float\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"struct\""] = (b, e, ch) => new ASTNodeStruct(b, e, ch),
+               ["\"enum\""] = (b, e, t) => new ASTNodeEnum(b, e, t),
                ["\"id\""] = (b, e, ch) => new ASTNodeFunction(b, e, ch),
                ["\"task\""] = (b, e, ch) => new ASTNodeTaskMain(b, e, ch),
                ["\"#define\""] = (b, e, ch) => new ASTDefineNode(b, e, ch),
                ["\"delay\""] = (b, e, ch) => new ASTDelayNode(b, e, ch),
+
 
                // Aggregates / lists (use these keys only if your reducer emits them as synthetic roots)
                ["\"Body\""] = (b, e, ch) => new ASTNodeBlock(b, e, ch),
@@ -348,10 +420,12 @@ namespace Obfuscator
                ["\"Program\""] = (b, e, ch) => new ASTNodeProgram(b, e, ch),
                ["Parma"] = (b, e, ch) => new ASTNodeParamList(b, e, ch),
                ["StructBody"] = (b, e, ch) => new ASTNodeStructBody(b, e, ch),
-
+               ["\"[\""] = (b, e, ch) => new ASTNodeArrayAccess(b, e, ch),
+               ["\"]\""] = (b, e, ch) => new ASTNodeArrayDecl(b, e, ch),
                // Calls & arg lists (if you mark '(' as the root for calls)
                ["\"(\""] = (b, e, ch) => new ASTNodeCall(b, e, ch),
                ["ListOfStatements"] = (b, e, ch) => new ASTNodeArgList(b, e, ch),
+               ["Unary"] = (b, e, ch) => CreateUnary(b, e, ch),
                // ---- ROBOTC DISPLAY/DRAW COMMANDS ----
                ["\"clearPixel\""] = (b, e, ch) => new ASTClearPixel(b, e, ch),
                ["\"displayBigStringAt\""] = (b, e, ch) => new ASTDisplayBigStringAt(b, e, ch),
@@ -379,6 +453,8 @@ namespace Obfuscator
                ["\"invertPixel\""] = (b, e, ch) => new ASTInvertPixel(b, e, ch),
                ["\"scrollText\""] = (b, e, ch) => new ASTScrollText(b, e, ch),
                ["\"setPixel\""] = (b, e, ch) => new ASTSetPixel(b, e, ch),
+               ["\"random\""] = (b, e, t) => new ASTNodeRandom(b, e, t),
+               ["\"abs\""] = (b, e, t) => new ASTNodeAbs(b, e, t),
            };
 
 
@@ -390,10 +466,16 @@ namespace Obfuscator
             TokenType.LPAREN,
             TokenType.RPAREN,
             TokenType.LBRACE,
-            TokenType.RBRACE
+            TokenType.RBRACE,
+            TokenType.RBRACKET,
+            TokenType.LBRACKET
         };
         public ASTNodeBase Parsing(List<AbstactToken> tokens, string starting, int current)
         {
+            if(starting == "Unary")
+            {
+                ;
+            }
             for (int i = 0; i < grammar.grammarPairs[starting].Count; i++)
             {
                 bool isMatch = true;
@@ -402,6 +484,11 @@ namespace Obfuscator
                 for (int d = 0; d < grammar.grammarPairs[starting][i].text.Count; d++)
                 {
                     var e = grammar.grammarPairs[starting][i];
+                    if(grammar.canBeNone.Contains(grammar.grammarPairs[starting][i].text[d]) == true && current >= tokens.Count)
+                    {
+                        childern.Add(new ASTNodeNone(current, current, new NONEToken("", 0)));
+                        continue;
+                    }
                     if (current >= tokens.Count)
                     {
                         isMatch = false;

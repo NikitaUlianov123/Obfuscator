@@ -118,8 +118,29 @@ namespace Obfuscator
         KW_SCROLL_TEXT = 86,   // covers both overloads
         KW_SET_PIXEL = 87,
         TERMAIL = 88,
-        NONE = 89,
-        FUNCTION_CALL = 89,
+
+        GREENCOLOR = 89,
+        BLUECOLOR = 90,
+        REDCOLOR = 91,
+        BLACKCOLOR = 92,
+        WHITECOLOR = 93,
+        YELLOWCOLOR = 94,
+        ELSE = 95,
+        ELSE_IF = 96,
+        KW_ENUM = 97,
+        NOT_EQUALS = 98,
+        ABS = 99,
+        RANDOM = 100,
+        kExitButton = 101,
+        kRightButton = 102,
+        kLeftButton = 103,
+        kEnterButton = 104,
+        nNxtButtonPressed = 104,
+        NONE,
+        FUNCTION_CALL,
+        FUNCTION,
+        STRUCTBODY,
+        CE,
     }
 
 
@@ -151,12 +172,15 @@ namespace Obfuscator
             [TokenType.KW_BOOL] = (text, len) => new KW_BOOLToken(text, len),
             [TokenType.KW_FLOAT] = (text, len) => new KW_FLOATToken(text, len),
             [TokenType.KW_VOID] = (text, len) => new KW_VOIDToken(text, len),
+            [TokenType.KW_ENUM] = (text, len) => new KW_ENUMToken(text, len),
 
             // Decls/structs
             [TokenType.KW_STRUCT] = (text, len) => new KW_STRUCTToken(text, len),
 
             // Control flow
             [TokenType.KW_IF] = (text, len) => new KW_IFToken(text, len),
+            [TokenType.ELSE] = (text, len) => new KW_ELSEToken(text, len),
+            [TokenType.ELSE_IF] = (text, len) => new KW_ELSE_IFToken(text, len),
             [TokenType.KW_WHILE] = (text, len) => new KW_WHILEToken(text, len),
             [TokenType.KW_FOR] = (text, len) => new KW_FORToken(text, len),
             [TokenType.KW_SWITCH] = (text, len) => new KW_SWITCHToken(text, len),
@@ -169,6 +193,24 @@ namespace Obfuscator
             // Task
             [TokenType.KW_TASK] = (text, len) => new KW_TASKToken(text, len),
             [TokenType.KW_MAIN] = (text, len) => new KW_MAINToken(text, len),
+
+            //Colors
+
+            [TokenType.REDCOLOR] = (text, len) => new REDCOLORToken(text, len),
+            [TokenType.BLUECOLOR] = (text, len) => new BLUECOLORToken(text, len),
+            [TokenType.YELLOWCOLOR] = (text, len) => new YELLOWCOLORToken(text, len),
+            [TokenType.WHITECOLOR] = (text, len) => new WHITECOLORToken(text, len),
+            [TokenType.BLACKCOLOR] = (text, len) => new BLUECOLORToken(text, len),
+            [TokenType.GREENCOLOR] = (text, len) => new GREENCOLORToken(text, len),
+
+            //Buttons
+
+
+            [TokenType.kEnterButton] = (text, len) => new KENTERBUTTONToken(text, len),
+            [TokenType.kExitButton] = (text, len) => new KEXITBUTTONToken(text, len),
+            [TokenType.kLeftButton] = (text, len) => new KLEFTBUTTONToken(text, len),
+            [TokenType.kRightButton] = (text, len) => new KRIGHTBUTTONToken(text, len),
+            [TokenType.nNxtButtonPressed] = (text, len) => new NXTBUTTONPRESSEDToken(text, len),
 
             // RobotC-specific identifiers
             [TokenType.KW_MOTOR] = (text, len) => new KW_MOTORToken(text, len),
@@ -191,6 +233,7 @@ namespace Obfuscator
             [TokenType.OP_STAR] = (text, len) => new OP_STARToken(text, len),
             [TokenType.OP_SLASH] = (text, len) => new OP_SLASHToken(text, len),
             [TokenType.OP_PERCENT] = (text, len) => new OP_PERCENTToken(text, len),
+            [TokenType.NOT_EQUALS] = (text, len) => new NOTEQUALSToken(text, len),
 
             [TokenType.OP_ANDAND] = (text, len) => new OP_ANDANDToken(text, len),
             [TokenType.OP_OROR] = (text, len) => new OP_ORORToken(text, len),
@@ -251,6 +294,8 @@ namespace Obfuscator
 
             [TokenType.KW_SCROLL_TEXT] = (text, len) => new KW_SCROLL_TEXTToken(text, len),
             [TokenType.KW_SET_PIXEL] = (text, len) => new KW_SET_PIXELToken(text, len),
+            [TokenType.ABS] = (text, len) => new KW_ABSToken(text, len),
+            [TokenType.RANDOM] = (text, len) => new KW_RANDOMToken(text, len),
         };
         public List<Spec> Specs;
         public AbstactToken GetType(ReadOnlySpan<char> input, int index)

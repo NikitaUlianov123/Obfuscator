@@ -18,7 +18,7 @@ namespace Obfuscator
             Name = children[1];
             Params = children[2];
             Body = children[3];
-            RootToken = ReturnType.RootToken;
+            RootToken = new FUNCTIONToken("Function",0);
         }
 
         public override string CodeGen()
@@ -29,9 +29,9 @@ namespace Obfuscator
         {
             Body.RenamingVariblePass(currentStack);
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            return;
         }
 
     }

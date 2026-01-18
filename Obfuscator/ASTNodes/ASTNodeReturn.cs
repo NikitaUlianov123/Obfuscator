@@ -7,12 +7,19 @@ namespace Obfuscator
 
     public sealed class ASTNodeReturn : ASTNodeBase
     {
-        public ASTNodeBase? Value { get; }
+        public ASTNodeBase Value { get; }
         public ASTNodeReturn(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // children: 'return', [expr], ';'
             RootToken = children[0].RootToken;
-            Value = children.Count >= 3 ? children[1] : null;
+            if(children.Count == 2)
+            {
+                Value = children[1];
+            }
+            else
+            {
+                Value = new ASTNodeNone(0,0,new NONEToken("",0));
+            }
         }
 
         public override string CodeGen()
@@ -30,9 +37,10 @@ namespace Obfuscator
         {
             return;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            Value.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddCommand("RET");
         }
     }
 }

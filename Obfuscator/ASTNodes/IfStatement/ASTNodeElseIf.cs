@@ -13,6 +13,8 @@ namespace Obfuscator
 
         public ASTNodeBase Body { get; }
 
+        public string EndLabel;
+
         public ASTNodeElseIf(int begin, int end, List<ASTNodeBase> children) : base(begin, end)
         {
             // children: 'if^', '(', CE, ')', '{', Body, '}'
@@ -31,16 +33,28 @@ namespace Obfuscator
             Condition.RenamingVariblePass(currentStack);
             
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string ret = "";
-            string conditon = Condition.IRGen(stack);
+            return;
+        }
+        public void IRGen(VaribleStack stack, IRCode IRCodeHandler, string endLabel)
+        {
+            Condition.IRGen(stack, IRCodeHandler);
 
-            stack.byteCounter += 5;
-            string BodyIR = Body.IRGen(stack);
-            ret = ret + $"{conditon}JNZ {stack.byteCounter} \n{BodyIR}";
-            string ElseIfIR = ElseIfChain.IRGen(stack);
-            return ret;
+            string label = IRCodeHandler.GetNewLabel();
+            IRCodeHandler.AddJNZ(label);
+
+            stack.addScope();
+            Body.IRGen(stack, IRCodeHandler);
+            IRCodeHandler.AddJMP(endLabel);
+            stack.popScope();
+
+            IRCodeHandler.AddLabelDef(label);
+            if (ElseIfChain.RootToken.GetTokenType() != TokenType.NONE)
+            {
+                ASTNodeElseIf elseIfNode = (ASTNodeElseIf)ElseIfChain;
+                elseIfNode.IRGen(stack, IRCodeHandler, endLabel);
+            }
         }
     }
 }

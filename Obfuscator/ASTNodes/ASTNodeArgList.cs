@@ -29,9 +29,12 @@ namespace Obfuscator
             }
             return Output;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            throw new NotImplementedException();
+            for(int i =0; i < Items.Count; i++)
+            {
+                Items[i].IRGen(stack, IRCodeHandler);
+            }
         }
     }
 }

@@ -19,10 +19,9 @@ namespace Obfuscator
         {
             return RootToken.text;
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            stack.byteCounter += 2;
-            return "PUSH_CONST_CHAR 5 \n";
+            IRCodeHandler.PushConstChar(5);
         }
 
     }

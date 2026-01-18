@@ -26,7 +26,7 @@ namespace Obfuscator
         {
             RenamingPassMulti(currentStack, Statements);
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode iRCodeHandler)
         {
             throw new NotImplementedException();
         }

@@ -26,14 +26,12 @@ namespace Obfuscator
         {
             RenamingPassMulti(currentStack, Decls);
         }
-        public override string IRGen(VaribleStack stack)
+        public override void IRGen(VaribleStack stack, IRCode IRCodeHandler)
         {
-            string IRCode = "";
             for (int i = 0; i < Decls.Count; i++)
             {
-                IRCode += Decls[i].IRGen(stack);
+                Decls[i].IRGen(stack, IRCodeHandler);
             }
-            return IRCode;
         }
     }
 }
