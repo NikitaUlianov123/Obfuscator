@@ -46,7 +46,8 @@ E
 	VaribleDec
 	ArrayCreation
 	"id" "^=" E'' ;
-	Dot "^=" E' ;
+	Dot "^=" E'' ;
+	ArrayAccess "^=" E'' ;
 	"id" "(^" ListOfStatements ")" ;
 	"delay^" "(" E' ")" ;
 	IfStmt
@@ -246,7 +247,7 @@ ElseOpt
 }
 ArrayAccess
 {
-    "id" "[^" E' "]"
+    "id" "[^" E'' "]"
 }
 ArrayCreation
 {

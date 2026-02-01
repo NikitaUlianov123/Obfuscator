@@ -102,7 +102,7 @@ namespace Obfuscator
                 ASTNodeMemberAccess memberAccess = (ASTNodeMemberAccess)member;
                 offset += findOffset(structInfo, memberAccess.Target, IRCodeHandler, stack);
                 StructInfo nextStruct;
-                if(memberAccess.Target.RootToken.GetTokenType() == TokenType.LBRACKET)
+                if(memberAccess.Target.RootToken.GetTokenType() == TokenType.LBRACE)
                 {
                     ASTNodeArrayAccess arrayAccess = (ASTNodeArrayAccess)Target;
                     nextStruct = (StructInfo)structInfo.memberInfos[arrayAccess.Array.RootToken.text].info;
@@ -115,10 +115,10 @@ namespace Obfuscator
 
                 return offset;
             }
-            else if(member.RootToken.GetTokenType() == TokenType.LBRACKET)
+            else if(member.RootToken.GetTokenType() == TokenType.LBRACE)
             {
                 ASTNodeArrayAccess arrayAccess = (ASTNodeArrayAccess)Member;
-                ArrayInfo arrayInfo = (ArrayInfo)structInfo.memberInfos[member.RootToken.text].info;
+                ArrayInfo arrayInfo = (ArrayInfo)structInfo.memberInfos[arrayAccess.Array.RootToken.text].info;
 
                 arrayAccess.Index.IRGen(stack, IRCodeHandler);
                 IRCodeHandler.PushConstInt(arrayInfo.varibleInfo.getSize());

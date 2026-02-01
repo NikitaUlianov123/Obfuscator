@@ -214,7 +214,7 @@ namespace Obfuscator
         ["\"enum\""] = (b, e, t) => new ASTNodeTypeEnum(b, e, t),
 
         // ---- IDENTIFIERS (non-type positions) ----
-        ["\"id\""] = (b, e, t) => new ASTNodeIdentifier(b, e, t),
+        ["\"id\""] = (b, e, t) => new ASTTypeId(b, e, t),
 
         // ---- LITERALS ----
         ["\"number\""] = (b, e, t) => new ASTLitNumber(b, e, t),

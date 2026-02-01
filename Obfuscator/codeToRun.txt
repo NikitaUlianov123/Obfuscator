@@ -19,9 +19,55 @@ struct Question
 }
 void initQuestion(Question question)
 {
-	question.numOne = getRandom(0,100);
-	question.numTwo = getRandom(0,100);
-
+	question.numOne = getRandom(1,100);
+	question.numTwo = getRandom(1,100);
+	question.operation = getRandom(0,3);
+	generateDecoys(question);
+}
+int getCorrectAnswer(Question question)
+{
+	if(question.operation == Add)
+	{
+		return question.numOne + question.numTwo;
+	}
+	else if(question.operation == Sub)
+	{
+		return question.numOne - question.numTwo;
+	}
+	else if(question.operation == Mult)
+	{
+		return question.numOne * question.numTwo;
+	}
+	else
+	{
+		return question.numOne / question.numTwo;
+	}
+}
+void generateDecoys(Question question)
+{
+	int correctAnswer = getCorrectAnswer(question);
+	int possibleDecoys[10];
+	for(int i = 0; i < 5; i++)
+	{
+		possibleDecoys[i] = correctAnswer + i + 1;
+	}
+	for(int i = 0; i < 5; i++)
+	{
+		possibleDecoys[i+5] = correctAnswer - i - 1;
+	}
+	for(int i = 0; i < 9; i++)
+	{
+		int randomIndex = getRandom(i,9);
+		int temp = possibleDecoys[i];
+		possibleDecoys[i] = possibleDecoys[randomIndex];
+		possibleDecoys[randomIndex] = temp;
+	}
+	for(int i = 0; i < 4; i++)
+	{
+		question.decoyAnswers[i] = possibleDecoys[i];
+	}
+	question.correctAnswerIndex = getRandom(0,3);
+	question.decoyAnswers[question.correctAnswerIndex] = correctAnswer;
 }
 task main()
 {
